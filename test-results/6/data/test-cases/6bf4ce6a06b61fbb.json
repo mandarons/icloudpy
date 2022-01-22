@@ -1,0 +1,88 @@
+{
+  "uid" : "6bf4ce6a06b61fbb",
+  "name" : "test_folder",
+  "fullName" : "tests.test_drive.DriveServiceTest#test_folder",
+  "historyId" : "d433e3d0382d30d6ea5f5fd4962af0a6",
+  "time" : {
+    "start" : 1642892229090,
+    "stop" : 1642892229091,
+    "duration" : 1
+  },
+  "description" : "Test the /iCloudPy folder.",
+  "descriptionHtml" : "<p>Test the /iCloudPy folder.</p>\n",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ {
+    "name" : "unittest_setUpClass_fixture_DriveServiceTest",
+    "time" : {
+      "start" : 1642892229085,
+      "stop" : 1642892229085,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "afterStages" : [ {
+    "name" : "unittest_setUpClass_fixture_DriveServiceTest::0",
+    "time" : {
+      "start" : 1642892229117,
+      "stop" : 1642892229118,
+      "duration" : 1
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "tests"
+  }, {
+    "name" : "suite",
+    "value" : "test_drive"
+  }, {
+    "name" : "subSuite",
+    "value" : "DriveServiceTest"
+  }, {
+    "name" : "host",
+    "value" : "fv-az121-364"
+  }, {
+    "name" : "thread",
+    "value" : "3473-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "tests.test_drive"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "6bf4ce6a06b61fbb.json",
+  "parameterValues" : [ ]
+}

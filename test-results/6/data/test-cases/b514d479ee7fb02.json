@@ -1,0 +1,88 @@
+{
+  "uid" : "b514d479ee7fb02",
+  "name" : "test_subfolder_file",
+  "fullName" : "tests.test_drive.DriveServiceTest#test_subfolder_file",
+  "historyId" : "e7b4c55b0553c9b836f01f208029e5a8",
+  "time" : {
+    "start" : 1642892229109,
+    "stop" : 1642892229117,
+    "duration" : 8
+  },
+  "description" : "Test the /iCloudPy/Test/Scanned document 1.pdf file.",
+  "descriptionHtml" : "<p>Test the /iCloudPy/Test/Scanned document 1.pdf file.</p>\n",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ {
+    "name" : "unittest_setUpClass_fixture_DriveServiceTest",
+    "time" : {
+      "start" : 1642892229085,
+      "stop" : 1642892229085,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "afterStages" : [ {
+    "name" : "unittest_setUpClass_fixture_DriveServiceTest::0",
+    "time" : {
+      "start" : 1642892229117,
+      "stop" : 1642892229118,
+      "duration" : 1
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "tests"
+  }, {
+    "name" : "suite",
+    "value" : "test_drive"
+  }, {
+    "name" : "subSuite",
+    "value" : "DriveServiceTest"
+  }, {
+    "name" : "host",
+    "value" : "fv-az121-364"
+  }, {
+    "name" : "thread",
+    "value" : "3473-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "tests.test_drive"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "b514d479ee7fb02.json",
+  "parameterValues" : [ ]
+}

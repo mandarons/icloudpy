@@ -1,0 +1,10 @@
+[ {
+  "name" : "GitHub Actions",
+  "type" : "github",
+  "url" : "https://mandarons.github.io/icloudpy/test-results",
+  "buildOrder" : 6,
+  "buildName" : "GitHub Actions Run #1734280350",
+  "buildUrl" : "https://github.com/mandarons/icloudpy/actions/runs/1734280350",
+  "reportName" : "Allure Report with history",
+  "reportUrl" : "https://mandarons.github.io/icloudpy/test-results/6/"
+} ]

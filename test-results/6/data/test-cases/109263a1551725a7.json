@@ -1,0 +1,88 @@
+{
+  "uid" : "109263a1551725a7",
+  "name" : "test_storage_usages_by_media",
+  "fullName" : "tests.test_account.AccountServiceTest#test_storage_usages_by_media",
+  "historyId" : "0ab895986e79a0324ba984aae3e90903",
+  "time" : {
+    "start" : 1642892229028,
+    "stop" : 1642892229029,
+    "duration" : 1
+  },
+  "description" : "Tests storage usages by media.",
+  "descriptionHtml" : "<p>Tests storage usages by media.</p>\n",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ {
+    "name" : "unittest_setUpClass_fixture_AccountServiceTest",
+    "time" : {
+      "start" : 1642892228986,
+      "stop" : 1642892228986,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "afterStages" : [ {
+    "name" : "unittest_setUpClass_fixture_AccountServiceTest::0",
+    "time" : {
+      "start" : 1642892229029,
+      "stop" : 1642892229030,
+      "duration" : 1
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "tests"
+  }, {
+    "name" : "suite",
+    "value" : "test_account"
+  }, {
+    "name" : "subSuite",
+    "value" : "AccountServiceTest"
+  }, {
+    "name" : "host",
+    "value" : "fv-az121-364"
+  }, {
+    "name" : "thread",
+    "value" : "3473-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "tests.test_account"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "109263a1551725a7.json",
+  "parameterValues" : [ ]
+}

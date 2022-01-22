@@ -1,0 +1,88 @@
+{
+  "uid" : "5da9c7faefb07d5",
+  "name" : "test_storage_usage",
+  "fullName" : "tests.test_account.AccountServiceTest#test_storage_usage",
+  "historyId" : "254cc9b01893e4eaf8380c2f5c0d1b62",
+  "time" : {
+    "start" : 1642892229024,
+    "stop" : 1642892229025,
+    "duration" : 1
+  },
+  "description" : "Tests storage usage.",
+  "descriptionHtml" : "<p>Tests storage usage.</p>\n",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ {
+    "name" : "unittest_setUpClass_fixture_AccountServiceTest",
+    "time" : {
+      "start" : 1642892228986,
+      "stop" : 1642892228986,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "afterStages" : [ {
+    "name" : "unittest_setUpClass_fixture_AccountServiceTest::0",
+    "time" : {
+      "start" : 1642892229029,
+      "stop" : 1642892229030,
+      "duration" : 1
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "tests"
+  }, {
+    "name" : "suite",
+    "value" : "test_account"
+  }, {
+    "name" : "subSuite",
+    "value" : "AccountServiceTest"
+  }, {
+    "name" : "host",
+    "value" : "fv-az121-364"
+  }, {
+    "name" : "thread",
+    "value" : "3473-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "tests.test_account"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "5da9c7faefb07d5.json",
+  "parameterValues" : [ ]
+}

@@ -1,0 +1,201 @@
+[ {
+  "uid" : "4113969074354972",
+  "name" : "test_folder_not_exists",
+  "time" : {
+    "start" : 1642892229098,
+    "stop" : 1642892229100,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "2ae31c2f72b89e98",
+  "name" : "test_help",
+  "time" : {
+    "start" : 1642892229042,
+    "stop" : 1642892229047,
+    "duration" : 5
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "5da9781f4098e70f",
+  "name" : "test_device_outputfile",
+  "time" : {
+    "start" : 1642892229033,
+    "stop" : 1642892229039,
+    "duration" : 6
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "b514d479ee7fb02",
+  "name" : "test_subfolder_file",
+  "time" : {
+    "start" : 1642892229109,
+    "stop" : 1642892229117,
+    "duration" : 8
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "c685e55b77d1456b",
+  "name" : "test_storage",
+  "time" : {
+    "start" : 1642892229020,
+    "stop" : 1642892229022,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "4d389ee2397e382c",
+  "name" : "test_subfolder",
+  "time" : {
+    "start" : 1642892229106,
+    "stop" : 1642892229107,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "82c4eacd0ff293c4",
+  "name" : "test_no_arg",
+  "time" : {
+    "start" : 1642892229049,
+    "stop" : 1642892229056,
+    "duration" : 7
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "c0e3f057d3ecb02a",
+  "name" : "test_devices",
+  "time" : {
+    "start" : 1642892228999,
+    "stop" : 1642892229009,
+    "duration" : 10
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "4ceefeaa65e29726",
+  "name" : "test_family",
+  "time" : {
+    "start" : 1642892229013,
+    "stop" : 1642892229014,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "c3387159e9e10539",
+  "name" : "test_repr",
+  "time" : {
+    "start" : 1642892229017,
+    "stop" : 1642892229018,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "49245e013381eb10",
+  "name" : "test_username_password_invalid",
+  "time" : {
+    "start" : 1642892229063,
+    "stop" : 1642892229074,
+    "duration" : 11
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "be9fbad961281499",
+  "name" : "test_devices",
+  "time" : {
+    "start" : 1642892229121,
+    "stop" : 1642892229124,
+    "duration" : 3
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "6bf4ce6a06b61fbb",
+  "name" : "test_folder",
+  "time" : {
+    "start" : 1642892229090,
+    "stop" : 1642892229091,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "ce01f417f1844ecc",
+  "name" : "test_folder_app",
+  "time" : {
+    "start" : 1642892229094,
+    "stop" : 1642892229096,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "98efd442ad5abd2f",
+  "name" : "test_file_open",
+  "time" : {
+    "start" : 1642892229086,
+    "stop" : 1642892229087,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "5623720651a97963",
+  "name" : "test_root",
+  "time" : {
+    "start" : 1642892229102,
+    "stop" : 1642892229103,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "f7d38f2ba84b5f9a",
+  "name" : "test_username",
+  "time" : {
+    "start" : 1642892229058,
+    "stop" : 1642892229060,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "109263a1551725a7",
+  "name" : "test_storage_usages_by_media",
+  "time" : {
+    "start" : 1642892229028,
+    "stop" : 1642892229029,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "5da9c7faefb07d5",
+  "name" : "test_storage_usage",
+  "time" : {
+    "start" : 1642892229024,
+    "stop" : 1642892229025,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "a8a7b8b48b02e59a",
+  "name" : "test_username_password_requires_2fa",
+  "time" : {
+    "start" : 1642892229076,
+    "stop" : 1642892229082,
+    "duration" : 6
+  },
+  "status" : "passed",
+  "severity" : "normal"
+} ]

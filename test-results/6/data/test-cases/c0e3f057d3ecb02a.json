@@ -1,0 +1,88 @@
+{
+  "uid" : "c0e3f057d3ecb02a",
+  "name" : "test_devices",
+  "fullName" : "tests.test_account.AccountServiceTest#test_devices",
+  "historyId" : "acf43eca3ccd27d3179cab7e3c9b79cc",
+  "time" : {
+    "start" : 1642892228999,
+    "stop" : 1642892229009,
+    "duration" : 10
+  },
+  "description" : "Tests devices.",
+  "descriptionHtml" : "<p>Tests devices.</p>\n",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ {
+    "name" : "unittest_setUpClass_fixture_AccountServiceTest",
+    "time" : {
+      "start" : 1642892228986,
+      "stop" : 1642892228986,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "afterStages" : [ {
+    "name" : "unittest_setUpClass_fixture_AccountServiceTest::0",
+    "time" : {
+      "start" : 1642892229029,
+      "stop" : 1642892229030,
+      "duration" : 1
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "tests"
+  }, {
+    "name" : "suite",
+    "value" : "test_account"
+  }, {
+    "name" : "subSuite",
+    "value" : "AccountServiceTest"
+  }, {
+    "name" : "host",
+    "value" : "fv-az121-364"
+  }, {
+    "name" : "thread",
+    "value" : "3473-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "tests.test_account"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "c0e3f057d3ecb02a.json",
+  "parameterValues" : [ ]
+}
