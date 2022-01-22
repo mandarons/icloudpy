@@ -1,0 +1,6 @@
+[run]
+ include =
+    icloudpy/*
+ [report]
+ include =
+    icloudpy/*
