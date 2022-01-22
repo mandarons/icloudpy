@@ -134,3 +134,5 @@ allure-results
 allure-report
 .history
 ignore-config.yaml
+gh-pages
+*.pub

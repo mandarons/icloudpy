@@ -7,7 +7,7 @@ on:
   push:
     branches: [main]
     paths:
-      - src/**
+      - icloudpy/**
       - tests/**
       - pylintrc
       - pytest.ini
@@ -59,7 +59,7 @@ jobs:
           pip install -r requirements-test.txt
       - name: Test with pytest
         run: |
-          pylint src/ tests/ && pytest
+          pylint icloudpy/ tests/ && pytest
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v2
         if: ${{ success() }}
