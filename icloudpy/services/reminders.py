@@ -25,7 +25,12 @@ class RemindersService(object):
         """Refresh data."""
         params_reminders = dict(self._params)
         params_reminders.update(
-            {"clientVersion": "4.0", "lang": "en-us", "usertz": get_localzone().zone}
+            {
+                "clientVersion": "4.0",
+                "lang": "en-us",
+                "usertz": get_localzone().zone,
+                "dsid": self.session.service.data["dsInfo"]["dsid"],
+            }
         )
 
         # Open reminders
