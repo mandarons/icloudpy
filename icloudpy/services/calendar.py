@@ -28,7 +28,13 @@ class CalendarService(object):
         (a calendar) and a guid (an event's ID).
         """
         params = dict(self.params)
-        params.update({"lang": "en-us", "usertz": get_localzone().zone})
+        params.update(
+            {
+                "lang": "en-us",
+                "usertz": get_localzone().zone,
+                "dsid": self.session.service.data["dsInfo"]["dsid"],
+            }
+        )
         url = "%s/%s/%s" % (self._calendar_event_detail_url, pguid, guid)
         req = self.session.get(url, params=params)
         self.response = req.json()
@@ -53,6 +59,7 @@ class CalendarService(object):
                 "usertz": get_localzone().zone,
                 "startDate": from_dt.strftime("%Y-%m-%d"),
                 "endDate": to_dt.strftime("%Y-%m-%d"),
+                "dsid": self.session.service.data["dsInfo"]["dsid"],
             }
         )
         req = self.session.get(self._calendar_refresh_url, params=params)
@@ -80,6 +87,7 @@ class CalendarService(object):
                 "usertz": get_localzone().zone,
                 "startDate": from_dt.strftime("%Y-%m-%d"),
                 "endDate": to_dt.strftime("%Y-%m-%d"),
+                "dsid": self.session.service.data["dsInfo"]["dsid"],
             }
         )
         req = self.session.get(self._calendars, params=params)
