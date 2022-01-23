@@ -1,0 +1,21 @@
+usage: pytest [-h] [--username USERNAME] [--password PASSWORD] [-n]
+              [--delete-from-keyring] [--list] [--llist] [--locate]
+              [--device DEVICE_ID] [--sound] [--message MESSAGE]
+              [--silentmessage SILENTMESSAGE] [--lostmode]
+              [--lostphone LOST_PHONE] [--lostpassword LOST_PASSWORD]
+              [--lostmessage LOST_MESSAGE] [--outputfile]
+pytest: error: No username supplied
+usage: pytest [-h] [--username USERNAME] [--password PASSWORD] [-n]
+              [--delete-from-keyring] [--list] [--llist] [--locate]
+              [--device DEVICE_ID] [--sound] [--message MESSAGE]
+              [--silentmessage SILENTMESSAGE] [--lostmode]
+              [--lostphone LOST_PHONE] [--lostpassword LOST_PASSWORD]
+              [--lostmessage LOST_MESSAGE] [--outputfile]
+pytest: error: No username supplied
+usage: pytest [-h] [--username USERNAME] [--password PASSWORD] [-n]
+              [--delete-from-keyring] [--list] [--llist] [--locate]
+              [--device DEVICE_ID] [--sound] [--message MESSAGE]
+              [--silentmessage SILENTMESSAGE] [--lostmode]
+              [--lostphone LOST_PHONE] [--lostpassword LOST_PASSWORD]
+              [--lostmessage LOST_MESSAGE] [--outputfile]
+pytest: error: No username supplied

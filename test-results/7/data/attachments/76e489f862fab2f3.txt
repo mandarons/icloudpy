@@ -1,0 +1,37 @@
+usage: pytest [-h] [--username USERNAME] [--password PASSWORD] [-n]
+              [--delete-from-keyring] [--list] [--llist] [--locate]
+              [--device DEVICE_ID] [--sound] [--message MESSAGE]
+              [--silentmessage SILENTMESSAGE] [--lostmode]
+              [--lostphone LOST_PHONE] [--lostpassword LOST_PASSWORD]
+              [--lostmessage LOST_MESSAGE] [--outputfile]
+
+Find My iPhone CommandLine Tool
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --username USERNAME   Apple ID to Use
+  --password PASSWORD   Apple ID Password to Use; if unspecified, password
+                        will be fetched from the system keyring.
+  -n, --non-interactive
+                        Disable interactive prompts.
+  --delete-from-keyring
+                        Delete stored password in system keyring for this
+                        username.
+  --list                Short Listings for Device(s) associated with account
+  --llist               Detailed Listings for Device(s) associated with
+                        account
+  --locate              Retrieve Location for the iDevice (non-exclusive).
+  --device DEVICE_ID    Only effect this device
+  --sound               Play a sound on the device
+  --message MESSAGE     Optional Text Message to display with a sound
+  --silentmessage SILENTMESSAGE
+                        Optional Text Message to display with no sounds
+  --lostmode            Enable Lost mode for the device
+  --lostphone LOST_PHONE
+                        Phone Number allowed to call when lost mode is enabled
+  --lostpassword LOST_PASSWORD
+                        Forcibly active this passcode on the idevice
+  --lostmessage LOST_MESSAGE
+                        Forcibly display this message when activating lost
+                        mode.
+  --outputfile          Save device data to a file in the current directory.

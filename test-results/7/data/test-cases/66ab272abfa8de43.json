@@ -1,0 +1,108 @@
+{
+  "uid" : "66ab272abfa8de43",
+  "name" : "test_storage",
+  "fullName" : "tests.test_account.AccountServiceTest#test_storage",
+  "historyId" : "15f4f8b7d44169b9c01f2ab5ed1c3999",
+  "time" : {
+    "start" : 1642953105776,
+    "stop" : 1642953105778,
+    "duration" : 2
+  },
+  "description" : "Tests storage.",
+  "descriptionHtml" : "<p>Tests storage.</p>\n",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ {
+    "name" : "unittest_setUpClass_fixture_AccountServiceTest",
+    "time" : {
+      "start" : 1642953105728,
+      "stop" : 1642953105728,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "afterStages" : [ {
+    "name" : "unittest_setUpClass_fixture_AccountServiceTest::0",
+    "time" : {
+      "start" : 1642953105784,
+      "stop" : 1642953105784,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "tests"
+  }, {
+    "name" : "suite",
+    "value" : "test_account"
+  }, {
+    "name" : "subSuite",
+    "value" : "AccountServiceTest"
+  }, {
+    "name" : "host",
+    "value" : "fv-az67-206"
+  }, {
+    "name" : "thread",
+    "value" : "3501-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "tests.test_account"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "history" : {
+      "statistic" : {
+        "failed" : 0,
+        "broken" : 0,
+        "skipped" : 0,
+        "passed" : 2,
+        "unknown" : 0,
+        "total" : 2
+      },
+      "items" : [ {
+        "uid" : "c685e55b77d1456b",
+        "reportUrl" : "https://mandarons.github.io/icloudpy/test-results/6//#testresult/c685e55b77d1456b",
+        "status" : "passed",
+        "time" : {
+          "start" : 1642892229020,
+          "stop" : 1642892229022,
+          "duration" : 2
+        }
+      } ]
+    },
+    "tags" : [ ]
+  },
+  "source" : "66ab272abfa8de43.json",
+  "parameterValues" : [ ]
+}

@@ -1,0 +1,125 @@
+{
+  "uid" : "748551a69e271f55",
+  "name" : "test_username_password_requires_2fa",
+  "fullName" : "tests.test_cmdline.TestCmdline#test_username_password_requires_2fa",
+  "historyId" : "46964b35fa164d760969d276c9a724bd",
+  "time" : {
+    "start" : 1642953105825,
+    "stop" : 1642953105829,
+    "duration" : 4
+  },
+  "description" : "Test username and password commands.",
+  "descriptionHtml" : "<p>Test username and password commands.</p>\n",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ {
+    "name" : "unittest_setUpClass_fixture_TestCmdline",
+    "time" : {
+      "start" : 1642953105787,
+      "stop" : 1642953105787,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "testStage" : {
+    "description" : "Test username and password commands.",
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ {
+      "uid" : "62a0ee8793997e7d",
+      "name" : "stdout",
+      "source" : "62a0ee8793997e7d.txt",
+      "type" : "text/plain",
+      "size" : 66
+    } ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 1,
+    "shouldDisplayMessage" : false,
+    "hasContent" : true
+  },
+  "afterStages" : [ {
+    "name" : "unittest_setUpClass_fixture_TestCmdline::0",
+    "time" : {
+      "start" : 1642953105830,
+      "stop" : 1642953105830,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "tests"
+  }, {
+    "name" : "suite",
+    "value" : "test_cmdline"
+  }, {
+    "name" : "subSuite",
+    "value" : "TestCmdline"
+  }, {
+    "name" : "host",
+    "value" : "fv-az67-206"
+  }, {
+    "name" : "thread",
+    "value" : "3501-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "tests.test_cmdline"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "history" : {
+      "statistic" : {
+        "failed" : 0,
+        "broken" : 0,
+        "skipped" : 0,
+        "passed" : 2,
+        "unknown" : 0,
+        "total" : 2
+      },
+      "items" : [ {
+        "uid" : "a8a7b8b48b02e59a",
+        "reportUrl" : "https://mandarons.github.io/icloudpy/test-results/6//#testresult/a8a7b8b48b02e59a",
+        "status" : "passed",
+        "time" : {
+          "start" : 1642892229076,
+          "stop" : 1642892229082,
+          "duration" : 6
+        }
+      } ]
+    },
+    "tags" : [ ]
+  },
+  "source" : "748551a69e271f55.json",
+  "parameterValues" : [ ]
+}

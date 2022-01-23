@@ -1,0 +1,201 @@
+[ {
+  "uid" : "9d0fbfa7d928d193",
+  "name" : "test_username_password_invalid",
+  "time" : {
+    "start" : 1642953105813,
+    "stop" : 1642953105822,
+    "duration" : 9
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "20516975e49140d2",
+  "name" : "test_folder_app",
+  "time" : {
+    "start" : 1642953105839,
+    "stop" : 1642953105841,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "dd940bec6e849cf0",
+  "name" : "test_subfolder",
+  "time" : {
+    "start" : 1642953105850,
+    "stop" : 1642953105851,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "1ce810e982ad52c2",
+  "name" : "test_username",
+  "time" : {
+    "start" : 1642953105809,
+    "stop" : 1642953105811,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "ff56d41f696bb077",
+  "name" : "test_storage_usage",
+  "time" : {
+    "start" : 1642953105779,
+    "stop" : 1642953105781,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "3245d15b831d004d",
+  "name" : "test_device_outputfile",
+  "time" : {
+    "start" : 1642953105787,
+    "stop" : 1642953105793,
+    "duration" : 6
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "290153182aa334de",
+  "name" : "test_file_open",
+  "time" : {
+    "start" : 1642953105833,
+    "stop" : 1642953105834,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "da83558e3163ed39",
+  "name" : "test_folder_not_exists",
+  "time" : {
+    "start" : 1642953105843,
+    "stop" : 1642953105844,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "dd75c9b86993e6cb",
+  "name" : "test_no_arg",
+  "time" : {
+    "start" : 1642953105801,
+    "stop" : 1642953105807,
+    "duration" : 6
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "38f33d24f5664541",
+  "name" : "test_help",
+  "time" : {
+    "start" : 1642953105795,
+    "stop" : 1642953105799,
+    "duration" : 4
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "b59dde975ad33e4e",
+  "name" : "test_devices",
+  "time" : {
+    "start" : 1642953105758,
+    "stop" : 1642953105766,
+    "duration" : 8
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "dbe7ff422c293174",
+  "name" : "test_root",
+  "time" : {
+    "start" : 1642953105846,
+    "stop" : 1642953105848,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "5ca7a86c674eae61",
+  "name" : "test_storage_usages_by_media",
+  "time" : {
+    "start" : 1642953105783,
+    "stop" : 1642953105784,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "9ad84724be36d403",
+  "name" : "test_devices",
+  "time" : {
+    "start" : 1642953105863,
+    "stop" : 1642953105865,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "748551a69e271f55",
+  "name" : "test_username_password_requires_2fa",
+  "time" : {
+    "start" : 1642953105825,
+    "stop" : 1642953105829,
+    "duration" : 4
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "3b82fb7ab3d9640f",
+  "name" : "test_family",
+  "time" : {
+    "start" : 1642953105770,
+    "stop" : 1642953105771,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "4aed36a8237f74fd",
+  "name" : "test_subfolder_file",
+  "time" : {
+    "start" : 1642953105853,
+    "stop" : 1642953105859,
+    "duration" : 6
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "e0679637c227de56",
+  "name" : "test_folder",
+  "time" : {
+    "start" : 1642953105836,
+    "stop" : 1642953105837,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "b7d688b9c21ac6c0",
+  "name" : "test_repr",
+  "time" : {
+    "start" : 1642953105773,
+    "stop" : 1642953105774,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "66ab272abfa8de43",
+  "name" : "test_storage",
+  "time" : {
+    "start" : 1642953105776,
+    "stop" : 1642953105778,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+} ]

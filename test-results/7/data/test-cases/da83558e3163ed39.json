@@ -1,0 +1,108 @@
+{
+  "uid" : "da83558e3163ed39",
+  "name" : "test_folder_not_exists",
+  "fullName" : "tests.test_drive.DriveServiceTest#test_folder_not_exists",
+  "historyId" : "cd131d4618fb53d99bad063e006d29eb",
+  "time" : {
+    "start" : 1642953105843,
+    "stop" : 1642953105844,
+    "duration" : 1
+  },
+  "description" : "Test the /not_exists folder.",
+  "descriptionHtml" : "<p>Test the /not_exists folder.</p>\n",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ {
+    "name" : "unittest_setUpClass_fixture_DriveServiceTest",
+    "time" : {
+      "start" : 1642953105832,
+      "stop" : 1642953105832,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "afterStages" : [ {
+    "name" : "unittest_setUpClass_fixture_DriveServiceTest::0",
+    "time" : {
+      "start" : 1642953105860,
+      "stop" : 1642953105860,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "tests"
+  }, {
+    "name" : "suite",
+    "value" : "test_drive"
+  }, {
+    "name" : "subSuite",
+    "value" : "DriveServiceTest"
+  }, {
+    "name" : "host",
+    "value" : "fv-az67-206"
+  }, {
+    "name" : "thread",
+    "value" : "3501-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "tests.test_drive"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "history" : {
+      "statistic" : {
+        "failed" : 0,
+        "broken" : 0,
+        "skipped" : 0,
+        "passed" : 2,
+        "unknown" : 0,
+        "total" : 2
+      },
+      "items" : [ {
+        "uid" : "4113969074354972",
+        "reportUrl" : "https://mandarons.github.io/icloudpy/test-results/6//#testresult/4113969074354972",
+        "status" : "passed",
+        "time" : {
+          "start" : 1642892229098,
+          "stop" : 1642892229100,
+          "duration" : 2
+        }
+      } ]
+    },
+    "tags" : [ ]
+  },
+  "source" : "da83558e3163ed39.json",
+  "parameterValues" : [ ]
+}
