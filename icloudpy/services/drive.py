@@ -43,6 +43,8 @@ class DriveService(object):
                 ]
             ),
         )
+        if not request.ok:
+            self.session.raise_error(request.status_code, request.reason)
         return request.json()[0]
 
     def get_file(self, file_id, zone="com.apple.CloudDocs", **kwargs):
@@ -54,15 +56,23 @@ class DriveService(object):
             params=file_params,
         )
         if not response.ok:
-            return None
-        url = response.json()["data_token"]["url"]
-        return self.session.get(url, params=self.params, **kwargs)
+            self.session.raise_error(response.status_code, response.reason)
+        package_token = response.json().get("package_token")
+        data_token = response.json().get("data_token")
+        if data_token and data_token.get("url"):
+            return self.session.get(data_token["url"], params=self.params, **kwargs)
+        elif package_token and package_token.get("url"):
+            return self.session.get(package_token["url"], params=self.params, **kwargs)
+        else:
+            raise KeyError("'data_token' nor 'package_token' found in response.")
 
     def get_app_data(self):
         """Returns the app library (previously ubiquity)."""
         request = self.session.get(
             self._service_root + "/retrieveAppLibraries", params=self.params
         )
+        if not request.ok:
+            self.session.raise_error(request.status_code, request.reason)
         return request.json()["items"]
 
     def _get_upload_contentws_url(self, file_object, zone="com.apple.CloudDocs"):
@@ -94,7 +104,7 @@ class DriveService(object):
             ),
         )
         if not request.ok:
-            return None
+            self.session.raise_error(request.status_code, request.reason)
         return (request.json()[0]["document_id"], request.json()[0]["url"])
 
     def _update_contentws(
@@ -135,7 +145,7 @@ class DriveService(object):
             data=json.dumps(data),
         )
         if not request.ok:
-            return None
+            self.session.raise_error(request.status_code, request.reason)
         return request.json()
 
     def send_file(self, folder_id, file_object, zone="com.apple.CloudDocs"):
@@ -144,7 +154,7 @@ class DriveService(object):
 
         request = self.session.post(content_url, files={file_object.name: file_object})
         if not request.ok:
-            return None
+            self.session.raise_error(request.status_code, request.reason)
         content_response = request.json()["singleFile"]
 
         self._update_contentws(
@@ -207,6 +217,8 @@ class DriveService(object):
                 }
             ),
         )
+        if not request.ok:
+            self.session.raise_error(request.status_code, request.reason)
         return request.json()
 
     @property
@@ -266,6 +278,11 @@ class DriveNode(object):
         if not size:
             return None
         return int(size)
+
+    @property
+    def date_created(self):
+        """Gets the node created date (in UTC)."""
+        return _date_to_utc(self.data.get("dateCreated"))
 
     @property
     def date_changed(self):

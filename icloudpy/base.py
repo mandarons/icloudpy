@@ -186,6 +186,10 @@ class ICloudPySession(Session):
         LOGGER.error(api_error)
         raise api_error
 
+    # Public method to resolve linting error
+    def raise_error(self, code, reason):
+        return self._raise_error(code=code, reason=reason)
+
 
 class ICloudPyService(object):
     """

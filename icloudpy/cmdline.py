@@ -15,7 +15,7 @@ from click import confirm
 
 from icloudpy import ICloudPyService
 from icloudpy.exceptions import ICloudPyFailedLoginException
-from . import utils
+from icloudpy import utils
 
 
 DEVICE_ERROR = "Please use the --device switch to indicate which device to use."
