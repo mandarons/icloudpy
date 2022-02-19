@@ -170,10 +170,20 @@ def main(args=None):
         help="Save device data to a file in the current directory.",
     )
 
+    # Path to session directory
+    parser.add_argument(
+        "--session-directory",
+        action="store",
+        dest="session_directory",
+        default=None,
+        help="Path to save session information",
+    )
+
     command_line = parser.parse_args(args)
 
     username = command_line.username
     password = command_line.password
+    session_directory = command_line.session_directory
 
     if username and command_line.delete_from_keyring:
         utils.delete_password_in_keyring(username)
@@ -194,7 +204,11 @@ def main(args=None):
             parser.error("No password supplied")
 
         try:
-            api = ICloudPyService(username.strip(), password.strip())
+            api = ICloudPyService(
+                apple_id=username.strip(),
+                password=password.strip(),
+                cookie_directory=session_directory,
+            )
             if (
                 not utils.password_exists_in_keyring(username)
                 and command_line.interactive
