@@ -1,0 +1,126 @@
+{
+  "uid" : "aab64d207c2ed2bd",
+  "name" : "test_subfolder",
+  "fullName" : "tests.test_drive.DriveServiceTest#test_subfolder",
+  "historyId" : "1f66364b95704ea4d0342719eb8c675e",
+  "time" : {
+    "start" : 1645235801996,
+    "stop" : 1645235801998,
+    "duration" : 2
+  },
+  "description" : "Test the /iCloudPy/Test folder.",
+  "descriptionHtml" : "<p>Test the /iCloudPy/Test folder.</p>\n",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ {
+    "name" : "unittest_setUpClass_fixture_DriveServiceTest",
+    "time" : {
+      "start" : 1645235801974,
+      "stop" : 1645235801974,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "afterStages" : [ {
+    "name" : "unittest_setUpClass_fixture_DriveServiceTest::0",
+    "time" : {
+      "start" : 1645235802008,
+      "stop" : 1645235802008,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "tests"
+  }, {
+    "name" : "suite",
+    "value" : "test_drive"
+  }, {
+    "name" : "subSuite",
+    "value" : "DriveServiceTest"
+  }, {
+    "name" : "host",
+    "value" : "fv-az18-582"
+  }, {
+    "name" : "thread",
+    "value" : "3778-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "tests.test_drive"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "history" : {
+      "statistic" : {
+        "failed" : 0,
+        "broken" : 0,
+        "skipped" : 0,
+        "passed" : 4,
+        "unknown" : 0,
+        "total" : 4
+      },
+      "items" : [ {
+        "uid" : "62cc906cede11ec8",
+        "reportUrl" : "https://mandarons.github.io/icloudpy/test-results/8//#testresult/62cc906cede11ec8",
+        "status" : "passed",
+        "time" : {
+          "start" : 1643329682727,
+          "stop" : 1643329682728,
+          "duration" : 1
+        }
+      }, {
+        "uid" : "dd940bec6e849cf0",
+        "reportUrl" : "https://mandarons.github.io/icloudpy/test-results/7//#testresult/dd940bec6e849cf0",
+        "status" : "passed",
+        "time" : {
+          "start" : 1642953105850,
+          "stop" : 1642953105851,
+          "duration" : 1
+        }
+      }, {
+        "uid" : "4d389ee2397e382c",
+        "reportUrl" : "https://mandarons.github.io/icloudpy/test-results/6//#testresult/4d389ee2397e382c",
+        "status" : "passed",
+        "time" : {
+          "start" : 1642892229106,
+          "stop" : 1642892229107,
+          "duration" : 1
+        }
+      } ]
+    },
+    "tags" : [ ]
+  },
+  "source" : "aab64d207c2ed2bd.json",
+  "parameterValues" : [ ]
+}

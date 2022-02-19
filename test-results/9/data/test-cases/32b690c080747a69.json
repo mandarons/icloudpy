@@ -1,0 +1,126 @@
+{
+  "uid" : "32b690c080747a69",
+  "name" : "test_repr",
+  "fullName" : "tests.test_account.AccountServiceTest#test_repr",
+  "historyId" : "a05d911c0a1f4a5ad163492af0509171",
+  "time" : {
+    "start" : 1645235801902,
+    "stop" : 1645235801903,
+    "duration" : 1
+  },
+  "description" : "Tests representation.",
+  "descriptionHtml" : "<p>Tests representation.</p>\n",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ {
+    "name" : "unittest_setUpClass_fixture_AccountServiceTest",
+    "time" : {
+      "start" : 1645235801802,
+      "stop" : 1645235801803,
+      "duration" : 1
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "afterStages" : [ {
+    "name" : "unittest_setUpClass_fixture_AccountServiceTest::0",
+    "time" : {
+      "start" : 1645235801916,
+      "stop" : 1645235801916,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "tests"
+  }, {
+    "name" : "suite",
+    "value" : "test_account"
+  }, {
+    "name" : "subSuite",
+    "value" : "AccountServiceTest"
+  }, {
+    "name" : "host",
+    "value" : "fv-az18-582"
+  }, {
+    "name" : "thread",
+    "value" : "3778-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "tests.test_account"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "history" : {
+      "statistic" : {
+        "failed" : 0,
+        "broken" : 0,
+        "skipped" : 0,
+        "passed" : 4,
+        "unknown" : 0,
+        "total" : 4
+      },
+      "items" : [ {
+        "uid" : "db068c3dfbedf883",
+        "reportUrl" : "https://mandarons.github.io/icloudpy/test-results/8//#testresult/db068c3dfbedf883",
+        "status" : "passed",
+        "time" : {
+          "start" : 1643329682651,
+          "stop" : 1643329682652,
+          "duration" : 1
+        }
+      }, {
+        "uid" : "b7d688b9c21ac6c0",
+        "reportUrl" : "https://mandarons.github.io/icloudpy/test-results/7//#testresult/b7d688b9c21ac6c0",
+        "status" : "passed",
+        "time" : {
+          "start" : 1642953105773,
+          "stop" : 1642953105774,
+          "duration" : 1
+        }
+      }, {
+        "uid" : "c3387159e9e10539",
+        "reportUrl" : "https://mandarons.github.io/icloudpy/test-results/6//#testresult/c3387159e9e10539",
+        "status" : "passed",
+        "time" : {
+          "start" : 1642892229017,
+          "stop" : 1642892229018,
+          "duration" : 1
+        }
+      } ]
+    },
+    "tags" : [ ]
+  },
+  "source" : "32b690c080747a69.json",
+  "parameterValues" : [ ]
+}

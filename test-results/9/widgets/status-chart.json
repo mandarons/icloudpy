@@ -1,0 +1,201 @@
+[ {
+  "uid" : "aab64d207c2ed2bd",
+  "name" : "test_subfolder",
+  "time" : {
+    "start" : 1645235801996,
+    "stop" : 1645235801998,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "3ca2363e6ef02a5d",
+  "name" : "test_username_password_invalid",
+  "time" : {
+    "start" : 1645235801951,
+    "stop" : 1645235801962,
+    "duration" : 11
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "b36b466ed976eb47",
+  "name" : "test_username_password_requires_2fa",
+  "time" : {
+    "start" : 1645235801965,
+    "stop" : 1645235801970,
+    "duration" : 5
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "24cfee80f33b3aaf",
+  "name" : "test_storage",
+  "time" : {
+    "start" : 1645235801906,
+    "stop" : 1645235801907,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "b820e718b1b64b66",
+  "name" : "test_folder",
+  "time" : {
+    "start" : 1645235801979,
+    "stop" : 1645235801980,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "e4f2493af22ded63",
+  "name" : "test_storage_usage",
+  "time" : {
+    "start" : 1645235801909,
+    "stop" : 1645235801910,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "d8945195e9f95319",
+  "name" : "test_family",
+  "time" : {
+    "start" : 1645235801897,
+    "stop" : 1645235801899,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "bcbb410184faa938",
+  "name" : "test_file_open",
+  "time" : {
+    "start" : 1645235801974,
+    "stop" : 1645235801976,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "82090e0436064423",
+  "name" : "test_root",
+  "time" : {
+    "start" : 1645235801991,
+    "stop" : 1645235801993,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "f342874565634b5c",
+  "name" : "test_subfolder_file",
+  "time" : {
+    "start" : 1645235802001,
+    "stop" : 1645235802008,
+    "duration" : 7
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "eb6cc75aa8b2ecee",
+  "name" : "test_devices",
+  "time" : {
+    "start" : 1645235802012,
+    "stop" : 1645235802015,
+    "duration" : 3
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "3b3fb4c71020682e",
+  "name" : "test_folder_app",
+  "time" : {
+    "start" : 1645235801983,
+    "stop" : 1645235801984,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "32b690c080747a69",
+  "name" : "test_repr",
+  "time" : {
+    "start" : 1645235801902,
+    "stop" : 1645235801903,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "c25f064c929202ac",
+  "name" : "test_help",
+  "time" : {
+    "start" : 1645235801928,
+    "stop" : 1645235801933,
+    "duration" : 5
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "9178f05c0a39f1ae",
+  "name" : "test_device_outputfile",
+  "time" : {
+    "start" : 1645235801919,
+    "stop" : 1645235801926,
+    "duration" : 7
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "6b3adcfec7264446",
+  "name" : "test_devices",
+  "time" : {
+    "start" : 1645235801886,
+    "stop" : 1645235801893,
+    "duration" : 7
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "deaa0952fa3fc788",
+  "name" : "test_username",
+  "time" : {
+    "start" : 1645235801946,
+    "stop" : 1645235801948,
+    "duration" : 2
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "7e6d225ccb2ac156",
+  "name" : "test_storage_usages_by_media",
+  "time" : {
+    "start" : 1645235801914,
+    "stop" : 1645235801915,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "db9d6c542ef64969",
+  "name" : "test_no_arg",
+  "time" : {
+    "start" : 1645235801936,
+    "stop" : 1645235801943,
+    "duration" : 7
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "7ce5e1a3bd0d98e2",
+  "name" : "test_folder_not_exists",
+  "time" : {
+    "start" : 1645235801987,
+    "stop" : 1645235801988,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+} ]
