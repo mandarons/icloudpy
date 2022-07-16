@@ -18,6 +18,8 @@ Authentication without using a saved password is as simple as passing your usern
 ```python
 from icloudpy import ICloudPyService
 api = ICloudPyService('jappleseed@apple.com', 'password')
+# For China region
+api = ICloudPyService('jappleseed@apple.com', 'password' auth_endpoint="https://www.icloud.com.cn",setup_endpoint="https://setup.icloud.com/setup/ws/1",)
 ```
 In the event that the username/password combination is invalid, a `ICloudPyFailedLoginException` exception is thrown.
 
@@ -25,6 +27,10 @@ You can also store your password in the system keyring using the command-line to
 
 ```bash
 > icloud --username=jappleseed@apple.com
+ICloud Password for jappleseed@apple.com:
+Save password in keyring? (y/N)
+# For China region
+> icloud --username=jappleseed@apple.com --region=china
 ICloud Password for jappleseed@apple.com:
 Save password in keyring? (y/N)
 ```

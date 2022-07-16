@@ -179,11 +179,21 @@ def main(args=None):
         help="Path to save session information",
     )
 
+    # Server region - global or china
+    parser.add_argument(
+        "--region",
+        action="store",
+        dest="region",
+        default="global",
+        help="Server region - global or china",
+    )
+
     command_line = parser.parse_args(args)
 
     username = command_line.username
     password = command_line.password
     session_directory = command_line.session_directory
+    server_region = command_line.region
 
     if username and command_line.delete_from_keyring:
         utils.delete_password_in_keyring(username)
@@ -204,11 +214,22 @@ def main(args=None):
             parser.error("No password supplied")
 
         try:
-            api = ICloudPyService(
-                apple_id=username.strip(),
-                password=password.strip(),
-                cookie_directory=session_directory,
+            api = (
+                ICloudPyService(
+                    apple_id=username.strip(),
+                    password=password.strip(),
+                    cookie_directory=session_directory,
+                    auth_endpoint="https://www.icloud.com.cn",
+                    setup_endpoint="https://setup.icloud.com.cn/setup/ws/1",
+                )
+                if server_region == "china"
+                else ICloudPyService(
+                    apple_id=username.strip(),
+                    password=password.strip(),
+                    cookie_directory=session_directory,
+                )
             )
+
             if (
                 not utils.password_exists_in_keyring(username)
                 and command_line.interactive
