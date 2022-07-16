@@ -202,10 +202,6 @@ class ICloudPyService(object):
         icloudpy.iphone.location()
     """
 
-    AUTH_ENDPOINT = "https://idmsa.apple.com/appleauth/auth"
-    HOME_ENDPOINT = "https://www.icloud.com"
-    SETUP_ENDPOINT = "https://setup.icloud.com/setup/ws/1"
-
     def __init__(
         self,
         apple_id,
@@ -214,6 +210,11 @@ class ICloudPyService(object):
         verify=True,
         client_id=None,
         with_family=True,
+        auth_endpoint="https://idmsa.apple.com/appleauth/auth",
+        # For China, use "https://www.icloud.com.cn"
+        home_endpoint="https://www.icloud.com",
+        # For China, use "https://setup.icloud.com.cn/setup/ws/1"
+        setup_endpoint="https://setup.icloud.com/setup/ws/1",
     ):
         if password is None:
             password = get_password_from_keyring(apple_id)
@@ -223,6 +224,9 @@ class ICloudPyService(object):
         self.params = {}
         self.client_id = client_id or ("auth-%s" % str(uuid1()).lower())
         self.with_family = with_family
+        self.auth_endpoint = auth_endpoint
+        self.home_endpoint = home_endpoint
+        self.setup_endpoint = setup_endpoint
 
         self.password_filter = ICloudPyPasswordFilter(password)
         LOGGER.addFilter(self.password_filter)
@@ -255,7 +259,7 @@ class ICloudPyService(object):
         self.session = ICloudPySession(self)
         self.session.verify = verify
         self.session.headers.update(
-            {"Origin": self.HOME_ENDPOINT, "Referer": "%s/" % self.HOME_ENDPOINT}
+            {"Origin": self.home_endpoint, "Referer": "%s/" % self.home_endpoint}
         )
 
         cookiejar_path = self.cookiejar_path
@@ -330,7 +334,7 @@ class ICloudPyService(object):
 
             try:
                 self.session.post(
-                    "%s/signin" % self.AUTH_ENDPOINT,
+                    "%s/signin" % self.auth_endpoint,
                     params={"isRememberMeEnabled": "true"},
                     data=json.dumps(data),
                     headers=headers,
@@ -356,7 +360,7 @@ class ICloudPyService(object):
 
         try:
             req = self.session.post(
-                "%s/accountLogin" % self.SETUP_ENDPOINT, data=json.dumps(data)
+                "%s/accountLogin" % self.setup_endpoint, data=json.dumps(data)
             )
             self.data = req.json()
         except ICloudPyAPIResponseException as error:
@@ -373,7 +377,7 @@ class ICloudPyService(object):
 
         try:
             self.session.post(
-                "%s/accountLogin" % self.SETUP_ENDPOINT, data=json.dumps(data)
+                "%s/accountLogin" % self.setup_endpoint, data=json.dumps(data)
             )
 
             self.data = self._validate_token()
@@ -385,7 +389,7 @@ class ICloudPyService(object):
         """Checks if the current access token is still valid."""
         LOGGER.debug("Checking session token validity")
         try:
-            req = self.session.post("%s/validate" % self.SETUP_ENDPOINT, data="null")
+            req = self.session.post("%s/validate" % self.setup_endpoint, data="null")
             LOGGER.debug("Session token is still valid")
             return req.json()
         except ICloudPyAPIResponseException as err:
@@ -449,7 +453,7 @@ class ICloudPyService(object):
     def trusted_devices(self):
         """Returns devices trusted for two-step authentication."""
         request = self.session.get(
-            "%s/listDevices" % self.SETUP_ENDPOINT, params=self.params
+            "%s/listDevices" % self.setup_endpoint, params=self.params
         )
         return request.json().get("devices")
 
@@ -457,7 +461,7 @@ class ICloudPyService(object):
         """Requests that a verification code is sent to the given device."""
         data = json.dumps(device)
         request = self.session.post(
-            "%s/sendVerificationCode" % self.SETUP_ENDPOINT,
+            "%s/sendVerificationCode" % self.setup_endpoint,
             params=self.params,
             data=data,
         )
@@ -470,7 +474,7 @@ class ICloudPyService(object):
 
         try:
             self.session.post(
-                "%s/validateVerificationCode" % self.SETUP_ENDPOINT,
+                "%s/validateVerificationCode" % self.setup_endpoint,
                 params=self.params,
                 data=data,
             )
@@ -498,7 +502,7 @@ class ICloudPyService(object):
 
         try:
             self.session.post(
-                "%s/verify/trusteddevice/securitycode" % self.AUTH_ENDPOINT,
+                "%s/verify/trusteddevice/securitycode" % self.auth_endpoint,
                 data=json.dumps(data),
                 headers=headers,
             )
@@ -526,7 +530,7 @@ class ICloudPyService(object):
 
         try:
             self.session.get(
-                "%s/2sv/trust" % self.AUTH_ENDPOINT,
+                "%s/2sv/trust" % self.auth_endpoint,
                 headers=headers,
             )
             self._authenticate_with_token()

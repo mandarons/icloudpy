@@ -63,7 +63,7 @@ class ICloudPySessionMock(base.ICloudPySession):
         data = json.loads(kwargs.get("data", "{}"))
 
         # Login
-        if self.service.SETUP_ENDPOINT in url:
+        if self.service.setup_endpoint in url:
             if "accountLogin" in url and method == "POST":
                 if data.get("dsWebAuthToken") not in VALID_TOKENS:
                     self._raise_error(None, "Unknown reason")
@@ -91,7 +91,7 @@ class ICloudPySessionMock(base.ICloudPySession):
                     return ResponseMock(LOGIN_WORKING)
                 self._raise_error(None, "Session expired")
 
-        if self.service.AUTH_ENDPOINT in url:
+        if self.service.auth_endpoint in url:
             if "signin" in url and method == "POST":
                 if (
                     data.get("accountName") not in VALID_USERS
