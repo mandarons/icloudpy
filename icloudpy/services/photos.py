@@ -167,10 +167,9 @@ class PhotosService(object):
     def albums(self):
         """Returns photo albums."""
         if not self._albums:
-            self._albums = {
-                name: PhotoAlbum(self, name, **props)
-                for (name, props) in self.SMART_FOLDERS.items()
-            }
+            self._albums = {}
+            for (name, props) in self.SMART_FOLDERS.items():
+                self._albums[name] = PhotoAlbum(self, name, **props)
 
             for folder in self._fetch_folders():
 
@@ -178,7 +177,6 @@ class PhotosService(object):
                 if "albumNameEnc" not in folder["fields"]:
                     continue
 
-                # TODO: Handle subfolders  # pylint: disable=fixme
                 if folder["recordName"] == "----Root-Folder----" or (
                     folder["fields"].get("isDeleted")
                     and folder["fields"]["isDeleted"]["value"]
@@ -202,11 +200,12 @@ class PhotosService(object):
 
                 album = PhotoAlbum(
                     self,
-                    folder_name,
-                    "CPLContainerRelationLiveByAssetDate",
-                    folder_obj_type,
-                    "ASCENDING",
-                    query_filter,
+                    name=folder_name,
+                    list_type="CPLContainerRelationLiveByAssetDate",
+                    obj_type=folder_obj_type,
+                    direction="ASCENDING",
+                    query_filter=query_filter,
+                    folder_id=folder_id,
                 )
                 self._albums[folder_name] = album
 
@@ -244,6 +243,7 @@ class PhotoAlbum(object):
         direction,
         query_filter=None,
         page_size=100,
+        folder_id=None
     ):
         self.name = name
         self.service = service
@@ -252,8 +252,11 @@ class PhotoAlbum(object):
         self.direction = direction
         self.query_filter = query_filter
         self.page_size = page_size
+        self.folder_id = folder_id
 
         self._len = None
+
+        self._subalbums = {}
 
     @property
     def title(self):
@@ -302,6 +305,76 @@ class PhotoAlbum(object):
             ]
 
         return self._len
+
+    def _fetch_subalbums(self):
+        url = ("%s/records/query?" % self.service.service_endpoint) + urlencode(
+            self.service.params
+        )
+        query = '''{{
+                "query": {{
+                    "recordType":"CPLAlbumByPositionLive",
+                    "filterBy": [
+                        {{
+                            "fieldName": "parentId",
+                            "comparator": "EQUALS",
+                            "fieldValue": {{
+                                "value": "{}",
+                                "type": "STRING"
+                            }}
+                        }}
+                    ]
+                }},
+                "zoneID": {{
+                    "zoneName":"PrimarySync"
+                }}
+            }}'''.format(self.folder_id)
+        json_data = (
+            query
+        )
+        request = self.service.session.post(
+            url,
+            data=json_data,
+            headers={"Content-type": "text/plain"},
+        )
+        response = request.json()
+
+        return response["records"]
+
+    @property
+    def subalbums(self):
+        """Returns the subalbums"""
+        if not self._subalbums and self.folder_id:
+            for folder in self._fetch_subalbums():
+                if (folder["fields"].get("isDeleted")
+                    and folder["fields"]["isDeleted"]["value"]):
+                    continue
+
+                folder_id = folder["recordName"]
+                folder_obj_type = (
+                    "CPLContainerRelationNotDeletedByAssetDate:%s" % folder_id
+                )
+                folder_name = base64.b64decode(
+                    folder["fields"]["albumNameEnc"]["value"]
+                ).decode("utf-8")
+                query_filter = [
+                    {
+                        "fieldName": "parentId",
+                        "comparator": "EQUALS",
+                        "fieldValue": {"type": "STRING", "value": folder_id},
+                    }
+                ]
+
+                album = PhotoAlbum(
+                    self.service,
+                    name=folder_name,
+                    list_type="CPLContainerRelationLiveByAssetDate",
+                    obj_type=folder_obj_type,
+                    direction="ASCENDING",
+                    query_filter=query_filter,
+                    folder_id=folder_id,
+                )
+                self._subalbums[folder_name] = album
+        return self._subalbums
 
     @property
     def photos(self):
