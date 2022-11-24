@@ -170,10 +170,6 @@ class PhotosService(object):
             self._albums = {}
             for (name, props) in self.SMART_FOLDERS.items():
                 self._albums[name] = PhotoAlbum(self, name, **props)
-            # self._albums = {
-            #     name: PhotoAlbum(self, name, **props)
-            #     for (name, props) in self.SMART_FOLDERS.items()
-            # }
 
             for folder in self._fetch_folders():
 
@@ -181,7 +177,6 @@ class PhotosService(object):
                 if "albumNameEnc" not in folder["fields"]:
                     continue
 
-                # TODO: Handle subfolders  # pylint: disable=fixme
                 if folder["recordName"] == "----Root-Folder----" or (
                     folder["fields"].get("isDeleted")
                     and folder["fields"]["isDeleted"]["value"]
