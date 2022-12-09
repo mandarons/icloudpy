@@ -21,10 +21,10 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v2
-      - name: Set up Python 3.9
+      - name: Set up Python 3.11
         uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: 3.11
       - name: Cache pip dependencies
         uses: actions/cache@v2
         id: cache-dependencies
@@ -43,10 +43,10 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v2
-      - name: Set up Python 3.9
+      - name: Set up Python 3.11
         uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: 3.11
       - name: Restore pip cache dependencies
         uses: actions/cache@v2
         with:
@@ -59,7 +59,8 @@ jobs:
           pip install -r requirements-test.txt
       - name: Test with pytest
         run: |
-          pylint icloudpy/ tests/ && pytest
+          #pylint icloudpy/ tests/ && pytest
+          pytest
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v2
         if: ${{ success() }}
