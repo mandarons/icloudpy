@@ -196,6 +196,7 @@ output-format=text
 # written in a file name "pylint_global.[txt|html]". This option is deprecated
 
 # and it will be removed in Pylint 2.0.
+=======
 
 # files-output=no
 
@@ -567,4 +568,5 @@ valid-metaclass-classmethod-first-arg=mcs
 # "Exception"
 
 overgeneral-exceptions=StandardError,
-BaseException
+                       BaseException
+=======
