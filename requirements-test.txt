@@ -1,6 +1,7 @@
 -r requirements.txt
-allure-pytest==2.8.33
-coverage==5.4
-pytest==6.2.2
-pytest-cov==2.11.1
-pylint==2.9.3
+allure-pytest==2.12.0
+coverage==6.5.0
+pylint==2.15.8
+pytest==7.2.0
+pytest-cov==4.0.0
+black==22.10.0
