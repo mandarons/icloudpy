@@ -60,7 +60,7 @@ jobs:
       - name: Test with pytest
         run: |
           #pylint icloudpy/ tests/ && pytest
-          pytest
+          pytest && rm htmlcov/.gitignore
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v2
         if: ${{ success() }}
