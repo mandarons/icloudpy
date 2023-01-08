@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
 jobs:
   cache-requirements-install:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
@@ -39,7 +39,7 @@ jobs:
           pip install -r requirements-test.txt
   test:
     needs: cache-requirements-install
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
         uses: actions/checkout@v3
@@ -107,7 +107,7 @@ jobs:
           retention-days: 1
   publish-test-report:
     needs: test
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - name: Download test artifacts
         uses: actions/download-artifact@v3
@@ -131,7 +131,7 @@ jobs:
           destination_dir: test-results
   publish-coverage-report:
     needs: publish-test-report
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - name: Download coverage artifacts
         uses: actions/download-artifact@v3
@@ -155,7 +155,7 @@ jobs:
           destination_dir: test-coverage
   publish-badges:
     needs: publish-coverage-report
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - name: Download badges artifacts
         uses: actions/download-artifact@v3
