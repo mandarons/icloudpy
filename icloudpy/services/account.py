@@ -70,8 +70,8 @@ class AccountService:
         return self._storage
 
     def __unicode__(self):
-        return f"{{devices: {len(self.devices)}, family: {len(self.family)}, \
-            storage: {self.storage.usage.available_storage_in_bytes} bytes free}}"
+        storage_available = self.storage.usage.available_storage_in_bytes
+        return f"{{devices: {len(self.devices)}, family: {len(self.family)}, storage: {storage_available} bytes free}}"
 
     def __str__(self):
         as_unicode = self.__unicode__()
