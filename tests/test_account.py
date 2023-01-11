@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
 """Account service tests."""
 from unittest import TestCase
-from six import PY3
 
 from . import ICloudPyServiceMock
 from .const import AUTHENTICATED_USER, VALID_PASSWORD
@@ -42,8 +40,7 @@ class AccountServiceTest(TestCase):
             assert device["modelSmallPhotoURL1x"]
             assert device["modelDisplayName"]
             # fmt: off
-            if PY3:
-                assert repr(device) == "<AccountDevice: {model: "+device.model_display_name+", name: "+device.name+"}>"
+            assert repr(device) == "<AccountDevice: {model: "+device.model_display_name+", name: "+device.name+"}>"
             # fmt: on
 
     def test_family(self):
@@ -73,9 +70,8 @@ class AccountServiceTest(TestCase):
         """Tests storage."""
         assert self.service.storage
         # fmt: off
-        if PY3:
-            # pylint: disable=C0301
-            assert repr(self.service.storage) == "<AccountStorage: {usage: 43.75% used of 5368709120 bytes, usages_by_media: OrderedDict([('photos', <AccountStorageUsageForMedia: {key: photos, usage: 0 bytes}>), ('backup', <AccountStorageUsageForMedia: {key: backup, usage: 799008186 bytes}>), ('docs', <AccountStorageUsageForMedia: {key: docs, usage: 449092146 bytes}>), ('mail', <AccountStorageUsageForMedia: {key: mail, usage: 1101522944 bytes}>)])}>"
+        # pylint: disable=C0301
+        assert repr(self.service.storage) == "<AccountStorage: {usage: 43.75% used of 5368709120 bytes, usages_by_media: OrderedDict([('photos', <AccountStorageUsageForMedia: {key: photos, usage: 0 bytes}>), ('backup', <AccountStorageUsageForMedia: {key: backup, usage: 799008186 bytes}>), ('docs', <AccountStorageUsageForMedia: {key: docs, usage: 449092146 bytes}>), ('mail', <AccountStorageUsageForMedia: {key: mail, usage: 1101522944 bytes}>)])}>"
         # fmt: on
 
     def test_storage_usage(self):

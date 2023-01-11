@@ -1,34 +1,34 @@
 """Library base file."""
-from six import PY2, string_types
-from uuid import uuid1
+import getpass
+import http.cookiejar as cookielib
 import inspect
 import json
 import logging
-from requests import Session
-from tempfile import gettempdir
-from os import path, mkdir
+from os import mkdir, path
 from re import match
-import http.cookiejar as cookielib
-import getpass
+from tempfile import gettempdir
+from uuid import uuid1
+
+from requests import Session
+from six import PY2
 
 from icloudpy.exceptions import (
-    ICloudPyFailedLoginException,
-    ICloudPyAPIResponseException,
     ICloudPy2SARequiredException,
+    ICloudPyAPIResponseException,
+    ICloudPyFailedLoginException,
     ICloudPyServiceNotActivatedException,
 )
 from icloudpy.services import (
-    FindMyiPhoneServiceManager,
-    CalendarService,
-    UbiquityService,
-    ContactsService,
-    RemindersService,
-    PhotosService,
     AccountService,
+    CalendarService,
+    ContactsService,
     DriveService,
+    FindMyiPhoneServiceManager,
+    PhotosService,
+    RemindersService,
+    UbiquityService,
 )
 from icloudpy.utils import get_password_from_keyring
-
 
 LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ class ICloudPySession(Session):
         if self.service.password_filter not in request_logger.filters:
             request_logger.addFilter(self.service.password_filter)
 
-        request_logger.debug("%s %s %s" % (method, url, kwargs.get("data", "")))
+        request_logger.debug("{} {} {}".format(method, url, kwargs.get("data", "")))
 
         has_retried = kwargs.get("retried")
         kwargs.pop("retried", None)
@@ -145,7 +145,7 @@ class ICloudPySession(Session):
             reason = data.get("errorMessage")
             reason = reason or data.get("reason")
             reason = reason or data.get("errorReason")
-            if not reason and isinstance(data.get("error"), string_types):
+            if not reason and isinstance(data.get("error"), str):
                 reason = data.get("error")
             if not reason and data.get("error"):
                 reason = "Unknown reason"
@@ -191,7 +191,7 @@ class ICloudPySession(Session):
         return self._raise_error(code=code, reason=reason)
 
 
-class ICloudPyService(object):
+class ICloudPyService:
     """
     A base authentication class for the iCloud service. Handles the
     authentication required to access iCloud services.

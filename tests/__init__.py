@@ -1,42 +1,40 @@
-# -*- coding: utf-8 -*-
 """Library tests."""
 import json
-from requests import Session, Response
+
+from requests import Response
 
 from icloudpy import base
-from icloudpy.exceptions import ICloudPyFailedLoginException
-from icloudpy.services.findmyiphone import FindMyiPhoneServiceManager, AppleDevice
 
 from .const import (
     AUTHENTICATED_USER,
-    REQUIRES_2FA_USER,
     REQUIRES_2FA_TOKEN,
-    VALID_TOKEN,
-    VALID_USERS,
-    VALID_PASSWORD,
-    VALID_COOKIE,
+    REQUIRES_2FA_USER,
     VALID_2FA_CODE,
+    VALID_COOKIE,
+    VALID_PASSWORD,
+    VALID_TOKEN,
     VALID_TOKENS,
-)
-from .const_login import (
-    AUTH_OK,
-    LOGIN_WORKING,
-    LOGIN_2FA,
-    TRUSTED_DEVICES,
-    TRUSTED_DEVICE_1,
-    VERIFICATION_CODE_OK,
-    VERIFICATION_CODE_KO,
+    VALID_USERS,
 )
 from .const_account import ACCOUNT_DEVICES_WORKING, ACCOUNT_STORAGE_WORKING
 from .const_account_family import ACCOUNT_FAMILY_WORKING
 from .const_drive import (
+    DRIVE_FILE_DOWNLOAD_WORKING,
     DRIVE_FOLDER_WORKING,
     DRIVE_ROOT_INVALID,
-    DRIVE_SUBFOLDER_WORKING,
     DRIVE_ROOT_WORKING,
-    DRIVE_FILE_DOWNLOAD_WORKING,
+    DRIVE_SUBFOLDER_WORKING,
 )
 from .const_findmyiphone import FMI_FAMILY_WORKING
+from .const_login import (
+    AUTH_OK,
+    LOGIN_2FA,
+    LOGIN_WORKING,
+    TRUSTED_DEVICE_1,
+    TRUSTED_DEVICES,
+    VERIFICATION_CODE_KO,
+    VERIFICATION_CODE_OK,
+)
 
 
 class ResponseMock(Response):

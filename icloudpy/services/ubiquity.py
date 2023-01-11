@@ -1,9 +1,10 @@
 """File service."""
 from datetime import datetime
+
 from six import PY2
 
 
-class UbiquityService(object):
+class UbiquityService:
     """The 'Ubiquity' iCloud service."""
 
     def __init__(self, service_root, session, params):
@@ -46,7 +47,7 @@ class UbiquityService(object):
         return self.root[key]
 
 
-class UbiquityNode(object):
+class UbiquityNode:
     """Ubiquity node."""
 
     def __init__(self, conn, data):
@@ -117,4 +118,4 @@ class UbiquityNode(object):
         return as_unicode
 
     def __repr__(self):
-        return "<%s: '%s'>" % (self.type.capitalize(), self)
+        return f"<{self.type.capitalize()}: '{self}'>"

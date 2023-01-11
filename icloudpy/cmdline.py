@@ -1,10 +1,8 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 A Command Line Wrapper to allow easy use of iCloudPy for
 command line scripts, and related.
 """
-from __future__ import print_function
 
 # from builtins import input
 import argparse
@@ -13,10 +11,8 @@ import sys
 
 from click import confirm
 
-from icloudpy import ICloudPyService
+from icloudpy import ICloudPyService, utils
 from icloudpy.exceptions import ICloudPyFailedLoginException
-from icloudpy import utils
-
 
 DEVICE_ERROR = "Please use the --device switch to indicate which device to use."
 

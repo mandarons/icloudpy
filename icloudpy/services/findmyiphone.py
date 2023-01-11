@@ -1,12 +1,12 @@
 """Find my iPhone service."""
 import json
 
-from six import PY2, text_type
+from six import PY2
 
 from icloudpy.exceptions import ICloudPyNoDevicesException
 
 
-class FindMyiPhoneServiceManager(object):
+class FindMyiPhoneServiceManager:
     """The 'Find my iPhone' iCloud service
 
     This connects to iCloud and return phone data including the near-realtime
@@ -69,17 +69,14 @@ class FindMyiPhoneServiceManager(object):
 
     def __getitem__(self, key):
         if isinstance(key, int):
-            if PY2:
-                key = self.keys()[key]
-            else:
-                key = list(self.keys())[key]
+            key = list(self.keys())[key]
         return self._devices[key]
 
     def __getattr__(self, attr):
         return getattr(self._devices, attr)
 
     def __unicode__(self):
-        return text_type(self._devices)
+        return str(self._devices)
 
     def __str__(self):
         as_unicode = self.__unicode__()
@@ -88,10 +85,10 @@ class FindMyiPhoneServiceManager(object):
         return as_unicode
 
     def __repr__(self):
-        return text_type(self)
+        return str(self)
 
 
-class AppleDevice(object):
+class AppleDevice:
     """Apple device."""
 
     def __init__(
@@ -203,7 +200,7 @@ class AppleDevice(object):
     def __unicode__(self):
         display_name = self["deviceDisplayName"]
         name = self["name"]
-        return "%s: %s" % (display_name, name)
+        return f"{display_name}: {name}"
 
     def __str__(self):
         as_unicode = self.__unicode__()

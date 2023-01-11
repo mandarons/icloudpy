@@ -1,16 +1,17 @@
 """Drive service."""
-from datetime import datetime, timedelta
-import json
 import io
+import json
 import mimetypes
 import os
 import time
+from datetime import datetime, timedelta
 from re import search
+
 from requests import Response
 from six import PY2
 
 
-class DriveService(object):
+class DriveService:
     """The 'Drive' iCloud service."""
 
     def __init__(self, service_root, document_root, session, params):
@@ -52,7 +53,7 @@ class DriveService(object):
         file_params = dict(self.params)
         file_params.update({"document_id": file_id})
         response = self.session.get(
-            self._document_root + "/ws/{}/download/by_id".format(zone),
+            self._document_root + f"/ws/{zone}/download/by_id",
             params=file_params,
         )
         if not response.ok:
@@ -91,7 +92,7 @@ class DriveService(object):
         file_params.update(self._get_token_from_cookie())
 
         request = self.session.post(
-            self._document_root + "/ws/{}/upload/web".format(zone),
+            self._document_root + f"/ws/{zone}/upload/web",
             params=file_params,
             headers={"Content-Type": "text/plain"},
             data=json.dumps(
@@ -139,7 +140,7 @@ class DriveService(object):
             data["data"].update({"receipt": sf_info["receipt"]})
 
         request = self.session.post(
-            self._document_root + "/ws/{}/update/documents".format(zone),
+            self._document_root + f"/ws/{zone}/update/documents",
             params=self.params,
             headers={"Content-Type": "text/plain"},
             data=json.dumps(data),
@@ -237,7 +238,7 @@ class DriveService(object):
         return self.root[key]
 
 
-class DriveNode(object):
+class DriveNode:
     """Drive node."""
 
     def __init__(self, conn, data):
@@ -249,7 +250,7 @@ class DriveNode(object):
     def name(self):
         """Gets the node name."""
         if "extension" in self.data:
-            return "%s.%s" % (self.data["name"], self.data["extension"])
+            return "{}.{}".format(self.data["name"], self.data["extension"])
         return self.data["name"]
 
     @property
@@ -351,7 +352,7 @@ class DriveNode(object):
             raise KeyError("No child named '%s' exists" % key) from error
 
     def __unicode__(self):
-        return "{type: %s, name: %s}" % (self.type, self.name)
+        return f"{{type: {self.type}, name: {self.name}}}"
 
     def __str__(self):
         as_unicode = self.__unicode__()
@@ -360,7 +361,7 @@ class DriveNode(object):
         return as_unicode
 
     def __repr__(self):
-        return "<%s: %s>" % (type(self).__name__, str(self))
+        return f"<{type(self).__name__}: {str(self)}>"
 
 
 def _date_to_utc(date):

@@ -1,14 +1,13 @@
 """Reminders service."""
-from __future__ import absolute_import
-from datetime import datetime
+import json
 import time
 import uuid
-import json
+from datetime import datetime
 
 from tzlocal import get_localzone
 
 
-class RemindersService(object):
+class RemindersService:
     """The 'Reminders' iCloud service."""
 
     def __init__(self, service_root, session, params):

@@ -1,10 +1,10 @@
 """Utils."""
 import getpass
-import keyring
 from sys import stdout
 
-from .exceptions import ICloudPyNoStoredPasswordAvailableException
+import keyring
 
+from .exceptions import ICloudPyNoStoredPasswordAvailableException
 
 KEYRING_SYSTEM = "icloudpy://icloud-password"
 
@@ -18,7 +18,7 @@ def get_password(username, interactive=stdout.isatty()):
             raise
 
         return getpass.getpass(
-            "Enter iCloud password for {username}: ".format(username=username)
+            f"Enter iCloud password for {username}: "
         )
 
 

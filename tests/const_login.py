@@ -1,13 +1,12 @@
-# -*- coding: utf-8 -*-
 """Login test constants."""
 from .const_account_family import (
+    APPLE_ID_EMAIL,
     FIRST_NAME,
+    FULL_NAME,
+    ICLOUD_ID_EMAIL,
     LAST_NAME,
     PERSON_ID,
-    FULL_NAME,
     PRIMARY_EMAIL,
-    APPLE_ID_EMAIL,
-    ICLOUD_ID_EMAIL,
 )
 
 PERSON_ID = (FIRST_NAME + LAST_NAME).lower()
@@ -16,9 +15,7 @@ A_DS_ID = "123456-12-12345678-1234-1234-1234-123456789012" + PERSON_ID
 WIDGET_KEY = "widget_key" + PERSON_ID
 
 # Data
-AUTH_OK = {
-    "authType": "hsa2"
-}
+AUTH_OK = {"authType": "hsa2"}
 
 LOGIN_WORKING = {
     "dsInfo": {

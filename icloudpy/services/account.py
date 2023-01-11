@@ -1,12 +1,12 @@
 """Account service."""
-from __future__ import division
-from six import PY2, python_2_unicode_compatible
 from collections import OrderedDict
+
+from six import PY2
 
 from icloudpy.utils import underscore_to_camelcase
 
 
-class AccountService(object):
+class AccountService:
     """The 'Account' iCloud service."""
 
     def __init__(self, service_root, session, params):
@@ -69,7 +69,7 @@ class AccountService(object):
         return self._storage
 
     def __unicode__(self):
-        return "{devices: %s, family: %s, storage: %s bytes free}" % (
+        return "{{devices: {}, family: {}, storage: {} bytes free}}".format(
             len(self.devices),
             len(self.family),
             self.storage.usage.available_storage_in_bytes,
@@ -82,10 +82,9 @@ class AccountService(object):
         return as_unicode
 
     def __repr__(self):
-        return "<%s: %s>" % (type(self).__name__, str(self))
+        return f"<{type(self).__name__}: {str(self)}>"
 
 
-@python_2_unicode_compatible
 class AccountDevice(dict):
     """Account device."""
 
@@ -93,7 +92,7 @@ class AccountDevice(dict):
         return self[underscore_to_camelcase(key)]
 
     def __unicode__(self):
-        return "{model: %s, name: %s}" % (self.model_display_name, self.name)
+        return f"{{model: {self.model_display_name}, name: {self.name}}}"
 
     def __str__(self):
         as_unicode = self.__unicode__()
@@ -102,10 +101,10 @@ class AccountDevice(dict):
         return as_unicode
 
     def __repr__(self):
-        return "<%s: %s>" % (type(self).__name__, str(self))
+        return f"<{type(self).__name__}: {str(self)}>"
 
 
-class FamilyMember(object):
+class FamilyMember:
     """A family member."""
 
     def __init__(self, member_info, session, params, acc_family_member_photo_url):
@@ -208,7 +207,7 @@ class FamilyMember(object):
         return getattr(self, key)
 
     def __unicode__(self):
-        return "{name: %s, age_classification: %s}" % (
+        return "{{name: {}, age_classification: {}}}".format(
             self.full_name,
             self.age_classification,
         )
@@ -220,10 +219,10 @@ class FamilyMember(object):
         return as_unicode
 
     def __repr__(self):
-        return "<%s: %s>" % (type(self).__name__, str(self))
+        return f"<{type(self).__name__}: {str(self)}>"
 
 
-class AccountStorageUsageForMedia(object):
+class AccountStorageUsageForMedia:
     """Storage used for a specific media type into the account."""
 
     def __init__(self, usage_data):
@@ -250,7 +249,7 @@ class AccountStorageUsageForMedia(object):
         return self.usage_data["usageInBytes"]
 
     def __unicode__(self):
-        return "{key: %s, usage: %s bytes}" % (self.key, self.usage_in_bytes)
+        return f"{{key: {self.key}, usage: {self.usage_in_bytes} bytes}}"
 
     def __str__(self):
         as_unicode = self.__unicode__()
@@ -259,10 +258,10 @@ class AccountStorageUsageForMedia(object):
         return as_unicode
 
     def __repr__(self):
-        return "<%s: %s>" % (type(self).__name__, str(self))
+        return f"<{type(self).__name__}: {str(self)}>"
 
 
-class AccountStorageUsage(object):
+class AccountStorageUsage:
     """Storage used for a specific media type into the account."""
 
     def __init__(self, usage_data, quota_data):
@@ -327,7 +326,7 @@ class AccountStorageUsage(object):
         return self.quota_data["paidQuota"]
 
     def __unicode__(self):
-        return "%s%% used of %s bytes" % (
+        return "{}% used of {} bytes".format(
             self.used_storage_in_percent,
             self.total_storage_in_bytes,
         )
@@ -339,10 +338,10 @@ class AccountStorageUsage(object):
         return as_unicode
 
     def __repr__(self):
-        return "<%s: %s>" % (type(self).__name__, str(self))
+        return f"<{type(self).__name__}: {str(self)}>"
 
 
-class AccountStorage(object):
+class AccountStorage:
     """Storage of the account."""
 
     def __init__(self, storage_data):
@@ -357,7 +356,7 @@ class AccountStorage(object):
             )
 
     def __unicode__(self):
-        return "{usage: %s, usages_by_media: %s}" % (self.usage, self.usages_by_media)
+        return f"{{usage: {self.usage}, usages_by_media: {self.usages_by_media}}}"
 
     def __str__(self):
         as_unicode = self.__unicode__()
@@ -366,4 +365,4 @@ class AccountStorage(object):
         return as_unicode
 
     def __repr__(self):
-        return "<%s: %s>" % (type(self).__name__, str(self))
+        return f"<{type(self).__name__}: {str(self)}>"

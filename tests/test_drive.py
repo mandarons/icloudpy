@@ -1,9 +1,11 @@
-# -*- coding: utf-8 -*-
 """Drive service tests."""
 from unittest import TestCase
+
+import pytest
+
 from . import ICloudPyServiceMock
 from .const import AUTHENTICATED_USER, VALID_PASSWORD
-import pytest
+
 
 # pylint: disable=pointless-statement
 class DriveServiceTest(TestCase):
@@ -62,7 +64,7 @@ class DriveServiceTest(TestCase):
         assert folder.date_changed is None
         assert folder.date_modified is None
         assert folder.date_last_open is None
-        assert folder.dir() == [u"Document scanné 2.pdf", "Scanned document 1.pdf"]
+        assert folder.dir() == ["Document scanné 2.pdf", "Scanned document 1.pdf"]
 
     def test_subfolder_file(self):
         """Test the /iCloudPy/Test/Scanned document 1.pdf file."""

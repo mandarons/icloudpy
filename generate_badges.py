@@ -1,12 +1,13 @@
-import requests
 import json
-import xml.etree.ElementTree as ET
 import os
 import shutil
+import xml.etree.ElementTree as ET
+
+import requests
 
 badges_directory = "./badges"
 
-with open("./allure-report/widgets/summary.json", "r") as f:
+with open("./allure-report/widgets/summary.json") as f:
     test_data = json.load(f)
     test_result = test_data["statistic"]["total"] == test_data["statistic"]["passed"]
 
