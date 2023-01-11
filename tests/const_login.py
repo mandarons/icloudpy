@@ -5,7 +5,6 @@ from .const_account_family import (
     FULL_NAME,
     ICLOUD_ID_EMAIL,
     LAST_NAME,
-    PERSON_ID,
     PRIMARY_EMAIL,
 )
 

@@ -9,11 +9,12 @@ from .const import AUTHENTICATED_USER, VALID_PASSWORD
 
 # pylint: disable=pointless-statement
 class DriveServiceTest(TestCase):
-    """ "Drive service tests"""
+    """Drive service tests."""
 
     service = None
 
     def setUp(self):
+        """Set up test."""
         self.service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD)
 
     def test_root(self):

@@ -26,7 +26,7 @@ class DriveService:
             if cookie.name == "X-APPLE-WEBAUTH-VALIDATE":
                 match = search(r"\bt=([^:]+)", cookie.value)
                 if match is None:
-                    raise Exception("Can't extract token from %r" % cookie.value)
+                    raise Exception(f"Can't extract token from {cookie.value}")
                 return {"token": match.group(1)}
         raise Exception("Token cookie not found")
 
@@ -250,7 +250,7 @@ class DriveNode:
     def name(self):
         """Gets the node name."""
         if "extension" in self.data:
-            return "{}.{}".format(self.data["name"], self.data["extension"])
+            return f'{self.data["name"]}.{self.data["extension"]}'
         return self.data["name"]
 
     @property
@@ -265,7 +265,7 @@ class DriveNode:
             if "items" not in self.data:
                 self.data.update(self.connection.get_node_data(self.data["drivewsid"]))
             if "items" not in self.data:
-                raise KeyError("No items in folder, status: %s" % self.data["status"])
+                raise KeyError(f'No items in folder, status: {self.data["status"]}')
             self._children = [
                 DriveNode(self.connection, item_data)
                 for item_data in self.data["items"]
@@ -349,7 +349,7 @@ class DriveNode:
         try:
             return self.get(key)
         except IndexError as error:
-            raise KeyError("No child named '%s' exists" % key) from error
+            raise KeyError(f"No child named '{key}' exists") from error
 
     def __unicode__(self):
         return f"{{type: {self.type}, name: {self.name}}}"

@@ -72,7 +72,7 @@ class ICloudPySession(Session):
         if self.service.password_filter not in request_logger.filters:
             request_logger.addFilter(self.service.password_filter)
 
-        request_logger.debug("{} {} {}".format(method, url, kwargs.get("data", "")))
+        request_logger.debug(f"{method} {url} {kwargs.get('data', '')}")
 
         has_retried = kwargs.get("retried")
         kwargs.pop("retried", None)
@@ -89,7 +89,7 @@ class ICloudPySession(Session):
                 )
 
         # Save session_data to file
-        with open(self.service.session_path, "w") as outfile:
+        with open(self.service.session_path, "w", encoding="utf-8") as outfile:
             json.dump(self.service.session_data, outfile)
             LOGGER.debug("Saved session data to file")
 
@@ -222,7 +222,7 @@ class ICloudPyService:
         self.user = {"accountName": apple_id, "password": password}
         self.data = {}
         self.params = {}
-        self.client_id = client_id or ("auth-%s" % str(uuid1()).lower())
+        self.client_id = client_id or (f"auth-{str(uuid1()).lower()}")
         self.with_family = with_family
         self.auth_endpoint = auth_endpoint
         self.home_endpoint = home_endpoint
@@ -247,7 +247,7 @@ class ICloudPyService:
 
         self.session_data = {}
         try:
-            with open(self.session_path) as session_f:
+            with open(self.session_path, encoding="utf-8") as session_f:
                 self.session_data = json.load(session_f)
         except:  # pylint: disable=bare-except
             LOGGER.info("Session file does not exist")
@@ -259,7 +259,7 @@ class ICloudPyService:
         self.session = ICloudPySession(self)
         self.session.verify = verify
         self.session.headers.update(
-            {"Origin": self.home_endpoint, "Referer": "%s/" % self.home_endpoint}
+            {"Origin": self.home_endpoint, "Referer": f"{self.home_endpoint}/"}
         )
 
         cookiejar_path = self.cookiejar_path
@@ -334,7 +334,7 @@ class ICloudPyService:
 
             try:
                 self.session.post(
-                    "%s/signin" % self.auth_endpoint,
+                    f"{self.auth_endpoint}/signin",
                     params={"isRememberMeEnabled": "true"},
                     data=json.dumps(data),
                     headers=headers,
@@ -360,7 +360,7 @@ class ICloudPyService:
 
         try:
             req = self.session.post(
-                "%s/accountLogin" % self.setup_endpoint, data=json.dumps(data)
+                f"{self.setup_endpoint}/accountLogin", data=json.dumps(data)
             )
             self.data = req.json()
         except ICloudPyAPIResponseException as error:
@@ -377,7 +377,7 @@ class ICloudPyService:
 
         try:
             self.session.post(
-                "%s/accountLogin" % self.setup_endpoint, data=json.dumps(data)
+                f"{self.setup_endpoint}/accountLogin", data=json.dumps(data)
             )
 
             self.data = self._validate_token()
@@ -389,7 +389,7 @@ class ICloudPyService:
         """Checks if the current access token is still valid."""
         LOGGER.debug("Checking session token validity")
         try:
-            req = self.session.post("%s/validate" % self.setup_endpoint, data="null")
+            req = self.session.post(f"{self.setup_endpoint}/validate", data="null")
             LOGGER.debug("Session token is still valid")
             return req.json()
         except ICloudPyAPIResponseException as err:
@@ -453,7 +453,7 @@ class ICloudPyService:
     def trusted_devices(self):
         """Returns devices trusted for two-step authentication."""
         request = self.session.get(
-            "%s/listDevices" % self.setup_endpoint, params=self.params
+            f"{self.setup_endpoint}/listDevices", params=self.params
         )
         return request.json().get("devices")
 
@@ -461,7 +461,7 @@ class ICloudPyService:
         """Requests that a verification code is sent to the given device."""
         data = json.dumps(device)
         request = self.session.post(
-            "%s/sendVerificationCode" % self.setup_endpoint,
+            f"{self.setup_endpoint}/sendVerificationCode",
             params=self.params,
             data=data,
         )
@@ -474,7 +474,7 @@ class ICloudPyService:
 
         try:
             self.session.post(
-                "%s/validateVerificationCode" % self.setup_endpoint,
+                f"{self.setup_endpoint}/validateVerificationCode",
                 params=self.params,
                 data=data,
             )
@@ -502,7 +502,7 @@ class ICloudPyService:
 
         try:
             self.session.post(
-                "%s/verify/trusteddevice/securitycode" % self.auth_endpoint,
+                f"{self.auth_endpoint}/verify/trusteddevice/securitycode",
                 data=json.dumps(data),
                 headers=headers,
             )
@@ -530,7 +530,7 @@ class ICloudPyService:
 
         try:
             self.session.get(
-                "%s/2sv/trust" % self.auth_endpoint,
+                f"{self.auth_endpoint}/2sv/trust",
                 headers=headers,
             )
             self._authenticate_with_token()
@@ -613,7 +613,7 @@ class ICloudPyService:
         return self._drive
 
     def __unicode__(self):
-        return "iCloud API: %s" % self.user.get("accountName")
+        return f"iCloud API: {self.user.get('accountName')}"
 
     def __str__(self):
         as_unicode = self.__unicode__()
@@ -622,4 +622,4 @@ class ICloudPyService:
         return as_unicode
 
     def __repr__(self):
-        return "<%s>" % str(self)
+        return f"<{str(self)}>"

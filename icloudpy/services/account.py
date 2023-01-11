@@ -18,12 +18,13 @@ class AccountService:
         self._family = []
         self._storage = None
 
-        self._acc_endpoint = "%s/setup/web" % self._service_root
-        self._acc_devices_url = "%s/device/getDevices" % self._acc_endpoint
-        self._acc_family_details_url = "%s/family/getFamilyDetails" % self._acc_endpoint
+        self._acc_endpoint = f"{self._service_root}/setup/web"
+        self._acc_devices_url = f"{self._acc_endpoint}/device/getDevices"
+        self._acc_family_details_url = f"{self._acc_endpoint}/family/getFamilyDetails"
         self._acc_family_member_photo_url = (
-            "%s/family/getMemberPhoto" % self._acc_endpoint
+            f"{self._acc_endpoint}/family/getMemberPhoto"
         )
+
         self._acc_storage_url = "https://setup.icloud.com/setup/ws/1/storageUsageInfo"
 
     @property
@@ -69,11 +70,8 @@ class AccountService:
         return self._storage
 
     def __unicode__(self):
-        return "{{devices: {}, family: {}, storage: {} bytes free}}".format(
-            len(self.devices),
-            len(self.family),
-            self.storage.usage.available_storage_in_bytes,
-        )
+        return f"{{devices: {len(self.devices)}, family: {len(self.family)}, \
+            storage: {self.storage.usage.available_storage_in_bytes} bytes free}}"
 
     def __str__(self):
         as_unicode = self.__unicode__()
@@ -207,9 +205,8 @@ class FamilyMember:
         return getattr(self, key)
 
     def __unicode__(self):
-        return "{{name: {}, age_classification: {}}}".format(
-            self.full_name,
-            self.age_classification,
+        return (
+            f"{{name: {self.full_name}, age_classification: {self.age_classification}}}"
         )
 
     def __str__(self):
@@ -326,10 +323,7 @@ class AccountStorageUsage:
         return self.quota_data["paidQuota"]
 
     def __unicode__(self):
-        return "{}% used of {} bytes".format(
-            self.used_storage_in_percent,
-            self.total_storage_in_bytes,
-        )
+        return f"{self.used_storage_in_percent}% used of {self.total_storage_in_bytes} bytes"
 
     def __str__(self):
         as_unicode = self.__unicode__()

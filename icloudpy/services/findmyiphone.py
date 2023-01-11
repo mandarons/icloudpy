@@ -18,11 +18,11 @@ class FindMyiPhoneServiceManager:
         self.params = params
         self.with_family = with_family
 
-        fmip_endpoint = "%s/fmipservice/client/web" % service_root
-        self._fmip_refresh_url = "%s/refreshClient" % fmip_endpoint
-        self._fmip_sound_url = "%s/playSound" % fmip_endpoint
-        self._fmip_message_url = "%s/sendMessage" % fmip_endpoint
-        self._fmip_lost_url = "%s/lostDevice" % fmip_endpoint
+        fmip_endpoint = f"{service_root}/fmipservice/client/web"
+        self._fmip_refresh_url = f"{fmip_endpoint}/refreshClient"
+        self._fmip_sound_url = f"{fmip_endpoint}/playSound"
+        self._fmip_message_url = f"{fmip_endpoint}/sendMessage"
+        self._fmip_lost_url = f"{fmip_endpoint}/lostDevice"
 
         self._devices = {}
         self.refresh_client()
@@ -209,4 +209,4 @@ class AppleDevice:
         return as_unicode
 
     def __repr__(self):
-        return "<AppleDevice(%s)>" % str(self)
+        return f"<AppleDevice({self})>"

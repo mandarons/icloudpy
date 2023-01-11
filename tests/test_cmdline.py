@@ -19,6 +19,7 @@ class TestCmdline(TestCase):
     main = None
 
     def setUp(self):
+        """Set up test."""
         cmdline.ICloudPyService = ICloudPyServiceMock
         self.main = cmdline.main
 

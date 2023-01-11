@@ -259,13 +259,7 @@ def main(args=None):
                 devices = api.trusted_devices
                 for i, device in enumerate(devices):
                     print(
-                        "    %s: %s"
-                        % (
-                            i,
-                            device.get(
-                                "deviceName", "SMS to %s" % device.get("phoneNumber")
-                            ),
-                        )
+                        f'    {i}: {device.get("deviceName", "SMS to " + device.get("phoneNumber"))}'
                     )
 
                 print("\nWhich device would you like to use?")
@@ -289,9 +283,7 @@ def main(args=None):
             if utils.password_exists_in_keyring(username):
                 utils.delete_password_in_keyring(username)
 
-            message = "Bad username or password for {username}".format(
-                username=username,
-            )
+            message = f"Bad username or password for {username}"
             password = None
 
             failure_count += 1
@@ -319,16 +311,16 @@ def main(args=None):
                 print("-" * 30)
                 print(contents["name"])
                 for key in contents:
-                    print("%20s - %s" % (key, contents[key]))
+                    print(f"{key} - {contents[key]}")
             elif command_line.list:
                 print("-" * 30)
-                print("Name - %s" % contents["name"])
-                print("Display Name  - %s" % contents["deviceDisplayName"])
-                print("Location      - %s" % contents["location"])
-                print("Battery Level - %s" % contents["batteryLevel"])
-                print("Battery Status- %s" % contents["batteryStatus"])
-                print("Device Class  - %s" % contents["deviceClass"])
-                print("Device Model  - %s" % contents["deviceModel"])
+                print(f"Name - {contents['name']}")
+                print(f"Display Name  - {contents['deviceDisplayName']}")
+                print(f"Location      - {contents['location']}")
+                print(f"Battery Level - {contents['batteryLevel']}")
+                print(f"Battery Status- {contents['batteryStatus']}")
+                print(f"Device Class  - {contents['deviceClass']}")
+                print(f"Device Model  - {contents['deviceModel']}")
 
             # Play a Sound on a device
             if command_line.sound:
@@ -336,11 +328,7 @@ def main(args=None):
                     dev.play_sound()
                 else:
                     raise RuntimeError(
-                        "\n\n\t\t%s %s\n\n"
-                        % (
-                            "Sounds can only be played on a singular device.",
-                            DEVICE_ERROR,
-                        )
+                        f"\n\n\t\tSounds can only be played on a singular device. {DEVICE_ERROR}\n\n"
                     )
 
             # Display a Message on the device
@@ -351,11 +339,7 @@ def main(args=None):
                     )
                 else:
                     raise RuntimeError(
-                        "%s %s"
-                        % (
-                            "Messages can only be played on a singular device.",
-                            DEVICE_ERROR,
-                        )
+                        f"Messages can only be played on a singular device. {DEVICE_ERROR}"
                     )
 
             # Display a Silent Message on the device
@@ -368,12 +352,7 @@ def main(args=None):
                     )
                 else:
                     raise RuntimeError(
-                        "%s %s"
-                        % (
-                            "Silent Messages can only be played "
-                            "on a singular device.",
-                            DEVICE_ERROR,
-                        )
+                        f"Silent Messages can only be played on a singular device. {DEVICE_ERROR}"
                     )
 
             # Enable Lost mode
@@ -386,11 +365,7 @@ def main(args=None):
                     )
                 else:
                     raise RuntimeError(
-                        "%s %s"
-                        % (
-                            "Lost Mode can only be activated on a singular device.",
-                            DEVICE_ERROR,
-                        )
+                        f"Lost Mode can only be activated on a singular device. {DEVICE_ERROR}"
                     )
     sys.exit(0)
 

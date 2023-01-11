@@ -10,10 +10,10 @@ class ContactsService:
         self.session = session
         self.params = params
         self._service_root = service_root
-        self._contacts_endpoint = "%s/co" % self._service_root
-        self._contacts_refresh_url = "%s/startup" % self._contacts_endpoint
-        self._contacts_next_url = "%s/contacts" % self._contacts_endpoint
-        self._contacts_changeset_url = "%s/changeset" % self._contacts_endpoint
+        self._contacts_endpoint = f"{self._service_root}/co"
+        self._contacts_refresh_url = f"{self._contacts_endpoint}/startup"
+        self._contacts_next_url = f"{self._contacts_endpoint}/contacts"
+        self._contacts_changeset_url = f"{self._contacts_endpoint}/changeset"
 
         self.response = {}
 

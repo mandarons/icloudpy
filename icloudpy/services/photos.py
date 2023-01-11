@@ -14,7 +14,6 @@ from icloudpy.exceptions import ICloudPyServiceNotActivatedException
 # fmt: on
 
 
-
 class PhotosService:
     """The 'Photos' iCloud service."""
 
@@ -134,8 +133,7 @@ class PhotosService:
         self.params = dict(params)
         self._service_root = service_root
         self.service_endpoint = (
-            "%s/database/1/com.apple.photos.cloud/production/private"
-            % self._service_root
+            f"{self._service_root}/database/1/com.apple.photos.cloud/production/private"
         )
 
         self._albums = None
@@ -176,7 +174,7 @@ class PhotosService:
 
             for folder in self._fetch_folders():
 
-                # Skiping albums having null name, that can happen sometime
+                # Skipping albums having null name, that can happen sometime
                 if "albumNameEnc" not in folder["fields"]:
                     continue
 
@@ -188,7 +186,7 @@ class PhotosService:
 
                 folder_id = folder["recordName"]
                 folder_obj_type = (
-                    "CPLContainerRelationNotDeletedByAssetDate:%s" % folder_id
+                    f"CPLContainerRelationNotDeletedByAssetDate:{folder_id}"
                 )
                 folder_name = base64.b64decode(
                     folder["fields"]["albumNameEnc"]["value"]
@@ -246,7 +244,7 @@ class PhotoAlbum:
         direction,
         query_filter=None,
         page_size=100,
-        folder_id=None
+        folder_id=None,
     ):
         self.name = name
         self.service = service
@@ -271,10 +269,7 @@ class PhotoAlbum:
 
     def __len__(self):
         if self._len is None:
-            url = "{}/internal/records/query/batch?{}".format(
-                self.service.service_endpoint,
-                urlencode(self.service.params),
-            )
+            url = f"{self.service.service_endpoint}/internal/records/query/batch?{urlencode(self.service.params)}"
             request = self.service.session.post(
                 url,
                 data=json.dumps(
@@ -310,10 +305,11 @@ class PhotoAlbum:
         return self._len
 
     def _fetch_subalbums(self):
-        url = ("%s/records/query?" % self.service.service_endpoint) + urlencode(
+        url = (f"{self.service.service_endpoint}/records/query?") + urlencode(
             self.service.params
         )
-        query = '''{{
+        # pylint: disable=consider-using-f-string
+        query = """{{
                 "query": {{
                     "recordType":"CPLAlbumByPositionLive",
                     "filterBy": [
@@ -330,10 +326,10 @@ class PhotoAlbum:
                 "zoneID": {{
                     "zoneName":"PrimarySync"
                 }}
-            }}'''.format(self.folder_id)
-        json_data = (
-            query
+            }}""".format(
+            self.folder_id
         )
+        json_data = query
         request = self.service.session.post(
             url,
             data=json_data,
@@ -348,13 +344,15 @@ class PhotoAlbum:
         """Returns the subalbums"""
         if not self._subalbums and self.folder_id:
             for folder in self._fetch_subalbums():
-                if (folder["fields"].get("isDeleted")
-                    and folder["fields"]["isDeleted"]["value"]):
+                if (
+                    folder["fields"].get("isDeleted")
+                    and folder["fields"]["isDeleted"]["value"]
+                ):
                     continue
 
                 folder_id = folder["recordName"]
                 folder_obj_type = (
-                    "CPLContainerRelationNotDeletedByAssetDate:%s" % folder_id
+                    f"CPLContainerRelationNotDeletedByAssetDate:{folder_id}"
                 )
                 folder_name = base64.b64decode(
                     folder["fields"]["albumNameEnc"]["value"]
@@ -388,7 +386,7 @@ class PhotoAlbum:
             offset = 0
 
         while True:
-            url = ("%s/records/query?" % self.service.service_endpoint) + urlencode(
+            url = (f"{self.service.service_endpoint}/records/query?") + urlencode(
                 self.service.params
             )
             request = self.service.session.post(
@@ -644,23 +642,23 @@ class PhotoAsset:
                 typed_version_lookup = self.PHOTO_VERSION_LOOKUP
 
             for key, prefix in typed_version_lookup.items():
-                if "%sRes" % prefix in self._master_record["fields"]:
+                if f"{prefix}Res" in self._master_record["fields"]:
                     fields = self._master_record["fields"]
                     version = {"filename": self.filename}
 
-                    width_entry = fields.get("%sWidth" % prefix)
+                    width_entry = fields.get(f"{prefix}Width")
                     if width_entry:
                         version["width"] = width_entry["value"]
                     else:
                         version["width"] = None
 
-                    height_entry = fields.get("%sHeight" % prefix)
+                    height_entry = fields.get(f"{prefix}Height")
                     if height_entry:
                         version["height"] = height_entry["value"]
                     else:
                         version["height"] = None
 
-                    size_entry = fields.get("%sRes" % prefix)
+                    size_entry = fields.get(f"{prefix}Res")
                     if size_entry:
                         version["size"] = size_entry["value"]["size"]
                         version["url"] = size_entry["value"]["downloadURL"]
@@ -668,7 +666,7 @@ class PhotoAsset:
                         version["size"] = None
                         version["url"] = None
 
-                    type_entry = fields.get("%sFileType" % prefix)
+                    type_entry = fields.get(f"{prefix}FileType")
                     if type_entry:
                         version["type"] = type_entry["value"]
                     else:
@@ -693,7 +691,7 @@ class PhotoAsset:
             '{"query":{"recordType":"CheckIndexingState"},'
             '"zoneID":{"zoneName":"PrimarySync"}}'
         )
-
+        # pylint: disable=consider-using-f-string
         json_data = (
             '{"operations":[{'
             '"operationType":"update",'
