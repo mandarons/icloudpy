@@ -41,6 +41,7 @@ class ResponseMock(Response):
     """Mocked Response."""
 
     def __init__(self, result, status_code=200, **kwargs):
+        """Init the object."""
         Response.__init__(self)
         self.result = result
         self.status_code = status_code
@@ -49,6 +50,7 @@ class ResponseMock(Response):
 
     @property
     def text(self):
+        """Text result."""
         return json.dumps(self.result)
 
 
@@ -56,6 +58,7 @@ class ICloudPySessionMock(base.ICloudPySession):
     """Mocked ICloudPySession."""
 
     def request(self, method, url, **kwargs):
+        """Mock request."""
         params = kwargs.get("params")
         headers = kwargs.get("headers")
         data = json.loads(kwargs.get("data", "{}"))
@@ -170,6 +173,7 @@ class ICloudPyServiceMock(base.ICloudPyService):
         client_id=None,
         with_family=True,
     ):
+        """Init the object."""
         base.ICloudPySession = ICloudPySessionMock
         base.ICloudPyService.__init__(
             self, apple_id, password, cookie_directory, verify, client_id, with_family

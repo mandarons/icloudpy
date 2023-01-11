@@ -17,9 +17,7 @@ def get_password(username, interactive=stdout.isatty()):
         if not interactive:
             raise
 
-        return getpass.getpass(
-            f"Enter iCloud password for {username}: "
-        )
+        return getpass.getpass(f"Enter iCloud password for {username}: ")
 
 
 def password_exists_in_keyring(username):
@@ -37,10 +35,10 @@ def get_password_from_keyring(username):
     result = keyring.get_password(KEYRING_SYSTEM, username)
     if result is None:
         raise ICloudPyNoStoredPasswordAvailableException(
-            "No iCloudPy password for {username} could be found "
+            f"No iCloudPy password for {username} could be found "
             "in the system keychain.  Use the `--store-in-keyring` "
             "command-line option for storing a password for this "
-            "username.".format(username=username)
+            "username."
         )
 
     return result

@@ -659,7 +659,7 @@ DRIVE_FILE_DOWNLOAD_WORKING = {
     "document_id": "516C896C-6AA5-4A30-B30E-5502C2333DAE",
     "data_token": {
         # pylint: disable=C0301
-        "url": "https://cvws.icloud-content.com/B/signature1ref_signature1/Scanned+document+1.pdf?o=object1&v=1&x=3&a=token1&e=1588472097&k=wrapping_key1&fl=&r=request&ckc=com.apple.clouddocs&ckz=com.apple.CloudDocs&p=31&s=s1",
+        "url": "https://cvws.icloud-content.com/B/signature1ref_signature1/Scanned+document+1.pdf?o=object1&v=1&x=3&a=token1&e=1588472097&k=wrapping_key1&fl=&r=request&ckc=com.apple.clouddocs&ckz=com.apple.CloudDocs&p=31&s=s1",  # noqa: E501
         "token": "token1",
         "signature": "signature1",
         "wrapping_key": "wrapping_key1==",
@@ -667,7 +667,7 @@ DRIVE_FILE_DOWNLOAD_WORKING = {
     },
     "thumbnail_token": {
         # pylint: disable=C0301
-        "url": "https://cvws.icloud-content.com/B/signature2ref_signature2/Scanned+document+1.jpg?o=object2&v=1&x=3&a=token2&e=1588472097&k=wrapping_key2&fl=&r=request&ckc=com.apple.clouddocs&ckz=com.apple.CloudDocs&p=31&s=s2",
+        "url": "https://cvws.icloud-content.com/B/signature2ref_signature2/Scanned+document+1.jpg?o=object2&v=1&x=3&a=token2&e=1588472097&k=wrapping_key2&fl=&r=request&ckc=com.apple.clouddocs&ckz=com.apple.CloudDocs&p=31&s=s2",  # noqa: E501
         "token": "token2",
         "signature": "signature2",
         "wrapping_key": "wrapping_key2==",

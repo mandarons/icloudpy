@@ -14,27 +14,27 @@ ACCOUNT_DEVICES_WORKING = {
             "serialNumber": "●●●●●●●NG123",
             "osVersion": "OSX;10.15.3",
             # pylint: disable=C0301
-            "modelLargePhotoURL2x": "https://statici.icloud.com/fmipmobile/deviceImages-4.0/MacBookPro/MacBookPro15,1-spacegray/online-infobox__2x.png",
+            "modelLargePhotoURL2x": "https://statici.icloud.com/fmipmobile/deviceImages-4.0/MacBookPro/MacBookPro15,1-spacegray/online-infobox__2x.png",  # noqa: E501
             # pylint: disable=C0301
-            "modelLargePhotoURL1x": "https://statici.icloud.com/fmipmobile/deviceImages-4.0/MacBookPro/MacBookPro15,1-spacegray/online-infobox.png",
+            "modelLargePhotoURL1x": "https://statici.icloud.com/fmipmobile/deviceImages-4.0/MacBookPro/MacBookPro15,1-spacegray/online-infobox.png",  # noqa: E501
             "paymentMethods": [PAYMENT_METHOD_ID_3],
             "name": "MacBook Pro de " + FIRST_NAME,
             "imei": "",
             "model": "MacBookPro15,1",
             "udid": "MacBookPro15,1" + FIRST_NAME,
             # pylint: disable=C0301
-            "modelSmallPhotoURL2x": "https://statici.icloud.com/fmipmobile/deviceImages-4.0/MacBookPro/MacBookPro15,1-spacegray/online-sourcelist__2x.png",
+            "modelSmallPhotoURL2x": "https://statici.icloud.com/fmipmobile/deviceImages-4.0/MacBookPro/MacBookPro15,1-spacegray/online-sourcelist__2x.png",  # noqa: E501
             # pylint: disable=C0301
-            "modelSmallPhotoURL1x": "https://statici.icloud.com/fmipmobile/deviceImages-4.0/MacBookPro/MacBookPro15,1-spacegray/online-sourcelist.png",
+            "modelSmallPhotoURL1x": "https://statici.icloud.com/fmipmobile/deviceImages-4.0/MacBookPro/MacBookPro15,1-spacegray/online-sourcelist.png",  # noqa: E501
             "modelDisplayName": 'MacBook Pro 15"',
         },
         {
             "serialNumber": "●●●●●●●UX123",
             "osVersion": "iOS;13.3",
             # pylint: disable=C0301
-            "modelLargePhotoURL2x": "https://statici.icloud.com/fmipmobile/deviceImages-4.0/iPhone/iPhone12,1-1-6-0/online-infobox__2x.png",
+            "modelLargePhotoURL2x": "https://statici.icloud.com/fmipmobile/deviceImages-4.0/iPhone/iPhone12,1-1-6-0/online-infobox__2x.png",  # noqa: E501
             # pylint: disable=C0301
-            "modelLargePhotoURL1x": "https://statici.icloud.com/fmipmobile/deviceImages-4.0/iPhone/iPhone12,1-1-6-0/online-infobox.png",
+            "modelLargePhotoURL1x": "https://statici.icloud.com/fmipmobile/deviceImages-4.0/iPhone/iPhone12,1-1-6-0/online-infobox.png",  # noqa: E501
             "paymentMethods": [
                 PAYMENT_METHOD_ID_4,
                 PAYMENT_METHOD_ID_2,
@@ -45,9 +45,9 @@ ACCOUNT_DEVICES_WORKING = {
             "model": "iPhone12,1",
             "udid": "iPhone12,1" + FIRST_NAME,
             # pylint: disable=C0301
-            "modelSmallPhotoURL2x": "https://statici.icloud.com/fmipmobile/deviceImages-4.0/iPhone/iPhone12,1-1-6-0/online-sourcelist__2x.png",
+            "modelSmallPhotoURL2x": "https://statici.icloud.com/fmipmobile/deviceImages-4.0/iPhone/iPhone12,1-1-6-0/online-sourcelist__2x.png",  # noqa: E501
             # pylint: disable=C0301
-            "modelSmallPhotoURL1x": "https://statici.icloud.com/fmipmobile/deviceImages-4.0/iPhone/iPhone12,1-1-6-0/online-sourcelist.png",
+            "modelSmallPhotoURL1x": "https://statici.icloud.com/fmipmobile/deviceImages-4.0/iPhone/iPhone12,1-1-6-0/online-sourcelist.png",  # noqa: E501
             "modelDisplayName": "iPhone 11",
         },
     ],

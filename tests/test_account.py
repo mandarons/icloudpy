@@ -6,11 +6,12 @@ from .const import AUTHENTICATED_USER, VALID_PASSWORD
 
 
 class AccountServiceTest(TestCase):
-    """ "Account service tests"""
+    """Account service tests."""
 
     service = None
 
     def setUp(self):
+        """Set up test."""
         self.service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD).account
 
     def test_repr(self):
@@ -63,7 +64,7 @@ class AccountServiceTest(TestCase):
             assert member.dsid_for_purchases
             # fmt: off
             # pylint: disable=C0301
-            assert repr(member) == "<FamilyMember: {name: "+member.full_name+", age_classification: "+member.age_classification+"}>"
+            assert repr(member) == "<FamilyMember: {name: "+member.full_name+", age_classification: "+member.age_classification+"}>"  # noqa: E501
             # fmt: on
 
     def test_storage(self):
@@ -71,7 +72,7 @@ class AccountServiceTest(TestCase):
         assert self.service.storage
         # fmt: off
         # pylint: disable=C0301
-        assert repr(self.service.storage) == "<AccountStorage: {usage: 43.75% used of 5368709120 bytes, usages_by_media: OrderedDict([('photos', <AccountStorageUsageForMedia: {key: photos, usage: 0 bytes}>), ('backup', <AccountStorageUsageForMedia: {key: backup, usage: 799008186 bytes}>), ('docs', <AccountStorageUsageForMedia: {key: docs, usage: 449092146 bytes}>), ('mail', <AccountStorageUsageForMedia: {key: mail, usage: 1101522944 bytes}>)])}>"
+        assert repr(self.service.storage) == "<AccountStorage: {usage: 43.75% used of 5368709120 bytes, usages_by_media: OrderedDict([('photos', <AccountStorageUsageForMedia: {key: photos, usage: 0 bytes}>), ('backup', <AccountStorageUsageForMedia: {key: backup, usage: 799008186 bytes}>), ('docs', <AccountStorageUsageForMedia: {key: docs, usage: 449092146 bytes}>), ('mail', <AccountStorageUsageForMedia: {key: mail, usage: 1101522944 bytes}>)])}>"  # noqa: E501
         # fmt: on
 
     def test_storage_usage(self):
@@ -91,7 +92,7 @@ class AccountServiceTest(TestCase):
         assert not usage.quota_paid
         # fmt: off
         # pylint: disable=C0301
-        assert repr(usage) == "<AccountStorageUsage: "+str(usage.used_storage_in_percent)+"% used of "+str(usage.total_storage_in_bytes)+" bytes>"
+        assert repr(usage) == "<AccountStorageUsage: "+str(usage.used_storage_in_percent)+"% used of "+str(usage.total_storage_in_bytes)+" bytes>"  # noqa: E501
         # fmt: on
 
     def test_storage_usages_by_media(self):
@@ -105,5 +106,5 @@ class AccountServiceTest(TestCase):
             assert usage_media.usage_in_bytes or usage_media.usage_in_bytes == 0
             # fmt: off
             # pylint: disable=C0301
-            assert repr(usage_media) == "<AccountStorageUsageForMedia: {key: "+usage_media.key+", usage: "+str(usage_media.usage_in_bytes)+" bytes}>"
+            assert repr(usage_media) == "<AccountStorageUsageForMedia: {key: "+usage_media.key+", usage: "+str(usage_media.usage_in_bytes)+" bytes}>"  # noqa: E501
             # fmt: on
