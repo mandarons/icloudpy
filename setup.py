@@ -1,12 +1,13 @@
-from setuptools import setup, find_packages
 from codecs import open
+
+from setuptools import find_packages, setup
 
 REPO_URL = "https://github.com/mandarons/icloudpy"
 VERSION = "0.3.2"
 
-with open("README.md", "r") as fh:
+with open("README.md") as fh:
     long_description = fh.read()
-with open("requirements.txt", "r") as fh:
+with open("requirements.txt") as fh:
     required = fh.read().splitlines()
 
 setup(

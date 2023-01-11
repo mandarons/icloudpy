@@ -4,7 +4,6 @@
 class ICloudPyException(Exception):
     """Generic iCloud exception."""
 
-    pass
 
 
 # API
@@ -26,14 +25,12 @@ class ICloudPyAPIResponseException(ICloudPyException):
 class ICloudPyServiceNotActivatedException(ICloudPyAPIResponseException):
     """iCloud service not activated exception."""
 
-    pass
 
 
 # Login
 class ICloudPyFailedLoginException(ICloudPyException):
     """iCloud failed login exception."""
 
-    pass
 
 
 class ICloudPy2SARequiredException(ICloudPyException):
@@ -47,11 +44,9 @@ class ICloudPy2SARequiredException(ICloudPyException):
 class ICloudPyNoStoredPasswordAvailableException(ICloudPyException):
     """iCloud no stored password exception."""
 
-    pass
 
 
 # Webservice specific
 class ICloudPyNoDevicesException(ICloudPyException):
     """iCloud no device exception."""
 
-    pass

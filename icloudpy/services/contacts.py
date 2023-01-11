@@ -1,8 +1,7 @@
 """Contacts service."""
-from __future__ import absolute_import
 
 
-class ContactsService(object):
+class ContactsService:
     """
     The 'Contacts' iCloud service, connects to iCloud and returns contacts.
     """

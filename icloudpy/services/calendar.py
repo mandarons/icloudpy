@@ -1,12 +1,11 @@
 """Calendar service."""
-from __future__ import absolute_import
-from datetime import datetime
 from calendar import monthrange
+from datetime import datetime
 
 from tzlocal import get_localzone
 
 
-class CalendarService(object):
+class CalendarService:
     """
     The 'Calendar' iCloud service, connects to iCloud and returns events.
     """
@@ -35,7 +34,7 @@ class CalendarService(object):
                 "dsid": self.session.service.data["dsInfo"]["dsid"],
             }
         )
-        url = "%s/%s/%s" % (self._calendar_event_detail_url, pguid, guid)
+        url = f"{self._calendar_event_detail_url}/{pguid}/{guid}"
         req = self.session.get(url, params=params)
         self.response = req.json()
         return self.response["Event"][0]

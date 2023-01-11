@@ -2,15 +2,6 @@ FROM mcr.microsoft.com/devcontainers/python:0-3.10
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Uninstall pre-installed formatting and linting tools
-# They would conflict with our pinned versions
-RUN pipx uninstall black
-RUN pipx uninstall flake8
-RUN pipx uninstall pydocstyle
-RUN pipx uninstall pycodestyle
-RUN pipx uninstall mypy
-RUN pipx uninstall pylint
-
 RUN \
     apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \

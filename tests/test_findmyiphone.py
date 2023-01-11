@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
 """Find My iPhone service tests."""
 from unittest import TestCase
+
 from . import ICloudPyServiceMock
 from .const import AUTHENTICATED_USER, VALID_PASSWORD
 
