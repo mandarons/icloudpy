@@ -11,7 +11,7 @@ with open("requirements.txt") as fh:
     required = fh.read().splitlines()
 
 setup(
-    name="icloudpy-lns",
+    name="lns-icloudpy",
     version=VERSION,
     author="leafnsand",
     author_email="mandarons@pm.me",
