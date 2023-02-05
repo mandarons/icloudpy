@@ -3,7 +3,7 @@ from codecs import open
 from setuptools import find_packages, setup
 
 REPO_URL = "https://github.com/mandarons/icloudpy"
-VERSION = "0.3.2"
+VERSION = "0.3.3"
 
 with open("README.md") as fh:
     long_description = fh.read()
