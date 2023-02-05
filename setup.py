@@ -2,8 +2,8 @@ from codecs import open
 
 from setuptools import find_packages, setup
 
-REPO_URL = "https://github.com/leafnsand/icloudpy"
-VERSION = "0.0.1"
+REPO_URL = "https://github.com/mandarons/icloudpy"
+VERSION = "0.3.2"
 
 with open("README.md") as fh:
     long_description = fh.read()
@@ -11,9 +11,9 @@ with open("requirements.txt") as fh:
     required = fh.read().splitlines()
 
 setup(
-    name="lns-icloudpy",
+    name="icloudpy",
     version=VERSION,
-    author="leafnsand",
+    author="Mandar Patil",
     author_email="mandarons@pm.me",
     description="Python library to interact with iCloud web service",
     long_description=long_description,
