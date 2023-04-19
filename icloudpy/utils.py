@@ -9,7 +9,7 @@ from .exceptions import ICloudPyNoStoredPasswordAvailableException
 KEYRING_SYSTEM = "icloudpy://icloud-password"
 
 
-def get_password(username, interactive=stdout.isatty()):
+def get_password(username, interactive=stdout.isatty() if stdout else False):
     """Get the password from a username."""
     try:
         return get_password_from_keyring(username)
