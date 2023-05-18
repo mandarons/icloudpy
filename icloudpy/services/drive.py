@@ -21,10 +21,6 @@ class DriveService:
         self.params = dict(params)
         self._root = None
 
-    def get_app_node(self, app_id, folder="documents"):
-        """Returns the node of the app (ubiquity)"""
-        return DriveNode(self, self.get_node_data("FOLDER::" + app_id + "::" + folder))
-
     def _get_token_from_cookie(self):
         for cookie in self.session.cookies:
             if cookie.name == "X-APPLE-WEBAUTH-VALIDATE":
@@ -79,6 +75,10 @@ class DriveService:
         if not request.ok:
             self.session.raise_error(request.status_code, request.reason)
         return request.json()["items"]
+
+    def get_app_node(self, app_id, folder="documents"):
+        """Returns the node of the app (ubiquity)"""
+        return DriveNode(self, self.get_node_data("FOLDER::" + app_id + "::" + folder))
 
     def _get_upload_contentws_url(self, file_object, zone="com.apple.CloudDocs"):
         """Get the contentWS endpoint URL to add a new file."""
