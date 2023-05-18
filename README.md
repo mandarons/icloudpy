@@ -209,6 +209,8 @@ John [{u'field': u'+1 555-55-5555-5', u'label': u'MOBILE'}]
 
 ## File Storage (Ubiquity)
 
+**NOTE: It seems like having app documents are no longer stored in Ubiquity [and migrated to iCloud Drive](https://developer.apple.com/library/archive/technotes/tn2348/_index.html). See below.**
+
 You can access documents stored in your iCloud account by using the `files` property's `dir` method:
 
 ```bash
@@ -318,6 +320,21 @@ The `upload` method can be used to send a file-like object to the iCloud Drive:
 
 It is strongly suggested to open file handles as binary rather than text to prevent decoding errors
 further down the line.
+
+### Accessing App Data
+The `get_app_node` method can be used to retrieve a node with app data (that is not shown in `api.drive.dir()`). This is where the individual apps store related documents.
+
+```bash
+>>> node = api.drive.get_app_node("XXXXXXXXXX.com.apple.iMovie")
+```
+Ids of individual app data can be found in `~/Library/Mobile Documents` (can only be accessed in Terminal). `~` must be replaced with `.`.
+
+Node can then be used just like any other node, supporting `mkdir`, `rename`, `delete` and so on:
+```
+>>> node.mkdir('2020')
+>>> node.rename('2020_copy')
+>>> node.delete()
+```
 
 ## Photo Library
 
