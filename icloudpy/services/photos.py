@@ -573,15 +573,21 @@ class PhotoAsset:
         self._versions = None
 
     PHOTO_VERSION_LOOKUP = {
-        "original": "resOriginal",
+        "full": "resJPEGFull",
+        "large": "resJPEGLarge",
         "medium": "resJPEGMed",
         "thumb": "resJPEGThumb",
+        "sidecar": "resSidecar",
+        "original": "resOriginal",
+        "original_alt": "resOriginalAlt",
     }
 
     VIDEO_VERSION_LOOKUP = {
-        "original": "resOriginal",
+        "full": "resVidFull",
         "medium": "resVidMed",
         "thumb": "resVidSmall",
+        "original": "resOriginal",
+        "original_compl": "resOriginalVidCompl",
     }
 
     @property
