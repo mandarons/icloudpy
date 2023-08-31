@@ -169,8 +169,6 @@ class PhotosService:
         """Returns photo albums."""
         if not self._albums:
             self._albums = {}
-            for (name, props) in self.SMART_FOLDERS.items():
-                self._albums[name] = PhotoAlbum(self, name, **props)
 
             for folder in self._fetch_folders():
 
@@ -191,6 +189,7 @@ class PhotosService:
                 folder_name = base64.b64decode(
                     folder["fields"]["albumNameEnc"]["value"]
                 ).decode("utf-8")
+                
                 query_filter = [
                     {
                         "fieldName": "parentId",
@@ -209,6 +208,9 @@ class PhotosService:
                     folder_id=folder_id,
                 )
                 self._albums[folder_name] = album
+
+            for (name, props) in self.SMART_FOLDERS.items():
+                self._albums[name] = PhotoAlbum(self, name, **props)
 
         return self._albums
 
