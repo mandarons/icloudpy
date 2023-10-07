@@ -188,7 +188,7 @@ class PhotoLibrary(object):
                 album = PhotoAlbum(self.service, folder_name,
                                    'CPLContainerRelationLiveByAssetDate',
                                    folder_obj_type, 'ASCENDING', query_filter,
-                                   zone_id=self.zone_id)
+                                   folder_id=folder_id, zone_id=self.zone_id)
                 self._albums[folder_name] = album
 
         return self._albums
@@ -305,7 +305,7 @@ class PhotoAlbum:
         if zone_id:
             self._zone_id = zone_id
         else:
-            self._zone_id = 'PrimarySync'
+            self._zone_id = "PrimarySync"
 
         self._len = None
 
@@ -357,7 +357,7 @@ class PhotoAlbum:
         return self._len
 
     def _fetch_subalbums(self):
-        url = (f"{self.service.service_endpoint}/records/query?") + urlencode(
+        url = (f"{self.service._service_endpoint}/records/query?") + urlencode(
             self.service.params
         )
         # pylint: disable=consider-using-f-string
@@ -380,7 +380,7 @@ class PhotoAlbum:
                 }}
             }}""".format(
             self.folder_id,
-            self._zone_id
+            self._zone_id["zoneName"]
         )
         json_data = query
         request = self.service.session.post(
@@ -426,6 +426,7 @@ class PhotoAlbum:
                     direction="ASCENDING",
                     query_filter=query_filter,
                     folder_id=folder_id,
+                    zone_id=self._zone_id
                 )
                 self._subalbums[folder_name] = album
         return self._subalbums
