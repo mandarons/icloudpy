@@ -322,14 +322,17 @@ It is strongly suggested to open file handles as binary rather than text to prev
 further down the line.
 
 ### Accessing App Data
+
 The `get_app_node` method can be used to retrieve a node with app data (that is not shown in `api.drive.dir()`). This is where the individual apps store related documents.
 
 ```bash
 >>> node = api.drive.get_app_node("XXXXXXXXXX.com.apple.iMovie")
 ```
+
 Ids of individual app data can be found in `~/Library/Mobile Documents` (can only be accessed in Terminal). `~` must be replaced with `.`.
 
 Node can then be used just like any other node, supporting `mkdir`, `rename`, `delete` and so on:
+
 ```
 >>> node.mkdir('2020')
 >>> node.rename('2020_copy')
