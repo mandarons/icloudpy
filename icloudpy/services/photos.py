@@ -189,7 +189,7 @@ class PhotosService:
                 folder_name = base64.b64decode(
                     folder["fields"]["albumNameEnc"]["value"]
                 ).decode("utf-8")
-                
+
                 query_filter = [
                     {
                         "fieldName": "parentId",

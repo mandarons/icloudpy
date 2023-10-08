@@ -136,3 +136,5 @@ allure-report
 ignore-config.yaml
 gh-pages
 *.pub
+session_data/
+session_data_original/
