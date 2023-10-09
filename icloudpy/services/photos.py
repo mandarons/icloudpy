@@ -1,6 +1,7 @@
 """Photo service."""
 import base64
 import json
+import logging
 from datetime import datetime
 
 # fmt: off
@@ -9,16 +10,18 @@ from urllib.parse import urlencode  # pylint: disable=bad-option-value,relative-
 from pytz import UTC
 from six import PY2
 
+# fmt: on
 from icloudpy.exceptions import ICloudPyServiceNotActivatedException
 
-# fmt: on
+LOGGER = logging.getLogger(__name__)
 
 
-class PhotoLibrary(object):
+class PhotoLibrary:
     """Represents a library in the user's photos.
 
     This provides access to all the albums as well as the photos.
     """
+
     SMART_FOLDERS = {
         "All Photos": {
             "obj_type": "CPLAssetByAddedDate",
@@ -136,24 +139,27 @@ class PhotoLibrary(object):
 
         self._albums = None
 
-        url = ('%s/records/query?%s' %
-               (self.service._service_endpoint, urlencode(self.service.params)))
-        json_data = json.dumps({
-            "query": {"recordType":"CheckIndexingState"},
-            "zoneID": self.zone_id,
-        })
+        url = f"{self.service._service_endpoint}/records/query?{urlencode(self.service.params)}"
+        json_data = json.dumps(
+            {
+                "query": {"recordType": "CheckIndexingState"},
+                "zoneID": self.zone_id,
+            }
+        )
 
         request = self.service.session.post(
-            url,
-            data=json_data,
-            headers={'Content-type': 'text/plain'}
+            url, data=json_data, headers={"Content-type": "text/plain"}
         )
         response = request.json()
-        indexing_state = response['records'][0]['fields']['state']['value']
-        if indexing_state != 'FINISHED':
-            raise PyiCloudServiceNotActivatedErrror(
-                ('iCloud Photo Library not finished indexing.  Please try '
-                 'again in a few minutes'), None)
+        indexing_state = response["records"][0]["fields"]["state"]["value"]
+        if indexing_state != "FINISHED":
+            raise ICloudPyServiceNotActivatedException(
+                (
+                    "iCloud Photo Library not finished indexing.  Please try "
+                    "again in a few minutes"
+                ),
+                None,
+            )
 
     @property
     def albums(self):
@@ -165,54 +171,63 @@ class PhotoLibrary(object):
 
             for folder in self._fetch_folders():
                 # FIXME: Handle subfolders
-                if folder['recordName'] in ('----Root-Folder----',
-                    '----Project-Root-Folder----') or \
-                    (folder['fields'].get('isDeleted') and
-                     folder['fields']['isDeleted']['value']):
+                if folder["recordName"] in (
+                    "----Root-Folder----",
+                    "----Project-Root-Folder----",
+                ) or (
+                    folder["fields"].get("isDeleted")
+                    and folder["fields"]["isDeleted"]["value"]
+                ):
                     continue
 
-                folder_id = folder['recordName']
-                folder_obj_type = \
-                    "CPLContainerRelationNotDeletedByAssetDate:%s" % folder_id
+                folder_id = folder["recordName"]
+                folder_obj_type = (
+                    f"CPLContainerRelationNotDeletedByAssetDate:{folder_id}"
+                )
                 folder_name = base64.b64decode(
-                    folder['fields']['albumNameEnc']['value']).decode('utf-8')
-                query_filter = [{
-                    "fieldName": "parentId",
-                    "comparator": "EQUALS",
-                    "fieldValue": {
-                        "type": "STRING",
-                        "value": folder_id
+                    folder["fields"]["albumNameEnc"]["value"]
+                ).decode("utf-8")
+                query_filter = [
+                    {
+                        "fieldName": "parentId",
+                        "comparator": "EQUALS",
+                        "fieldValue": {"type": "STRING", "value": folder_id},
                     }
-                }]
+                ]
 
-                album = PhotoAlbum(self.service, folder_name,
-                                   'CPLContainerRelationLiveByAssetDate',
-                                   folder_obj_type, 'ASCENDING', query_filter,
-                                   folder_id=folder_id, zone_id=self.zone_id)
+                album = PhotoAlbum(
+                    self.service,
+                    folder_name,
+                    "CPLContainerRelationLiveByAssetDate",
+                    folder_obj_type,
+                    "ASCENDING",
+                    query_filter,
+                    folder_id=folder_id,
+                    zone_id=self.zone_id,
+                )
                 self._albums[folder_name] = album
 
         return self._albums
 
     def _fetch_folders(self):
-        url = ('%s/records/query?%s' %
-               (self.service._service_endpoint, urlencode(self.service.params)))
-        json_data = json.dumps({
-            "query": {"recordType":"CPLAlbumByPositionLive"},
-            "zoneID": self.zone_id,
-        })
+        url = f"{self.service._service_endpoint}/records/query?{urlencode(self.service.params)}"
+        json_data = json.dumps(
+            {
+                "query": {"recordType": "CPLAlbumByPositionLive"},
+                "zoneID": self.zone_id,
+            }
+        )
 
         request = self.service.session.post(
-            url,
-            data=json_data,
-            headers={'Content-type': 'text/plain'}
+            url, data=json_data, headers={"Content-type": "text/plain"}
         )
         response = request.json()
 
-        return response['records']
+        return response["records"]
 
     @property
     def all(self):
-        return self.albums['All Photos']
+        return self.albums["All Photos"]
 
 
 class PhotosService(PhotoLibrary):
@@ -220,20 +235,18 @@ class PhotosService(PhotoLibrary):
 
     This also acts as a way to access the user's primary library.
     """
+
     def __init__(self, service_root, session, params):
         self.session = session
         self.params = dict(params)
         self._service_root = service_root
-        self._service_endpoint = \
-            ('%s/database/1/com.apple.photos.cloud/production/private'
-             % self._service_root)
+        self._service_endpoint = (
+            f"{self._service_root}/database/1/com.apple.photos.cloud/production/private"
+        )
 
         self._libraries = None
 
-        self.params.update({
-            'remapEnums': True,
-            'getCurrentSyncToken': True
-        })
+        self.params.update({"remapEnums": True, "getCurrentSyncToken": True})
 
         # TODO: Does syncToken ever change?
         # self.params.update({
@@ -243,35 +256,30 @@ class PhotosService(PhotoLibrary):
 
         self._photo_assets = {}
 
-        super(PhotosService, self).__init__(
-            service=self, zone_id={u'zoneName': u'PrimarySync'})
+        super().__init__(service=self, zone_id={"zoneName": "PrimarySync"})
 
     @property
     def libraries(self):
         if not self._libraries:
             try:
-                url = ('%s/changes/database' %
-                    (self._service_endpoint, ))
+                url = f"{self._service_endpoint}/changes/database"
                 request = self.session.post(
-                    url,
-                    data='{}',
-                    headers={'Content-type': 'text/plain'}
+                    url, data="{}", headers={"Content-type": "text/plain"}
                 )
                 response = request.json()
-                zones = response['zones'] 
+                zones = response["zones"]
             except Exception as e:
-                    logger.error("library exception: %s" % str(e))
+                LOGGER.error(f"library exception: {str(e)}")
 
             libraries = {}
             for zone in zones:
-                if not zone.get('deleted'):
-                    zone_name = zone['zoneID']['zoneName']
-                    libraries[zone_name] = PhotoLibrary(
-                        self, zone_id=zone['zoneID'])
-                        # obj_type='CPLAssetByAssetDateWithoutHiddenOrDeleted',
-                        # list_type="CPLAssetAndMasterByAssetDateWithoutHiddenOrDeleted",
-                        # direction="ASCENDING", query_filter=None,
-                        # zone_id=zone['zoneID'])
+                if not zone.get("deleted"):
+                    zone_name = zone["zoneID"]["zoneName"]
+                    libraries[zone_name] = PhotoLibrary(self, zone_id=zone["zoneID"])
+                    # obj_type='CPLAssetByAssetDateWithoutHiddenOrDeleted',
+                    # list_type="CPLAssetAndMasterByAssetDateWithoutHiddenOrDeleted",
+                    # direction="ASCENDING", query_filter=None,
+                    # zone_id=zone['zoneID'])
 
             self._libraries = libraries
 
@@ -379,8 +387,7 @@ class PhotoAlbum:
                     "zoneName":"{}"
                 }}
             }}""".format(
-            self.folder_id,
-            self._zone_id["zoneName"]
+            self.folder_id, self._zone_id["zoneName"]
         )
         json_data = query
         request = self.service.session.post(
@@ -426,7 +433,7 @@ class PhotoAlbum:
                     direction="ASCENDING",
                     query_filter=query_filter,
                     folder_id=folder_id,
-                    zone_id=self._zone_id
+                    zone_id=self._zone_id,
                 )
                 self._subalbums[folder_name] = album
         return self._subalbums
