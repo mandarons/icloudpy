@@ -1,6 +1,7 @@
 """Photo service."""
 import base64
 import json
+import logging
 from datetime import datetime
 
 # fmt: off
@@ -9,13 +10,17 @@ from urllib.parse import urlencode  # pylint: disable=bad-option-value,relative-
 from pytz import UTC
 from six import PY2
 
+# fmt: on
 from icloudpy.exceptions import ICloudPyServiceNotActivatedException
 
-# fmt: on
+LOGGER = logging.getLogger(__name__)
 
 
-class PhotosService:
-    """The 'Photos' iCloud service."""
+class PhotoLibrary:
+    """Represents a library in the user's photos.
+
+    This provides access to all the albums as well as the photos.
+    """
 
     SMART_FOLDERS = {
         "All Photos": {
@@ -128,55 +133,48 @@ class PhotosService:
         },
     }
 
-    def __init__(self, service_root, session, params):
-        self.session = session
-        self.params = dict(params)
-        self._service_root = service_root
-        self.service_endpoint = (
-            f"{self._service_root}/database/1/com.apple.photos.cloud/production/private"
-        )
+    def __init__(self, service, zone_id):
+        self.service = service
+        self.zone_id = zone_id
 
         self._albums = None
 
-        self.params.update({"remapEnums": True, "getCurrentSyncToken": True})
-
-        url = f"{self.service_endpoint}/records/query?{urlencode(self.params)}"
-        json_data = (
-            '{"query":{"recordType":"CheckIndexingState"},'
-            '"zoneID":{"zoneName":"PrimarySync"}}'
+        url = f"{self.service._service_endpoint}/records/query?{urlencode(self.service.params)}"
+        json_data = json.dumps(
+            {
+                "query": {"recordType": "CheckIndexingState"},
+                "zoneID": self.zone_id,
+            }
         )
-        request = self.session.post(
+
+        request = self.service.session.post(
             url, data=json_data, headers={"Content-type": "text/plain"}
         )
         response = request.json()
         indexing_state = response["records"][0]["fields"]["state"]["value"]
         if indexing_state != "FINISHED":
             raise ICloudPyServiceNotActivatedException(
-                "iCloud Photo Library not finished indexing. "
-                "Please try again in a few minutes."
+                (
+                    "iCloud Photo Library not finished indexing.  Please try "
+                    "again in a few minutes"
+                ),
+                None,
             )
-
-        # TODO: Does syncToken ever change?  # pylint: disable=fixme
-        # self.params.update({
-        #     'syncToken': response['syncToken'],
-        #     'clientInstanceId': self.params.pop('clientId')
-        # })
-
-        self._photo_assets = {}
 
     @property
     def albums(self):
-        """Returns photo albums."""
         if not self._albums:
-            self._albums = {}
+            self._albums = {
+                name: PhotoAlbum(self.service, name, zone_id=self.zone_id, **props)
+                for (name, props) in self.SMART_FOLDERS.items()
+            }
 
             for folder in self._fetch_folders():
-
-                # Skipping albums having null name, that can happen sometime
-                if "albumNameEnc" not in folder["fields"]:
-                    continue
-
-                if folder["recordName"] == "----Root-Folder----" or (
+                # FIXME: Handle subfolders
+                if folder["recordName"] in (
+                    "----Root-Folder----",
+                    "----Project-Root-Folder----",
+                ) or (
                     folder["fields"].get("isDeleted")
                     and folder["fields"]["isDeleted"]["value"]
                 ):
@@ -189,7 +187,6 @@ class PhotosService:
                 folder_name = base64.b64decode(
                     folder["fields"]["albumNameEnc"]["value"]
                 ).decode("utf-8")
-
                 query_filter = [
                     {
                         "fieldName": "parentId",
@@ -199,29 +196,29 @@ class PhotosService:
                 ]
 
                 album = PhotoAlbum(
-                    self,
-                    name=folder_name,
-                    list_type="CPLContainerRelationLiveByAssetDate",
-                    obj_type=folder_obj_type,
-                    direction="ASCENDING",
-                    query_filter=query_filter,
+                    self.service,
+                    folder_name,
+                    "CPLContainerRelationLiveByAssetDate",
+                    folder_obj_type,
+                    "ASCENDING",
+                    query_filter,
                     folder_id=folder_id,
+                    zone_id=self.zone_id,
                 )
                 self._albums[folder_name] = album
-
-            for (name, props) in self.SMART_FOLDERS.items():
-                self._albums[name] = PhotoAlbum(self, name, **props)
 
         return self._albums
 
     def _fetch_folders(self):
-        url = f"{self.service_endpoint}/records/query?{urlencode(self.params)}"
-        json_data = (
-            '{"query":{"recordType":"CPLAlbumByPositionLive"},'
-            '"zoneID":{"zoneName":"PrimarySync"}}'
+        url = f"{self.service._service_endpoint}/records/query?{urlencode(self.service.params)}"
+        json_data = json.dumps(
+            {
+                "query": {"recordType": "CPLAlbumByPositionLive"},
+                "zoneID": self.zone_id,
+            }
         )
 
-        request = self.session.post(
+        request = self.service.session.post(
             url, data=json_data, headers={"Content-type": "text/plain"}
         )
         response = request.json()
@@ -230,8 +227,63 @@ class PhotosService:
 
     @property
     def all(self):
-        """Returns all photos."""
         return self.albums["All Photos"]
+
+
+class PhotosService(PhotoLibrary):
+    """The 'Photos' iCloud service.
+
+    This also acts as a way to access the user's primary library.
+    """
+
+    def __init__(self, service_root, session, params):
+        self.session = session
+        self.params = dict(params)
+        self._service_root = service_root
+        self._service_endpoint = (
+            f"{self._service_root}/database/1/com.apple.photos.cloud/production/private"
+        )
+
+        self._libraries = None
+
+        self.params.update({"remapEnums": True, "getCurrentSyncToken": True})
+
+        # TODO: Does syncToken ever change?
+        # self.params.update({
+        #     'syncToken': response['syncToken'],
+        #     'clientInstanceId': self.params.pop('clientId')
+        # })
+
+        self._photo_assets = {}
+
+        super().__init__(service=self, zone_id={"zoneName": "PrimarySync"})
+
+    @property
+    def libraries(self):
+        if not self._libraries:
+            try:
+                url = f"{self._service_endpoint}/zones/list"
+                request = self.session.post(
+                    url, data="{}", headers={"Content-type": "text/plain"}
+                )
+                response = request.json()
+                zones = response["zones"]
+            except Exception as e:
+                LOGGER.error(f"library exception: {str(e)}")
+
+            libraries = {}
+            for zone in zones:
+                if not zone.get("deleted"):
+                    zone_name = zone["zoneID"]["zoneName"]
+                    libraries[zone_name] = PhotoLibrary(self, zone_id=zone["zoneID"])
+                    # obj_type='CPLAssetByAssetDateWithoutHiddenOrDeleted',
+                    # list_type="CPLAssetAndMasterByAssetDateWithoutHiddenOrDeleted",
+                    # direction="ASCENDING", query_filter=None,
+                    # zone_id=zone['zoneID'])
+
+            self._libraries = libraries
+
+        return self._libraries
 
 
 class PhotoAlbum:
@@ -247,6 +299,7 @@ class PhotoAlbum:
         query_filter=None,
         page_size=100,
         folder_id=None,
+        zone_id=None,
     ):
         self.name = name
         self.service = service
@@ -256,6 +309,11 @@ class PhotoAlbum:
         self.query_filter = query_filter
         self.page_size = page_size
         self.folder_id = folder_id
+
+        if zone_id:
+            self._zone_id = zone_id
+        else:
+            self._zone_id = "PrimarySync"
 
         self._len = None
 
@@ -291,7 +349,7 @@ class PhotoAlbum:
                                     "recordType": "HyperionIndexCountLookup",
                                 },
                                 "zoneWide": True,
-                                "zoneID": {"zoneName": "PrimarySync"},
+                                "zoneID": {"zoneName": self._zone_id},
                             }
                         ]
                     }
@@ -307,7 +365,7 @@ class PhotoAlbum:
         return self._len
 
     def _fetch_subalbums(self):
-        url = (f"{self.service.service_endpoint}/records/query?") + urlencode(
+        url = (f"{self.service._service_endpoint}/records/query?") + urlencode(
             self.service.params
         )
         # pylint: disable=consider-using-f-string
@@ -326,10 +384,10 @@ class PhotoAlbum:
                     ]
                 }},
                 "zoneID": {{
-                    "zoneName":"PrimarySync"
+                    "zoneName":"{}"
                 }}
             }}""".format(
-            self.folder_id
+            self.folder_id, self._zone_id["zoneName"]
         )
         json_data = query
         request = self.service.session.post(
@@ -375,6 +433,7 @@ class PhotoAlbum:
                     direction="ASCENDING",
                     query_filter=query_filter,
                     folder_id=folder_id,
+                    zone_id=self._zone_id,
                 )
                 self._subalbums[folder_name] = album
         return self._subalbums
@@ -388,7 +447,7 @@ class PhotoAlbum:
             offset = 0
 
         while True:
-            url = (f"{self.service.service_endpoint}/records/query?") + urlencode(
+            url = (f"{self.service._service_endpoint}/records/query?") + urlencode(
                 self.service.params
             )
             request = self.service.session.post(
@@ -543,7 +602,7 @@ class PhotoAlbum:
                 "position",
                 "isKeyAsset",
             ],
-            "zoneID": {"zoneName": "PrimarySync"},
+            "zoneID": self._zone_id,
         }
 
         if query_filter:
