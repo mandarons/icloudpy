@@ -215,7 +215,6 @@ def main(args=None):
                     apple_id=username.strip(),
                     password=password.strip(),
                     cookie_directory=session_directory,
-                    auth_endpoint="https://idmsa.apple.com.cn/appleauth/auth",
                     home_endpoint="https://www.icloud.com.cn",
                     setup_endpoint="https://setup.icloud.com.cn/setup/ws/1",
                 )
