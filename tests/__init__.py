@@ -1,5 +1,6 @@
 """Library tests."""
 import json
+import pprint
 
 from requests import Response
 
@@ -15,6 +16,7 @@ from .const import (
     VALID_TOKEN,
     VALID_TOKENS,
     VALID_USERS,
+    CLIENT_ID,
 )
 from .const_account import ACCOUNT_DEVICES_WORKING, ACCOUNT_STORAGE_WORKING
 from .const_account_family import ACCOUNT_FAMILY_WORKING
@@ -24,6 +26,7 @@ from .const_drive import (
     DRIVE_ROOT_INVALID,
     DRIVE_ROOT_WORKING,
     DRIVE_SUBFOLDER_WORKING,
+    DRIVE_SUBFOLDER_WORKING_AFTER_MKDIR,
 )
 from .const_findmyiphone import FMI_FAMILY_WORKING
 from .const_login import (
@@ -57,7 +60,10 @@ class ResponseMock(Response):
 class ICloudPySessionMock(base.ICloudPySession):
     """Mocked ICloudPySession."""
 
+    mkdir_called = False
+
     def request(self, method, url, **kwargs):
+
         """Mock request."""
         params = kwargs.get("params")
         headers = kwargs.get("headers")
@@ -104,6 +110,7 @@ class ICloudPySessionMock(base.ICloudPySession):
                     return ResponseMock(AUTH_OK)
 
                 self.service.session_data["session_token"] = VALID_TOKEN
+                self.service.session_data["client_id"] = CLIENT_ID
                 return ResponseMock(AUTH_OK)
 
             if "securitycode" in url and method == "POST":
@@ -145,7 +152,16 @@ class ICloudPySessionMock(base.ICloudPySession):
                 data[0].get("drivewsid")
                 == "FOLDER::com.apple.CloudDocs::D5AA0425-E84F-4501-AF5D-60F1D92648CF"
             ):
-                return ResponseMock(DRIVE_SUBFOLDER_WORKING)
+                print("getFolder params:", self.params, self.mkdir_called)
+                if self.mkdir_called:
+                    return ResponseMock(DRIVE_SUBFOLDER_WORKING_AFTER_MKDIR)
+                else:
+                    return ResponseMock(DRIVE_SUBFOLDER_WORKING)
+        if (
+            "/createFolders" in url
+            and method == "POST"):
+            self.mkdir_called = True
+            return ResponseMock(DRIVE_SUBFOLDER_WORKING_AFTER_MKDIR)
         # Drive download
         if "com.apple.CloudDocs/download/by_id" in url and method == "GET":
             if params.get("document_id") == "516C896C-6AA5-4A30-B30E-5502C2333DAE":

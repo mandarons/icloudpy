@@ -655,6 +655,71 @@ DRIVE_SUBFOLDER_WORKING = [
     }
 ]
 
+DRIVE_SUBFOLDER_WORKING_AFTER_MKDIR = [
+    {
+        "drivewsid": "FOLDER::com.apple.CloudDocs::D5AA0425-E84F-4501-AF5D-60F1D92648CF",
+        "docwsid": "D5AA0425-E84F-4501-AF5D-60F1D92648CF",
+        "zone": "com.apple.CloudDocs",
+        "name": "Test",
+        "parentId": "FOLDER::com.apple.CloudDocs::1C7F1760-D940-480F-8C4F-005824A4E05B",
+        "etag": "2z",
+        "type": "FOLDER",
+        "assetQuota": 42199575,
+        "fileCount": 2,
+        "shareCount": 0,
+        "shareAliasCount": 0,
+        "directChildrenCount": 2,
+        "items": [
+            {
+                "drivewsid": "FILE::com.apple.CloudDocs::33A41112-4131-4938-9691-7F356CE3C51D",
+                "docwsid": "33A41112-4131-4938-9691-7F356CE3C51D",
+                "zone": "com.apple.CloudDocs",
+                "name": "Document scanné 2",
+                "parentId": "FOLDER::com.apple.CloudDocs::D5AA0425-E84F-4501-AF5D-60F1D92648CF",
+                "dateModified": "2020-04-27T21:37:36Z",
+                "dateChanged": "2020-04-27T14:44:29-07:00",
+                "size": 19876991,
+                "etag": "2k::2j",
+                "extension": "pdf",
+                "hiddenExtension": True,
+                "lastOpenTime": "2020-04-27T21:37:36Z",
+                "type": "FILE",
+            },
+            {
+                "drivewsid": "FILE::com.apple.CloudDocs::516C896C-6AA5-4A30-B30E-5502C2333DAE",
+                "docwsid": "516C896C-6AA5-4A30-B30E-5502C2333DAE",
+                "zone": "com.apple.CloudDocs",
+                "name": "Scanned document 1",
+                "parentId": "FOLDER::com.apple.CloudDocs::D5AA0425-E84F-4501-AF5D-60F1D92648CF",
+                "dateModified": "2020-05-03T00:15:17Z",
+                "dateChanged": "2020-05-02T17:16:17-07:00",
+                "size": 21644358,
+                "etag": "32::2x",
+                "extension": "pdf",
+                "hiddenExtension": True,
+                "lastOpenTime": "2020-05-03T00:24:25Z",
+                "type": "FILE",
+            },
+            {
+                "drivewsid": "FOLDER::com.apple.CloudDocs::D5AA0425-E84F-4501-AF5D-60F1D92648EF",
+                "docwsid": "D5AA0425-E84F-4501-AF5D-60F1D92648EF",
+                "zone": "com.apple.CloudDocs",
+                "name": "sub_dir",
+                "parentId": "FOLDER::com.apple.CloudDocs::D5AA0425-E84F-4501-AF5D-60F1D92648CF",
+                "etag": "2z",
+                "type": "FOLDER",
+                "assetQuota": 42199575,
+                "fileCount": 0,
+                "shareCount": 0,
+                "shareAliasCount": 0,
+                "directChildrenCount": 0,
+                "items": [],
+            },
+        ],
+        "numberOfItems": 3,
+    }
+]
+
 DRIVE_FILE_DOWNLOAD_WORKING = {
     "document_id": "516C896C-6AA5-4A30-B30E-5502C2333DAE",
     "data_token": {
