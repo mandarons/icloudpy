@@ -253,8 +253,10 @@ class ICloudPyService:
             LOGGER.info("Session file does not exist")
         if self.session_data.get("client_id"):
             self.client_id = self.session_data.get("client_id")
+            self.params["clientId"] = self.client_id
         else:
             self.session_data.update({"client_id": self.client_id})
+            self.params["clientId"] = self.client_id
 
         self.session = ICloudPySession(self)
         self.session.verify = verify

@@ -329,6 +329,10 @@ class DriveNode:
 
     def mkdir(self, folder):
         """Create a new directory directory."""
+        # remove cached entries information first so that it will be re-read on next get_children()
+        self._children = None
+        if "items" in self.data:
+            self.data.pop("items")
         return self.connection.create_folders(self.data["drivewsid"], folder)
 
     def rename(self, name):

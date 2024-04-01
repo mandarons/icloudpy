@@ -4,7 +4,7 @@ from unittest import TestCase
 import pytest
 
 from . import ICloudPyServiceMock
-from .const import AUTHENTICATED_USER, VALID_PASSWORD
+from .const import AUTHENTICATED_USER, VALID_PASSWORD, CLIENT_ID
 
 
 # pylint: disable=pointless-statement
@@ -15,7 +15,7 @@ class DriveServiceTest(TestCase):
 
     def setUp(self):
         """Set up test."""
-        self.service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD)
+        self.service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD, None, True, CLIENT_ID)
 
     def test_root(self):
         """Test the root folder."""
@@ -84,3 +84,14 @@ class DriveServiceTest(TestCase):
         file_test = self.service.drive["iCloudPy"]["Test"]["Scanned document 1.pdf"]
         with file_test.open(stream=True) as response:
             assert response.raw
+
+    def test_mkdir(self):
+        """Test the /iCloudPy/Test folder."""
+        folder = self.service.drive["iCloudPy"]["Test"]
+        sub_folder_name = "sub_dir"
+        assert folder.dir() == ["Document scanné 2.pdf", "Scanned document 1.pdf"]
+        folder.mkdir(sub_folder_name)
+        sub_folder = folder.get(sub_folder_name)
+        assert sub_folder.name == sub_folder_name
+        assert sub_folder.type == "folder"
+        assert folder.dir() == ["Document scanné 2.pdf", "Scanned document 1.pdf", sub_folder_name]
