@@ -1,5 +1,4 @@
 """Calendar service."""
-
 from calendar import monthrange
 from datetime import datetime
 
