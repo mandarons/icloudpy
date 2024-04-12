@@ -1,4 +1,5 @@
 """Calendar service."""
+
 from calendar import monthrange
 from datetime import datetime
 
@@ -46,9 +47,9 @@ class CalendarService:
         have been given, the range becomes this month.
         """
         today = datetime.today()
-        first_day, last_day = monthrange(today.year, today.month)
+        _, last_day = monthrange(today.year, today.month)
         if not from_dt:
-            from_dt = datetime(today.year, today.month, first_day)
+            from_dt = datetime(today.year, today.month, 1)
         if not to_dt:
             to_dt = datetime(today.year, today.month, last_day)
         params = dict(self.params)
@@ -76,8 +77,8 @@ class CalendarService:
         Retrieves calendars of this month.
         """
         today = datetime.today()
-        first_day, last_day = monthrange(today.year, today.month)
-        from_dt = datetime(today.year, today.month, first_day)
+        _, last_day = monthrange(today.year, today.month)
+        from_dt = datetime(today.year, today.month, 1)
         to_dt = datetime(today.year, today.month, last_day)
         params = dict(self.params)
         params.update(
