@@ -585,6 +585,7 @@ class PhotoAlbum:
                 "burstFlagsExt",
                 "burstId",
                 "captionEnc",
+                "extendedDescEnc",
                 "locationEnc",
                 "locationV2Enc",
                 "locationLatitude",
