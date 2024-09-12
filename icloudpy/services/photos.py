@@ -602,6 +602,9 @@ class PhotoAlbum:
                 "itemId",
                 "position",
                 "isKeyAsset",
+                "importedByBundleIdentifierEnc",
+                "importedByDisplayNameEnc",
+                "importedBy"
             ],
             "zoneID": self._zone_id,
         }
