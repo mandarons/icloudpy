@@ -8,6 +8,9 @@ from os import mkdir, path
 from re import match
 from tempfile import gettempdir
 from uuid import uuid1
+import srp
+import base64
+import hashlib
 
 from requests import Session
 from six import PY2
@@ -319,13 +322,6 @@ class ICloudPyService:
         if not login_successful:
             LOGGER.debug("Authenticating as %s", self.user["accountName"])
 
-            data = dict(self.user)
-
-            data["rememberMe"] = True
-            data["trustTokens"] = []
-            if self.session_data.get("trust_token"):
-                data["trustTokens"] = [self.session_data.get("trust_token")]
-
             headers = self._get_auth_headers()
 
             if self.session_data.get("scnt"):
@@ -334,9 +330,67 @@ class ICloudPyService:
             if self.session_data.get("session_id"):
                 headers["X-Apple-ID-Session-Id"] = self.session_data.get("session_id")
 
+            class SrpPassword():
+                def __init__(self, password: str):
+                    self.password = password
+
+                def set_encrypt_info(self, salt: bytes, iterations: int, key_length: int):
+                    self.salt = salt
+                    self.iterations = iterations
+                    self.key_length = key_length
+
+                def encode(self):
+                    password_hash = hashlib.sha256(self.password.encode('utf-8')).digest()
+                    return hashlib.pbkdf2_hmac('sha256', password_hash, salt, iterations, key_length)
+
+            srp_password = SrpPassword(self.user["password"])
+            srp.rfc5054_enable()
+            srp.no_username_in_x()
+            usr = srp.User(self.user["accountName"], srp_password, hash_alg=srp.SHA256, ng_type=srp.NG_2048)
+
+            uname, A = usr.start_authentication()
+
+            data = {
+                'a': base64.b64encode(A).decode(),
+                'accountName': uname,
+                'protocols': ['s2k', 's2k_fo']
+            }
+
+            try:
+                response = self.session.post(f"{self.auth_endpoint}/signin/init", data=json.dumps(data),
+                                             headers=headers)
+                response.raise_for_status()
+            except ICloudPyAPIResponseException as error:
+                msg = "Failed to initiate srp authentication."
+                raise ICloudPyFailedLoginException(msg, error) from error
+
+            body = response.json()
+
+            salt = base64.b64decode(body['salt'])
+            b = base64.b64decode(body['b'])
+            c = body['c']
+            iterations = body['iteration']
+            key_length = 32
+            srp_password.set_encrypt_info(salt, iterations, key_length)
+
+            m1 = usr.process_challenge(salt, b)
+            m2 = usr.H_AMK
+
+            data = {
+                "accountName": uname,
+                "c": c,
+                "m1": base64.b64encode(m1).decode(),
+                "m2": base64.b64encode(m2).decode(),
+                "rememberMe": True,
+                "trustTokens": [],
+            }
+
+            if self.session_data.get("trust_token"):
+                data["trustTokens"] = [self.session_data.get("trust_token")]
+
             try:
                 self.session.post(
-                    f"{self.auth_endpoint}/signin",
+                    f"{self.auth_endpoint}/signin/complete",
                     params={"isRememberMeEnabled": "true"},
                     data=json.dumps(data),
                     headers=headers,
@@ -400,7 +454,7 @@ class ICloudPyService:
 
     def _get_auth_headers(self, overrides=None):
         headers = {
-            "Accept": "*/*",
+            "Accept": "application/json, text/javascript",
             "Content-Type": "application/json",
             "X-Apple-OAuth-Client-Id": "d39ba9916b7251055b22c7f910e2ea796ee65e98b2ddecea8f5dde8d9d1a815d",
             "X-Apple-OAuth-Client-Type": "firstPartyAuth",
