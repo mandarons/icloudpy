@@ -4,5 +4,5 @@ coverage==6.5.0
 pylint==2.15.8
 pytest==8.3.3
 pytest-cov==4.0.0
-black==22.10.0
+black==24.3.0
 pre-commit
