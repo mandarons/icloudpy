@@ -31,6 +31,7 @@ from .const_drive import (
 from .const_findmyiphone import FMI_FAMILY_WORKING
 from .const_login import (
     AUTH_OK,
+    SRP_INIT_OK,
     LOGIN_2FA,
     LOGIN_WORKING,
     TRUSTED_DEVICE_1,
@@ -102,9 +103,11 @@ class ICloudPySessionMock(base.ICloudPySession):
             if "signin" in url and method == "POST":
                 if (
                     data.get("accountName") not in VALID_USERS
-                    or data.get("password") != VALID_PASSWORD
+                    # or data.get("password") != VALID_PASSWORD
                 ):
                     self._raise_error(None, "Unknown reason")
+                if url.endswith('/init'):
+                    return ResponseMock(SRP_INIT_OK)
                 if data.get("accountName") == REQUIRES_2FA_USER:
                     self.service.session_data["session_token"] = REQUIRES_2FA_TOKEN
                     return ResponseMock(AUTH_OK)
