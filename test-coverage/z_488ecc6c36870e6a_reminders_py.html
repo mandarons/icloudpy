@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_488ecc6c36870e6a_ubiquity_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.8">coverage.py v7.6.8</a>,
-            created at 2024-12-06 22:40 +0000
+            created at 2024-12-07 00:33 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -111,12 +111,12 @@
     <p class="pln"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t">                <span class="str">"lang"</span><span class="op">:</span> <span class="str">"en-us"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t">                <span class="str">"usertz"</span><span class="op">:</span> <span class="nam">get_localzone</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">zone</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t">                <span class="str">"dsid"</span><span class="op">:</span> <span class="nam">self</span><span class="op">.</span><span class="nam">session</span><span class="op">.</span><span class="nam">service</span><span class="op">.</span><span class="nam">data</span><span class="op">[</span><span class="str">"dsInfo"</span><span class="op">]</span><span class="op">[</span><span class="str">"dsid"</span><span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">            <span class="op">}</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">            <span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t">        <span class="com"># Open reminders</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t">        <span class="nam">req</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">session</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">_service_root</span> <span class="op">+</span> <span class="str">"/rd/startup"</span><span class="op">,</span> <span class="nam">params</span><span class="op">=</span><span class="nam">params_reminders</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">_service_root</span> <span class="op">+</span> <span class="str">"/rd/startup"</span><span class="op">,</span> <span class="nam">params</span><span class="op">=</span><span class="nam">params_reminders</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t">        <span class="nam">data</span> <span class="op">=</span> <span class="nam">req</span><span class="op">.</span><span class="nam">json</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -150,7 +150,7 @@
     <p class="pln"><span class="n"><a id="t68" href="#t68">68</a></span><span class="t">                        <span class="str">"title"</span><span class="op">:</span> <span class="nam">reminder</span><span class="op">[</span><span class="str">"title"</span><span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t69" href="#t69">69</a></span><span class="t">                        <span class="str">"desc"</span><span class="op">:</span> <span class="nam">reminder</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">"description"</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t70" href="#t70">70</a></span><span class="t">                        <span class="str">"due"</span><span class="op">:</span> <span class="nam">due</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t71" href="#t71">71</a></span><span class="t">                    <span class="op">}</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t71" href="#t71">71</a></span><span class="t">                    <span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t72" href="#t72">72</a></span><span class="t">                <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t73" href="#t73">73</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">lists</span><span class="op">[</span><span class="nam">collection</span><span class="op">[</span><span class="str">"title"</span><span class="op">]</span><span class="op">]</span> <span class="op">=</span> <span class="nam">temp</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t74" href="#t74">74</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -163,7 +163,7 @@
     <p class="pln"><span class="n"><a id="t81" href="#t81">81</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t82" href="#t82">82</a></span><span class="t">        <span class="nam">params_reminders</span> <span class="op">=</span> <span class="nam">dict</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">_params</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t83" href="#t83">83</a></span><span class="t">        <span class="nam">params_reminders</span><span class="op">.</span><span class="nam">update</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t84" href="#t84">84</a></span><span class="t">            <span class="op">{</span><span class="str">"clientVersion"</span><span class="op">:</span> <span class="str">"4.0"</span><span class="op">,</span> <span class="str">"lang"</span><span class="op">:</span> <span class="str">"en-us"</span><span class="op">,</span> <span class="str">"usertz"</span><span class="op">:</span> <span class="nam">get_localzone</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">zone</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t84" href="#t84">84</a></span><span class="t">            <span class="op">{</span><span class="str">"clientVersion"</span><span class="op">:</span> <span class="str">"4.0"</span><span class="op">,</span> <span class="str">"lang"</span><span class="op">:</span> <span class="str">"en-us"</span><span class="op">,</span> <span class="str">"usertz"</span><span class="op">:</span> <span class="nam">get_localzone</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">zone</span><span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t85" href="#t85">85</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t86" href="#t86">86</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t87" href="#t87">87</a></span><span class="t">        <span class="nam">due_dates</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
@@ -203,7 +203,7 @@
     <p class="pln"><span class="n"><a id="t121" href="#t121">121</a></span><span class="t">                        <span class="str">"guid"</span><span class="op">:</span> <span class="nam">str</span><span class="op">(</span><span class="nam">uuid</span><span class="op">.</span><span class="nam">uuid4</span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t122" href="#t122">122</a></span><span class="t">                    <span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t123" href="#t123">123</a></span><span class="t">                    <span class="str">"ClientState"</span><span class="op">:</span> <span class="op">{</span><span class="str">"Collections"</span><span class="op">:</span> <span class="nam">list</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">collections</span><span class="op">.</span><span class="nam">values</span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t124" href="#t124">124</a></span><span class="t">                <span class="op">}</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t124" href="#t124">124</a></span><span class="t">                <span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t125" href="#t125">125</a></span><span class="t">            <span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t126" href="#t126">126</a></span><span class="t">            <span class="nam">params</span><span class="op">=</span><span class="nam">params_reminders</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t127" href="#t127">127</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -217,7 +217,7 @@
             <a class="nav" href="z_488ecc6c36870e6a_ubiquity_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.8">coverage.py v7.6.8</a>,
-            created at 2024-12-06 22:40 +0000
+            created at 2024-12-07 00:33 +0000
         </p>
     </div>
 </footer>
