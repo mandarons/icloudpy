@@ -38,7 +38,7 @@ def get_password_from_keyring(username):
             f"No iCloudPy password for {username} could be found "
             "in the system keychain.  Use the `--store-in-keyring` "
             "command-line option for storing a password for this "
-            "username."
+            "username.",
         )
 
     return result

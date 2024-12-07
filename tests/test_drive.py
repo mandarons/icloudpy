@@ -4,7 +4,7 @@ from unittest import TestCase
 import pytest
 
 from . import ICloudPyServiceMock
-from .const import AUTHENTICATED_USER, VALID_PASSWORD, CLIENT_ID
+from .const import AUTHENTICATED_USER, CLIENT_ID, VALID_PASSWORD
 
 
 # pylint: disable=pointless-statement

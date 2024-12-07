@@ -23,13 +23,13 @@ else:
 
 url_data = "passing&color=brightgreen" if test_result else "failing&color=critical"
 response = requests.get(
-    "https://img.shields.io/static/v1?label=Tests&message=" + url_data
+    "https://img.shields.io/static/v1?label=Tests&message=" + url_data,
 )
 with open(badges_directory + "/tests.svg", "w") as f:
     f.write(response.text)
 url_data = "brightgreen" if coverage_result == 100.0 else "critical"
 response = requests.get(
-    f"https://img.shields.io/static/v1?label=Coverage&message={coverage_result}%&color={url_data}"
+    f"https://img.shields.io/static/v1?label=Coverage&message={coverage_result}%&color={url_data}",
 )
 with open(badges_directory + "/coverage.svg", "w") as f:
     f.write(response.text)

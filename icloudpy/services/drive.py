@@ -40,8 +40,8 @@ class DriveService:
                     {
                         "drivewsid": drivewsid,
                         "partialData": False,
-                    }
-                ]
+                    },
+                ],
             ),
         )
         if not request.ok:
@@ -70,7 +70,7 @@ class DriveService:
     def get_app_data(self):
         """Returns the app library (previously ubiquity)."""
         request = self.session.get(
-            self._service_root + "/retrieveAppLibraries", params=self.params
+            self._service_root + "/retrieveAppLibraries", params=self.params,
         )
         if not request.ok:
             self.session.raise_error(request.status_code, request.reason)
@@ -105,7 +105,7 @@ class DriveService:
                     "type": "FILE",
                     "content_type": content_type,
                     "size": file_size,
-                }
+                },
             ),
         )
         if not request.ok:
@@ -113,7 +113,7 @@ class DriveService:
         return (request.json()[0]["document_id"], request.json()[0]["url"])
 
     def _update_contentws(
-        self, folder_id, sf_info, document_id, file_object, zone="com.apple.CloudDocs"
+        self, folder_id, sf_info, document_id, file_object, zone="com.apple.CloudDocs",
     ):
         data = {
             "data": {
@@ -163,7 +163,7 @@ class DriveService:
         content_response = request.json()["singleFile"]
 
         self._update_contentws(
-            folder_id, content_response, document_id, file_object, zone
+            folder_id, content_response, document_id, file_object, zone,
         )
 
     def create_folders(self, parent, name):
@@ -179,9 +179,9 @@ class DriveService:
                         {
                             "clientId": self.params["clientId"],
                             "name": name,
-                        }
+                        },
                     ],
-                }
+                },
             ),
         )
         return request.json()
@@ -198,9 +198,9 @@ class DriveService:
                             "drivewsid": node_id,
                             "etag": etag,
                             "name": name,
-                        }
+                        },
                     ],
-                }
+                },
             ),
         )
         return request.json()
@@ -217,9 +217,9 @@ class DriveService:
                             "drivewsid": node_id,
                             "etag": etag,
                             "clientId": self.params["clientId"],
-                        }
+                        },
                     ],
-                }
+                },
             ),
         )
         if not request.ok:
@@ -231,7 +231,7 @@ class DriveService:
         """Returns the root node."""
         if not self._root:
             self._root = DriveNode(
-                self, self.get_node_data("FOLDER::com.apple.CloudDocs::root")
+                self, self.get_node_data("FOLDER::com.apple.CloudDocs::root"),
             )
         return self._root
 
@@ -312,13 +312,13 @@ class DriveNode:
             response.raw = io.BytesIO()
             return response
         return self.connection.get_file(
-            self.data["docwsid"], zone=self.data["zone"], **kwargs
+            self.data["docwsid"], zone=self.data["zone"], **kwargs,
         )
 
     def upload(self, file_object, **kwargs):
         """ "Upload a new file."""
         return self.connection.send_file(
-            self.data["docwsid"], file_object, zone=self.data["zone"], **kwargs
+            self.data["docwsid"], file_object, zone=self.data["zone"], **kwargs,
         )
 
     def dir(self):
@@ -338,13 +338,13 @@ class DriveNode:
     def rename(self, name):
         """Rename an iCloud Drive item."""
         return self.connection.rename_items(
-            self.data["drivewsid"], self.data["etag"], name
+            self.data["drivewsid"], self.data["etag"], name,
         )
 
     def delete(self):
         """Delete an iCloud Drive item."""
         return self.connection.move_items_to_trash(
-            self.data["drivewsid"], self.data["etag"]
+            self.data["drivewsid"], self.data["etag"],
         )
 
     def get(self, name):

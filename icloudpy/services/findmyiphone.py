@@ -1,4 +1,5 @@
 """Find my iPhone service."""
+
 import json
 
 from six import PY2
@@ -43,8 +44,8 @@ class FindMyiPhoneServiceManager:
                         "shouldLocate": True,
                         "selectedDevice": "all",
                         "deviceListVersion": 1,
-                    }
-                }
+                    },
+                },
             ),
         )
         self.response = req.json()
@@ -65,7 +66,7 @@ class FindMyiPhoneServiceManager:
                 self._devices[device_id].update(device_info)
 
         if not self._devices:
-            raise ICloudPyNoDevicesException()
+            raise ICloudPyNoDevicesException
 
     def __getitem__(self, key):
         if isinstance(key, int):
@@ -142,12 +143,15 @@ class AppleDevice:
                 "device": self.content["id"],
                 "subject": subject,
                 "clientContext": {"fmly": True},
-            }
+            },
         )
         self.session.post(self.sound_url, params=self.params, data=data)
 
     def display_message(
-        self, subject="Find My iPhone Alert", message="This is a note", sounds=False
+        self,
+        subject="Find My iPhone Alert",
+        message="This is a note",
+        sounds=False,
     ):
         """Send a request to the device to play a sound.
 
@@ -160,12 +164,15 @@ class AppleDevice:
                 "sound": sounds,
                 "userText": True,
                 "text": message,
-            }
+            },
         )
         self.session.post(self.message_url, params=self.params, data=data)
 
     def lost_device(
-        self, number, text="This iPhone has been lost. Please call me.", newpasscode=""
+        self,
+        number,
+        text="This iPhone has been lost. Please call me.",
+        newpasscode="",
     ):
         """Send a request to the device to trigger 'lost mode'.
 
@@ -182,7 +189,7 @@ class AppleDevice:
                 "trackingEnabled": True,
                 "device": self.content["id"],
                 "passcode": newpasscode,
-            }
+            },
         )
         self.session.post(self.lost_url, params=self.params, data=data)
 

@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python # noqa:EXE001
 """
 A Command Line Wrapper to allow easy use of iCloudPy for
 command line scripts, and related.
@@ -49,10 +49,7 @@ def main(args=None):
         action="store",
         dest="password",
         default="",
-        help=(
-            "Apple ID Password to Use; if unspecified, password will be "
-            "fetched from the system keyring."
-        ),
+        help=("Apple ID Password to Use; if unspecified, password will be " "fetched from the system keyring."),
     )
     parser.add_argument(
         "-n",
@@ -203,7 +200,8 @@ def main(args=None):
 
         if not password:
             password = utils.get_password(
-                username, interactive=command_line.interactive
+                username,
+                interactive=command_line.interactive,
             )
 
         if not password:
@@ -237,7 +235,7 @@ def main(args=None):
                 # fmt: off
                 print(
                     "\nTwo-step authentication required.",
-                    "\nPlease enter validation code"
+                    "\nPlease enter validation code",
                 )
                 # fmt: on
 
@@ -252,14 +250,14 @@ def main(args=None):
                 # fmt: off
                 print(
                     "\nTwo-step authentication required.",
-                    "\nYour trusted devices are:"
+                    "\nYour trusted devices are:",
                 )
                 # fmt: on
 
                 devices = api.trusted_devices
                 for i, device in enumerate(devices):
                     print(
-                        f'    {i}: {device.get("deviceName", "SMS to " + device.get("phoneNumber"))}'
+                        f'    {i}: {device.get("deviceName", "SMS to " + device.get("phoneNumber"))}',
                     )
 
                 print("\nWhich device would you like to use?")
@@ -293,9 +291,7 @@ def main(args=None):
             print(message, file=sys.stderr)
 
     for dev in api.devices:
-        if not command_line.device_id or (
-            command_line.device_id.strip().lower() == dev.content["id"].strip().lower()
-        ):
+        if not command_line.device_id or (command_line.device_id.strip().lower() == dev.content["id"].strip().lower()):
             # List device(s)
             if command_line.locate:
                 dev.location()
@@ -328,18 +324,20 @@ def main(args=None):
                     dev.play_sound()
                 else:
                     raise RuntimeError(
-                        f"\n\n\t\tSounds can only be played on a singular device. {DEVICE_ERROR}\n\n"
+                        f"\n\n\t\tSounds can only be played on a singular device. {DEVICE_ERROR}\n\n",
                     )
 
             # Display a Message on the device
             if command_line.message:
                 if command_line.device_id:
                     dev.display_message(
-                        subject="A Message", message=command_line.message, sounds=True
+                        subject="A Message",
+                        message=command_line.message,
+                        sounds=True,
                     )
                 else:
                     raise RuntimeError(
-                        f"Messages can only be played on a singular device. {DEVICE_ERROR}"
+                        f"Messages can only be played on a singular device. {DEVICE_ERROR}",
                     )
 
             # Display a Silent Message on the device
@@ -352,7 +350,7 @@ def main(args=None):
                     )
                 else:
                     raise RuntimeError(
-                        f"Silent Messages can only be played on a singular device. {DEVICE_ERROR}"
+                        f"Silent Messages can only be played on a singular device. {DEVICE_ERROR}",
                     )
 
             # Enable Lost mode
@@ -365,7 +363,7 @@ def main(args=None):
                     )
                 else:
                     raise RuntimeError(
-                        f"Lost Mode can only be activated on a singular device. {DEVICE_ERROR}"
+                        f"Lost Mode can only be activated on a singular device. {DEVICE_ERROR}",
                     )
     sys.exit(0)
 
