@@ -28,7 +28,7 @@ class ContactsService:
                 "clientVersion": "2.1",
                 "locale": "en_US",
                 "order": "last,first",
-            }
+            },
         )
         req = self.session.get(self._contacts_refresh_url, params=params_contacts)
         self.response = req.json()
@@ -40,7 +40,7 @@ class ContactsService:
                 "syncToken": self.response["syncToken"],
                 "limit": "0",
                 "offset": "0",
-            }
+            },
         )
         req = self.session.get(self._contacts_next_url, params=params_next)
         self.response = req.json()

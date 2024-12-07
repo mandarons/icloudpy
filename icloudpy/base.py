@@ -1,5 +1,8 @@
 """Library base file."""
+
+import base64
 import getpass
+import hashlib
 import http.cookiejar as cookielib
 import inspect
 import json
@@ -8,10 +11,8 @@ from os import mkdir, path
 from re import match
 from tempfile import gettempdir
 from uuid import uuid1
-import srp
-import base64
-import hashlib
 
+import srp
 from requests import Session
 from six import PY2
 
@@ -67,7 +68,6 @@ class ICloudPySession(Session):
         Session.__init__(self)
 
     def request(self, method, url, **kwargs):  # pylint: disable=arguments-differ
-
         # Charge logging to the right service endpoint
         callee = inspect.stack()[2]
         module = inspect.getmodule(callee[0])
@@ -88,7 +88,7 @@ class ICloudPySession(Session):
             if response.headers.get(header):
                 session_arg = value
                 self.service.session_data.update(
-                    {session_arg: response.headers.get(header)}
+                    {session_arg: response.headers.get(header)},
                 )
 
         # Save session_data to file
@@ -100,18 +100,11 @@ class ICloudPySession(Session):
         self.cookies.save(ignore_discard=True, ignore_expires=True)
         LOGGER.debug("Cookies saved to %s", self.service.cookiejar_path)
 
-        if not response.ok and (
-            content_type not in json_mimetypes
-            or response.status_code in [421, 450, 500]
-        ):
+        if not response.ok and (content_type not in json_mimetypes or response.status_code in [421, 450, 500]):
             try:
                 # pylint: disable=W0212
                 fmip_url = self.service._get_webservice_url("findme")
-                if (
-                    has_retried is None
-                    and response.status_code == 450
-                    and fmip_url in url
-                ):
+                if has_retried is None and response.status_code == 450 and fmip_url in url:
                     # Handle re-authentication for Find My iPhone
                     LOGGER.debug("Re-authenticating Find My iPhone service")
                     try:
@@ -125,7 +118,9 @@ class ICloudPySession(Session):
 
             if has_retried is None and response.status_code in [421, 450, 500]:
                 api_error = ICloudPyAPIResponseException(
-                    response.reason, response.status_code, retry=True
+                    response.reason,
+                    response.status_code,
+                    retry=True,
                 )
                 request_logger.debug(api_error)
                 kwargs["retried"] = True
@@ -138,7 +133,7 @@ class ICloudPySession(Session):
 
         try:
             data = response.json()
-        except:  # pylint: disable=bare-except
+        except:  # noqa: E722
             request_logger.warning("Failed to parse response with JSON mimetype")
             return response
 
@@ -163,15 +158,11 @@ class ICloudPySession(Session):
         return response
 
     def _raise_error(self, code, reason):
-        if (
-            self.service.requires_2sa
-            and reason == "Missing X-APPLE-WEBAUTH-TOKEN cookie"
-        ):
+        if self.service.requires_2sa and reason == "Missing X-APPLE-WEBAUTH-TOKEN cookie":
             raise ICloudPy2SARequiredException(self.service.user["apple_id"])
         if code in ("ZONE_NOT_FOUND", "AUTHENTICATION_FAILED"):
             reason = (
-                reason + ". Please log into https://icloud.com/ to manually "
-                "finish setting up your iCloud service"
+                reason + ". Please log into https://icloud.com/ to manually " "finish setting up your iCloud service"
             )
             api_error = ICloudPyServiceNotActivatedException(reason, code)
             LOGGER.error(api_error)
@@ -252,7 +243,7 @@ class ICloudPyService:
         try:
             with open(self.session_path, encoding="utf-8") as session_f:
                 self.session_data = json.load(session_f)
-        except:  # pylint: disable=bare-except
+        except:  # noqa: E722
             LOGGER.info("Session file does not exist")
         if self.session_data.get("client_id"):
             self.client_id = self.session_data.get("client_id")
@@ -264,7 +255,7 @@ class ICloudPyService:
         self.session = ICloudPySession(self)
         self.session.verify = verify
         self.session.headers.update(
-            {"Origin": self.home_endpoint, "Referer": f"{self.home_endpoint}/"}
+            {"Origin": self.home_endpoint, "Referer": f"{self.home_endpoint}/"},
         )
 
         cookiejar_path = self.cookiejar_path
@@ -273,7 +264,7 @@ class ICloudPyService:
             try:
                 self.session.cookies.load(ignore_discard=True, ignore_expires=True)
                 LOGGER.debug("Read cookies from %s", cookiejar_path)
-            except:  # pylint: disable=bare-except
+            except:  # noqa: E722
                 # Most likely a pickled cookiejar from earlier versions.
                 # The cookiejar will get replaced with a valid one after
                 # successful authentication.
@@ -302,12 +293,11 @@ class ICloudPyService:
 
         if not login_successful and service is not None:
             app = self.data["apps"][service]
-            if (
-                "canLaunchWithOneFactor" in app
-                and app["canLaunchWithOneFactor"] is True
-            ):
+            if "canLaunchWithOneFactor" in app and app["canLaunchWithOneFactor"] is True:
                 LOGGER.debug(
-                    "Authenticating as %s for %s", self.user["accountName"], service
+                    "Authenticating as %s for %s",
+                    self.user["accountName"],
+                    service,
                 )
 
                 try:
@@ -330,35 +320,56 @@ class ICloudPyService:
             if self.session_data.get("session_id"):
                 headers["X-Apple-ID-Session-Id"] = self.session_data.get("session_id")
 
-            class SrpPassword():
+            class SrpPassword:
                 def __init__(self, password: str):
                     self.password = password
 
-                def set_encrypt_info(self, salt: bytes, iterations: int, key_length: int):
+                def set_encrypt_info(
+                    self,
+                    salt: bytes,
+                    iterations: int,
+                    key_length: int,
+                ):
                     self.salt = salt
                     self.iterations = iterations
                     self.key_length = key_length
 
                 def encode(self):
-                    password_hash = hashlib.sha256(self.password.encode('utf-8')).digest()
-                    return hashlib.pbkdf2_hmac('sha256', password_hash, salt, iterations, key_length)
+                    password_hash = hashlib.sha256(
+                        self.password.encode("utf-8"),
+                    ).digest()
+                    return hashlib.pbkdf2_hmac(
+                        "sha256",
+                        password_hash,
+                        salt,
+                        iterations,
+                        key_length,
+                    )
 
             srp_password = SrpPassword(self.user["password"])
             srp.rfc5054_enable()
             srp.no_username_in_x()
-            usr = srp.User(self.user["accountName"], srp_password, hash_alg=srp.SHA256, ng_type=srp.NG_2048)
+            usr = srp.User(
+                self.user["accountName"],
+                srp_password,
+                hash_alg=srp.SHA256,
+                ng_type=srp.NG_2048,
+            )
 
-            uname, A = usr.start_authentication()
+            uname, a_bytes = usr.start_authentication()
 
             data = {
-                'a': base64.b64encode(A).decode(),
-                'accountName': uname,
-                'protocols': ['s2k', 's2k_fo']
+                "a": base64.b64encode(a_bytes).decode(),
+                "accountName": uname,
+                "protocols": ["s2k", "s2k_fo"],
             }
 
             try:
-                response = self.session.post(f"{self.auth_endpoint}/signin/init", data=json.dumps(data),
-                                             headers=headers)
+                response = self.session.post(
+                    f"{self.auth_endpoint}/signin/init",
+                    data=json.dumps(data),
+                    headers=headers,
+                )
                 response.raise_for_status()
             except ICloudPyAPIResponseException as error:
                 msg = "Failed to initiate srp authentication."
@@ -366,10 +377,10 @@ class ICloudPyService:
 
             body = response.json()
 
-            salt = base64.b64decode(body['salt'])
-            b = base64.b64decode(body['b'])
-            c = body['c']
-            iterations = body['iteration']
+            salt = base64.b64decode(body["salt"])
+            b = base64.b64decode(body["b"])
+            c = body["c"]
+            iterations = body["iteration"]
             key_length = 32
             srp_password.set_encrypt_info(salt, iterations, key_length)
 
@@ -416,7 +427,8 @@ class ICloudPyService:
 
         try:
             req = self.session.post(
-                f"{self.setup_endpoint}/accountLogin", data=json.dumps(data)
+                f"{self.setup_endpoint}/accountLogin",
+                data=json.dumps(data),
             )
             self.data = req.json()
         except ICloudPyAPIResponseException as error:
@@ -433,7 +445,8 @@ class ICloudPyService:
 
         try:
             self.session.post(
-                f"{self.setup_endpoint}/accountLogin", data=json.dumps(data)
+                f"{self.setup_endpoint}/accountLogin",
+                data=json.dumps(data),
             )
 
             self.data = self._validate_token()
@@ -482,8 +495,7 @@ class ICloudPyService:
         """Get path for session data file."""
         return path.join(
             self._cookie_directory,
-            "".join([c for c in self.user.get("accountName") if match(r"\w", c)])
-            + ".session",
+            "".join([c for c in self.user.get("accountName") if match(r"\w", c)]) + ".session",
         )
 
     @property
@@ -509,7 +521,8 @@ class ICloudPyService:
     def trusted_devices(self):
         """Returns devices trusted for two-step authentication."""
         request = self.session.get(
-            f"{self.setup_endpoint}/listDevices", params=self.params
+            f"{self.setup_endpoint}/listDevices",
+            params=self.params,
         )
         return request.json().get("devices")
 
@@ -599,7 +612,8 @@ class ICloudPyService:
         """Get webservice URL, raise an exception if not exists."""
         if self._webservices.get(ws_key) is None:
             raise ICloudPyServiceNotActivatedException(
-                "Webservice not available", ws_key
+                "Webservice not available",
+                ws_key,
             )
         return self._webservices[ws_key]["url"]
 
@@ -608,7 +622,10 @@ class ICloudPyService:
         """Returns all devices."""
         service_root = self._get_webservice_url("findme")
         return FindMyiPhoneServiceManager(
-            service_root, self.session, self.params, self.with_family
+            service_root,
+            self.session,
+            self.params,
+            self.with_family,
         )
 
     @property

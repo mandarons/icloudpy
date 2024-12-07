@@ -1,6 +1,6 @@
 """Library tests."""
+
 import json
-import pprint
 
 from requests import Response
 
@@ -8,15 +8,14 @@ from icloudpy import base
 
 from .const import (
     AUTHENTICATED_USER,
+    CLIENT_ID,
     REQUIRES_2FA_TOKEN,
     REQUIRES_2FA_USER,
     VALID_2FA_CODE,
     VALID_COOKIE,
-    VALID_PASSWORD,
     VALID_TOKEN,
     VALID_TOKENS,
     VALID_USERS,
-    CLIENT_ID,
 )
 from .const_account import ACCOUNT_DEVICES_WORKING, ACCOUNT_STORAGE_WORKING
 from .const_account_family import ACCOUNT_FAMILY_WORKING
@@ -31,9 +30,9 @@ from .const_drive import (
 from .const_findmyiphone import FMI_FAMILY_WORKING
 from .const_login import (
     AUTH_OK,
-    SRP_INIT_OK,
     LOGIN_2FA,
     LOGIN_WORKING,
+    SRP_INIT_OK,
     TRUSTED_DEVICE_1,
     TRUSTED_DEVICES,
     VERIFICATION_CODE_KO,
@@ -64,7 +63,6 @@ class ICloudPySessionMock(base.ICloudPySession):
     mkdir_called = False
 
     def request(self, method, url, **kwargs):
-
         """Mock request."""
         params = kwargs.get("params")
         headers = kwargs.get("headers")
@@ -106,7 +104,7 @@ class ICloudPySessionMock(base.ICloudPySession):
                     # or data.get("password") != VALID_PASSWORD
                 ):
                     self._raise_error(None, "Unknown reason")
-                if url.endswith('/init'):
+                if url.endswith("/init"):
                     return ResponseMock(SRP_INIT_OK)
                 if data.get("accountName") == REQUIRES_2FA_USER:
                     self.service.session_data["session_token"] = REQUIRES_2FA_TOKEN
@@ -135,34 +133,22 @@ class ICloudPySessionMock(base.ICloudPySession):
             return ResponseMock(ACCOUNT_STORAGE_WORKING)
 
         # Drive
-        if (
-            "retrieveItemDetailsInFolders" in url
-            and method == "POST"
-            and data[0].get("drivewsid")
-        ):
+        if "retrieveItemDetailsInFolders" in url and method == "POST" and data[0].get("drivewsid"):
             if data[0].get("drivewsid") == "FOLDER::com.apple.CloudDocs::root":
                 return ResponseMock(DRIVE_ROOT_WORKING)
             if data[0].get("drivewsid") == "FOLDER::com.apple.CloudDocs::documents":
                 return ResponseMock(DRIVE_ROOT_INVALID)
             if data[0].get("drivewsid") == "FOLDER::com.apple.Preview::documents":
                 return ResponseMock(DRIVE_ROOT_INVALID)
-            if (
-                data[0].get("drivewsid")
-                == "FOLDER::com.apple.CloudDocs::1C7F1760-D940-480F-8C4F-005824A4E05B"
-            ):
+            if data[0].get("drivewsid") == "FOLDER::com.apple.CloudDocs::1C7F1760-D940-480F-8C4F-005824A4E05B":
                 return ResponseMock(DRIVE_FOLDER_WORKING)
-            if (
-                data[0].get("drivewsid")
-                == "FOLDER::com.apple.CloudDocs::D5AA0425-E84F-4501-AF5D-60F1D92648CF"
-            ):
+            if data[0].get("drivewsid") == "FOLDER::com.apple.CloudDocs::D5AA0425-E84F-4501-AF5D-60F1D92648CF":
                 print("getFolder params:", self.params, self.mkdir_called)
                 if self.mkdir_called:
                     return ResponseMock(DRIVE_SUBFOLDER_WORKING_AFTER_MKDIR)
                 else:
                     return ResponseMock(DRIVE_SUBFOLDER_WORKING)
-        if (
-            "/createFolders" in url
-            and method == "POST"):
+        if "/createFolders" in url and method == "POST":
             self.mkdir_called = True
             return ResponseMock(DRIVE_SUBFOLDER_WORKING_AFTER_MKDIR)
         # Drive download
@@ -195,5 +181,11 @@ class ICloudPyServiceMock(base.ICloudPyService):
         """Init the object."""
         base.ICloudPySession = ICloudPySessionMock
         base.ICloudPyService.__init__(
-            self, apple_id, password, cookie_directory, verify, client_id, with_family
+            self,
+            apple_id,
+            password,
+            cookie_directory,
+            verify,
+            client_id,
+            with_family,
         )

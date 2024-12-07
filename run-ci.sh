@@ -15,8 +15,8 @@ deleteDir icloudpy.egg-info
 deleteFile .coverage
 deleteFile coverage.xml
 
-echo "Linting ..." &&
-    pylint icloudpy/ tests/ &&
+echo "Ruffing ..." &&
+    ruff check --fix &&
     echo "Testing ..." &&
     pytest &&
     echo "Reporting ..." &&

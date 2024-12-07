@@ -29,12 +29,12 @@ class RemindersService:
                 "lang": "en-us",
                 "usertz": get_localzone().zone,
                 "dsid": self.session.service.data["dsInfo"]["dsid"],
-            }
+            },
         )
 
         # Open reminders
         req = self.session.get(
-            self._service_root + "/rd/startup", params=params_reminders
+            self._service_root + "/rd/startup", params=params_reminders,
         )
 
         data = req.json()
@@ -68,7 +68,7 @@ class RemindersService:
                         "title": reminder["title"],
                         "desc": reminder.get("description"),
                         "due": due,
-                    }
+                    },
                 )
             self.lists[collection["title"]] = temp
 
@@ -81,7 +81,7 @@ class RemindersService:
 
         params_reminders = dict(self._params)
         params_reminders.update(
-            {"clientVersion": "4.0", "lang": "en-us", "usertz": get_localzone().zone}
+            {"clientVersion": "4.0", "lang": "en-us", "usertz": get_localzone().zone},
         )
 
         due_dates = None
@@ -121,7 +121,7 @@ class RemindersService:
                         "guid": str(uuid.uuid4()),
                     },
                     "ClientState": {"Collections": list(self.collections.values())},
-                }
+                },
             ),
             params=params_reminders,
         )

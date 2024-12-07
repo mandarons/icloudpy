@@ -48,7 +48,7 @@ class TestCmdline(TestCase):
     @patch("keyring.get_password", return_value=None)
     @patch("getpass.getpass")
     def test_username_password_invalid(
-        self, mock_getpass, mock_get_password
+        self, mock_getpass, mock_get_password,
     ):  # pylint: disable=unused-argument
         """Test username and password commands."""
         # No password supplied
@@ -59,20 +59,20 @@ class TestCmdline(TestCase):
         # Bad username or password
         mock_getpass.return_value = "invalid_pass"
         with pytest.raises(
-            RuntimeError, match="Bad username or password for invalid_user"
+            RuntimeError, match="Bad username or password for invalid_user",
         ):
             self.main(["--username", "invalid_user"])
 
         # We should not use getpass for this one, but we reset the password at login fail
         with pytest.raises(
-            RuntimeError, match="Bad username or password for invalid_user"
+            RuntimeError, match="Bad username or password for invalid_user",
         ):
             self.main(["--username", "invalid_user", "--password", "invalid_pass"])
 
     @patch("keyring.get_password", return_value=None)
     @patch("icloudpy.cmdline.input")
     def test_username_password_requires_2fa(
-        self, mock_input, mock_get_password
+        self, mock_input, mock_get_password,
     ):  # pylint: disable=unused-argument
         """Test username and password commands."""
         # Valid connection for the first time
@@ -88,7 +88,7 @@ class TestCmdline(TestCase):
 
     @patch("keyring.get_password", return_value=None)
     def test_device_outputfile(
-        self, mock_get_password
+        self, mock_get_password,
     ):  # pylint: disable=unused-argument
         """Test the outputfile command."""
         with pytest.raises(SystemExit, match="0"):
@@ -97,7 +97,7 @@ class TestCmdline(TestCase):
                 "--username", AUTHENTICATED_USER,
                 "--password", VALID_PASSWORD,
                 "--non-interactive",
-                "--outputfile"
+                "--outputfile",
             ])
             # fmt: on
 

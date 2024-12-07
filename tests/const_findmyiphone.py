@@ -96,7 +96,7 @@ FMI_FAMILY_WORKING = {
         "webPrefs": {
             "id": "web_prefs",
             "selectedDeviceId": "iPhone4,1",
-        }
+        },
     },
     "content": [
         {

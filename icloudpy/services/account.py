@@ -53,7 +53,7 @@ class AccountService:
                         self.session,
                         self.params,
                         self._acc_family_member_photo_url,
-                    )
+                    ),
                 )
 
         return self._family
@@ -196,7 +196,7 @@ class FamilyMember:
         params_photo = dict(self._params)
         params_photo.update({"memberId": self.dsid})
         return self._session.get(
-            self._acc_family_member_photo_url, params=params_photo, stream=True
+            self._acc_family_member_photo_url, params=params_photo, stream=True,
         )
 
     def __getitem__(self, key):
@@ -289,7 +289,7 @@ class AccountStorageUsage:
     def available_storage_in_percent(self):
         """Gets the available storage in percent."""
         return round(
-            self.available_storage_in_bytes * 100 / self.total_storage_in_bytes, 2
+            self.available_storage_in_bytes * 100 / self.total_storage_in_bytes, 2,
         )
 
     @property
@@ -340,13 +340,13 @@ class AccountStorage:
 
     def __init__(self, storage_data):
         self.usage = AccountStorageUsage(
-            storage_data.get("storageUsageInfo"), storage_data.get("quotaStatus")
+            storage_data.get("storageUsageInfo"), storage_data.get("quotaStatus"),
         )
         self.usages_by_media = OrderedDict()
 
         for usage_media in storage_data.get("storageUsageByMedia"):
             self.usages_by_media[usage_media["mediaKey"]] = AccountStorageUsageForMedia(
-                usage_media
+                usage_media,
             )
 
     def __unicode__(self):

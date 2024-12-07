@@ -1,4 +1,5 @@
 """Photo service."""
+
 import base64
 import json
 import logging
@@ -38,7 +39,7 @@ class PhotoLibrary:
                     "fieldName": "smartAlbum",
                     "comparator": "EQUALS",
                     "fieldValue": {"type": "STRING", "value": "TIMELAPSE"},
-                }
+                },
             ],
         },
         "Videos": {
@@ -50,7 +51,7 @@ class PhotoLibrary:
                     "fieldName": "smartAlbum",
                     "comparator": "EQUALS",
                     "fieldValue": {"type": "STRING", "value": "VIDEO"},
-                }
+                },
             ],
         },
         "Slo-mo": {
@@ -62,7 +63,7 @@ class PhotoLibrary:
                     "fieldName": "smartAlbum",
                     "comparator": "EQUALS",
                     "fieldValue": {"type": "STRING", "value": "SLOMO"},
-                }
+                },
             ],
         },
         "Bursts": {
@@ -80,7 +81,7 @@ class PhotoLibrary:
                     "fieldName": "smartAlbum",
                     "comparator": "EQUALS",
                     "fieldValue": {"type": "STRING", "value": "FAVORITE"},
-                }
+                },
             ],
         },
         "Panoramas": {
@@ -92,7 +93,7 @@ class PhotoLibrary:
                     "fieldName": "smartAlbum",
                     "comparator": "EQUALS",
                     "fieldValue": {"type": "STRING", "value": "PANORAMA"},
-                }
+                },
             ],
         },
         "Screenshots": {
@@ -104,7 +105,7 @@ class PhotoLibrary:
                     "fieldName": "smartAlbum",
                     "comparator": "EQUALS",
                     "fieldValue": {"type": "STRING", "value": "SCREENSHOT"},
-                }
+                },
             ],
         },
         "Live": {
@@ -116,7 +117,7 @@ class PhotoLibrary:
                     "fieldName": "smartAlbum",
                     "comparator": "EQUALS",
                     "fieldValue": {"type": "STRING", "value": "LIVE"},
-                }
+                },
             ],
         },
         "Recently Deleted": {
@@ -144,20 +145,19 @@ class PhotoLibrary:
             {
                 "query": {"recordType": "CheckIndexingState"},
                 "zoneID": self.zone_id,
-            }
+            },
         )
 
         request = self.service.session.post(
-            url, data=json_data, headers={"Content-type": "text/plain"}
+            url,
+            data=json_data,
+            headers={"Content-type": "text/plain"},
         )
         response = request.json()
         indexing_state = response["records"][0]["fields"]["state"]["value"]
         if indexing_state != "FINISHED":
             raise ICloudPyServiceNotActivatedException(
-                (
-                    "iCloud Photo Library not finished indexing.  Please try "
-                    "again in a few minutes"
-                ),
+                ("iCloud Photo Library not finished indexing.  Please try " "again in a few minutes"),
                 None,
             )
 
@@ -170,29 +170,23 @@ class PhotoLibrary:
             }
 
             for folder in self._fetch_folders():
-                # FIXME: Handle subfolders
                 if folder["recordName"] in (
                     "----Root-Folder----",
                     "----Project-Root-Folder----",
-                ) or (
-                    folder["fields"].get("isDeleted")
-                    and folder["fields"]["isDeleted"]["value"]
-                ):
+                ) or (folder["fields"].get("isDeleted") and folder["fields"]["isDeleted"]["value"]):
                     continue
 
                 folder_id = folder["recordName"]
-                folder_obj_type = (
-                    f"CPLContainerRelationNotDeletedByAssetDate:{folder_id}"
-                )
+                folder_obj_type = f"CPLContainerRelationNotDeletedByAssetDate:{folder_id}"
                 folder_name = base64.b64decode(
-                    folder["fields"]["albumNameEnc"]["value"]
+                    folder["fields"]["albumNameEnc"]["value"],
                 ).decode("utf-8")
                 query_filter = [
                     {
                         "fieldName": "parentId",
                         "comparator": "EQUALS",
                         "fieldValue": {"type": "STRING", "value": folder_id},
-                    }
+                    },
                 ]
 
                 album = PhotoAlbum(
@@ -215,11 +209,13 @@ class PhotoLibrary:
             {
                 "query": {"recordType": "CPLAlbumByPositionLive"},
                 "zoneID": self.zone_id,
-            }
+            },
         )
 
         request = self.service.session.post(
-            url, data=json_data, headers={"Content-type": "text/plain"}
+            url,
+            data=json_data,
+            headers={"Content-type": "text/plain"},
         )
         response = request.json()
 
@@ -240,19 +236,11 @@ class PhotosService(PhotoLibrary):
         self.session = session
         self.params = dict(params)
         self._service_root = service_root
-        self._service_endpoint = (
-            f"{self._service_root}/database/1/com.apple.photos.cloud/production/private"
-        )
+        self._service_endpoint = f"{self._service_root}/database/1/com.apple.photos.cloud/production/private"
 
         self._libraries = None
 
         self.params.update({"remapEnums": True, "getCurrentSyncToken": True})
-
-        # TODO: Does syncToken ever change?
-        # self.params.update({
-        #     'syncToken': response['syncToken'],
-        #     'clientInstanceId': self.params.pop('clientId')
-        # })
 
         self._photo_assets = {}
 
@@ -264,7 +252,9 @@ class PhotosService(PhotoLibrary):
             try:
                 url = f"{self._service_endpoint}/zones/list"
                 request = self.session.post(
-                    url, data="{}", headers={"Content-type": "text/plain"}
+                    url,
+                    data="{}",
+                    headers={"Content-type": "text/plain"},
                 )
                 response = request.json()
                 zones = response["zones"]
@@ -350,23 +340,21 @@ class PhotoAlbum:
                                 },
                                 "zoneWide": True,
                                 "zoneID": {"zoneName": self._zone_id},
-                            }
-                        ]
-                    }
+                            },
+                        ],
+                    },
                 ),
                 headers={"Content-type": "text/plain"},
             )
             response = request.json()
 
-            self._len = response["batch"][0]["records"][0]["fields"]["itemCount"][
-                "value"
-            ]
+            self._len = response["batch"][0]["records"][0]["fields"]["itemCount"]["value"]
 
         return self._len
 
     def _fetch_subalbums(self):
         url = (f"{self.service._service_endpoint}/records/query?") + urlencode(
-            self.service.params
+            self.service.params,
         )
         # pylint: disable=consider-using-f-string
         query = """{{
@@ -387,7 +375,8 @@ class PhotoAlbum:
                     "zoneName":"{}"
                 }}
             }}""".format(
-            self.folder_id, self._zone_id["zoneName"]
+            self.folder_id,
+            self._zone_id["zoneName"],
         )
         json_data = query
         request = self.service.session.post(
@@ -404,25 +393,20 @@ class PhotoAlbum:
         """Returns the subalbums"""
         if not self._subalbums and self.folder_id:
             for folder in self._fetch_subalbums():
-                if (
-                    folder["fields"].get("isDeleted")
-                    and folder["fields"]["isDeleted"]["value"]
-                ):
+                if folder["fields"].get("isDeleted") and folder["fields"]["isDeleted"]["value"]:
                     continue
 
                 folder_id = folder["recordName"]
-                folder_obj_type = (
-                    f"CPLContainerRelationNotDeletedByAssetDate:{folder_id}"
-                )
+                folder_obj_type = f"CPLContainerRelationNotDeletedByAssetDate:{folder_id}"
                 folder_name = base64.b64decode(
-                    folder["fields"]["albumNameEnc"]["value"]
+                    folder["fields"]["albumNameEnc"]["value"],
                 ).decode("utf-8")
                 query_filter = [
                     {
                         "fieldName": "parentId",
                         "comparator": "EQUALS",
                         "fieldValue": {"type": "STRING", "value": folder_id},
-                    }
+                    },
                 ]
 
                 album = PhotoAlbum(
@@ -448,14 +432,17 @@ class PhotoAlbum:
 
         while True:
             url = (f"{self.service._service_endpoint}/records/query?") + urlencode(
-                self.service.params
+                self.service.params,
             )
             request = self.service.session.post(
                 url,
                 data=json.dumps(
                     self._list_query_gen(
-                        offset, self.list_type, self.direction, self.query_filter
-                    )
+                        offset,
+                        self.list_type,
+                        self.direction,
+                        self.query_filter,
+                    ),
                 ),
                 headers={"Content-type": "text/plain"},
             )
@@ -480,7 +467,9 @@ class PhotoAlbum:
                 for master_record in master_records:
                     record_name = master_record["recordName"]
                     yield PhotoAsset(
-                        self.service, master_record, asset_records[record_name]
+                        self.service,
+                        master_record,
+                        asset_records[record_name],
                     )
             else:
                 break
@@ -604,7 +593,7 @@ class PhotoAlbum:
                 "isKeyAsset",
                 "importedByBundleIdentifierEnc",
                 "importedByDisplayNameEnc",
-                "importedBy"
+                "importedBy",
             ],
             "zoneID": self._zone_id,
         }
@@ -664,7 +653,7 @@ class PhotoAsset:
     def filename(self):
         """Gets the photo file name."""
         return base64.b64decode(
-            self._master_record["fields"]["filenameEnc"]["value"]
+            self._master_record["fields"]["filenameEnc"]["value"],
         ).decode("utf-8")
 
     @property
@@ -682,7 +671,8 @@ class PhotoAsset:
         """Gets the photo asset date."""
         try:
             return datetime.fromtimestamp(
-                self._asset_record["fields"]["assetDate"]["value"] / 1000.0, tz=UTC
+                self._asset_record["fields"]["assetDate"]["value"] / 1000.0,
+                tz=UTC,
             )
         except KeyError:
             return datetime.fromtimestamp(0)
@@ -691,7 +681,8 @@ class PhotoAsset:
     def added_date(self):
         """Gets the photo added date."""
         return datetime.fromtimestamp(
-            self._asset_record["fields"]["addedDate"]["value"] / 1000.0, tz=UTC
+            self._asset_record["fields"]["addedDate"]["value"] / 1000.0,
+            tz=UTC,
         )
 
     @property
@@ -753,33 +744,25 @@ class PhotoAsset:
             return None
 
         return self._service.session.get(
-            self.versions[version]["url"], stream=True, **kwargs
+            self.versions[version]["url"],
+            stream=True,
+            **kwargs,
         )
 
     def delete(self):
         """Deletes the photo."""
         json_data = (
-            '{"query":{"recordType":"CheckIndexingState"},'
-            '"zoneID":{"zoneName":"PrimarySync"}}'
-        )
-        # pylint: disable=consider-using-f-string
-        json_data = (
-            '{"operations":[{'
-            '"operationType":"update",'
-            '"record":{'
-            '"recordName":"%s",'
-            '"recordType":"%s",'
-            '"recordChangeTag":"%s",'
-            '"fields":{"isDeleted":{"value":1}'
-            "}}}],"
-            '"zoneID":{'
-            '"zoneName":"PrimarySync"'
-            '},"atomic":true}'
-            % (
-                self._asset_record["recordName"],
-                self._asset_record["recordType"],
-                self._master_record["recordChangeTag"],
-            )
+            f'{{"operations":[{{'
+            f'"operationType":"update",'
+            f'"record":{{'
+            f'"recordName":"{self._asset_record["recordName"]}",'
+            f'"recordType":"{self._asset_record["recordType"]}",'
+            f'"recordChangeTag":"{self._master_record["recordChangeTag"]}",'
+            f'"fields":{{"isDeleted":{{"value":1}}'
+            f'}}}}],'
+            f'"zoneID":{{'
+            f'"zoneName":"PrimarySync"'
+            f'}},"atomic":true}}'
         )
 
         endpoint = self._service.service_endpoint
@@ -787,7 +770,9 @@ class PhotoAsset:
         url = f"{endpoint}/records/modify?{params}"
 
         return self._service.session.post(
-            url, data=json_data, headers={"Content-type": "text/plain"}
+            url,
+            data=json_data,
+            headers={"Content-type": "text/plain"},
         )
 
     def __repr__(self):

@@ -563,12 +563,12 @@ DRIVE_ROOT_WORKING = [
             },
         ],
         "numberOfItems": 5,
-    }
+    },
 ]
 
 # App specific folder (Keynote, Numbers, Pages, Preview ...) type=APP_LIBRARY
 DRIVE_ROOT_INVALID = [
-    {"drivewsid": "FOLDER::com.apple.CloudDocs::documents", "status": "ID_INVALID"}
+    {"drivewsid": "FOLDER::com.apple.CloudDocs::documents", "status": "ID_INVALID"},
 ]
 
 DRIVE_FOLDER_WORKING = [
@@ -599,10 +599,10 @@ DRIVE_FOLDER_WORKING = [
                 "shareCount": 0,
                 "shareAliasCount": 0,
                 "directChildrenCount": 2,
-            }
+            },
         ],
         "numberOfItems": 1,
-    }
+    },
 ]
 
 DRIVE_SUBFOLDER_WORKING = [
@@ -652,7 +652,7 @@ DRIVE_SUBFOLDER_WORKING = [
             },
         ],
         "numberOfItems": 2,
-    }
+    },
 ]
 
 DRIVE_SUBFOLDER_WORKING_AFTER_MKDIR = [
@@ -717,7 +717,7 @@ DRIVE_SUBFOLDER_WORKING_AFTER_MKDIR = [
             },
         ],
         "numberOfItems": 3,
-    }
+    },
 ]
 
 DRIVE_FILE_DOWNLOAD_WORKING = {

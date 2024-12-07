@@ -14,13 +14,14 @@ RUN \
     unzip allure-commandline-2.20.1.zip -d /allure && \
     rm allure-commandline-2.20.1.zip
 
-ENV PATH "/allure/allure-2.20.1/bin:${PATH}"
+USER vscode
+# Install uv (pip replacement)
+RUN \
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+
+ENV PATH="/allure/allure-2.20.1/bin:/home/vscode/.cargo/bin:${PATH}"
 
 WORKDIR /workspaces
-
-# Install Python dependencies from requirements
-COPY requirements*.txt ./
-RUN pip install -r requirements-test.txt
 
 # Set the default shell to bash instead of sh
 ENV SHELL /bin/bash
