@@ -3,7 +3,7 @@ pytest==8.3.3
 allure-pytest==2.13.5
 coverage==7.6.8
 pytest-cov==6.0.0
-black==24.3.0
+black==24.10.0
 ruff
 ipython
 pre-commit
