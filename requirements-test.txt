@@ -1,7 +1,7 @@
 -r requirements.txt
 pytest==8.3.4
 allure-pytest==2.13.5
-coverage==7.6.8
+coverage==7.6.9
 pytest-cov==6.0.0
 black==24.3.0
 ruff
