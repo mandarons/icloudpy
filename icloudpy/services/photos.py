@@ -751,18 +751,23 @@ class PhotoAsset:
 
     def delete(self):
         """Deletes the photo."""
-        json_data = (
-            f'{{"operations":[{{'
-            f'"operationType":"update",'
-            f'"record":{{'
-            f'"recordName":"{self._asset_record["recordName"]}",'
-            f'"recordType":"{self._asset_record["recordType"]}",'
-            f'"recordChangeTag":"{self._master_record["recordChangeTag"]}",'
-            f'"fields":{{"isDeleted":{{"value":1}}'
-            f'}}}}],'
-            f'"zoneID":{{'
-            f'"zoneName":"PrimarySync"'
-            f'}},"atomic":true}}'
+        json_data = json.dumps(
+            {
+                "atomic": True,
+                "desiredKeys": ["isDeleted"],
+                "operations": [
+                    {
+                        "operationType": "update",
+                        "record": {
+                            "fields": {"isDeleted": {"value": 1}},
+                            "recordChangeTag": self._asset_record["recordChangeTag"],
+                            "recordName": self._asset_record["recordName"],
+                            "recordType": self._asset_record["recordType"],
+                        },
+                    },
+                ],
+                "zoneID": self._service.zone_id,
+            },
         )
 
         endpoint = self._service._service_endpoint
