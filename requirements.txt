@@ -6,5 +6,5 @@ six==1.16.0
 srp==1.0.22
 tzlocal==5.2
 pytz==2024.2
-certifi==2024.8.30
+certifi==2024.12.14
 future==1.0.0
