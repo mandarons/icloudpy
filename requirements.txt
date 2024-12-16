@@ -1,5 +1,5 @@
 requests==2.32.3
-keyring==23.11.0
+keyring==25.5.0
 keyrings.alt==5.0.2
 click==8.1.7
 six==1.16.0
