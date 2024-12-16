@@ -2,7 +2,7 @@ requests==2.32.3
 keyring==23.11.0
 keyrings.alt==5.0.2
 click==8.1.7
-six==1.16.0
+six==1.17.0
 srp==1.0.22
 tzlocal==5.2
 pytz==2024.2
