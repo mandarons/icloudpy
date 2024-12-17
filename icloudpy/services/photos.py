@@ -319,7 +319,7 @@ class PhotoAlbum:
 
     def __len__(self):
         if self._len is None:
-            url = f"{self.service.service_endpoint}/internal/records/query/batch?{urlencode(self.service.params)}"
+            url = f"{self.service._service_endpoint}/internal/records/query/batch?{urlencode(self.service.params)}"
             request = self.service.session.post(
                 url,
                 data=json.dumps(
@@ -339,7 +339,7 @@ class PhotoAlbum:
                                     "recordType": "HyperionIndexCountLookup",
                                 },
                                 "zoneWide": True,
-                                "zoneID": {"zoneName": self._zone_id},
+                                "zoneID": {"zoneName": self._zone_id["zoneName"]},
                             },
                         ],
                     },
@@ -751,21 +751,26 @@ class PhotoAsset:
 
     def delete(self):
         """Deletes the photo."""
-        json_data = (
-            f'{{"operations":[{{'
-            f'"operationType":"update",'
-            f'"record":{{'
-            f'"recordName":"{self._asset_record["recordName"]}",'
-            f'"recordType":"{self._asset_record["recordType"]}",'
-            f'"recordChangeTag":"{self._master_record["recordChangeTag"]}",'
-            f'"fields":{{"isDeleted":{{"value":1}}'
-            f'}}}}],'
-            f'"zoneID":{{'
-            f'"zoneName":"PrimarySync"'
-            f'}},"atomic":true}}'
+        json_data = json.dumps(
+            {
+                "atomic": True,
+                "desiredKeys": ["isDeleted"],
+                "operations": [
+                    {
+                        "operationType": "update",
+                        "record": {
+                            "fields": {"isDeleted": {"value": 1}},
+                            "recordChangeTag": self._asset_record["recordChangeTag"],
+                            "recordName": self._asset_record["recordName"],
+                            "recordType": self._asset_record["recordType"],
+                        },
+                    },
+                ],
+                "zoneID": self._service.zone_id,
+            },
         )
 
-        endpoint = self._service.service_endpoint
+        endpoint = self._service._service_endpoint
         params = urlencode(self._service.params)
         url = f"{endpoint}/records/modify?{params}"
 
