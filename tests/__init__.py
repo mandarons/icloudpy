@@ -19,6 +19,16 @@ from .const import (
 )
 from .const_account import ACCOUNT_DEVICES_WORKING, ACCOUNT_STORAGE_WORKING
 from .const_account_family import ACCOUNT_FAMILY_WORKING
+from .const_auth import (
+    AUTH_OK,
+    SESSION_VALID,
+    SRP_INIT_OK,
+    TRUSTED_DEVICE_1,
+    TRUSTED_DEVICES,
+    TRUST_TOKEN_OK,
+    VERIFICATION_CODE_KO,
+    VERIFICATION_CODE_OK,
+)
 from .const_drive import (
     DRIVE_FILE_DOWNLOAD_WORKING,
     DRIVE_FOLDER_WORKING,
@@ -27,17 +37,15 @@ from .const_drive import (
     DRIVE_SUBFOLDER_WORKING,
     DRIVE_SUBFOLDER_WORKING_AFTER_MKDIR,
 )
-from .const_findmyiphone import FMI_FAMILY_WORKING
-from .const_login import (
-    AUTH_OK,
-    LOGIN_2FA,
-    LOGIN_WORKING,
-    SRP_INIT_OK,
-    TRUSTED_DEVICE_1,
-    TRUSTED_DEVICES,
-    VERIFICATION_CODE_KO,
-    VERIFICATION_CODE_OK,
+from .const_drive_upload import (
+    RENAME_ITEMS_RESPONSE,
+    TRASH_ITEMS_RESPONSE,
+    UPDATE_CONTENTWS_RESPONSE,
+    UPLOAD_URL_RESPONSE,
 )
+from .const_findmyiphone import FMI_FAMILY_WORKING
+from .const_login import LOGIN_2FA, LOGIN_WORKING
+from .const_photos import DATA as PHOTOS_DATA
 
 
 class ResponseMock(Response):
@@ -60,7 +68,10 @@ class ResponseMock(Response):
 class ICloudPySessionMock(base.ICloudPySession):
     """Mocked ICloudPySession."""
 
+    # State tracking for multi-step operations
     mkdir_called = False
+    upload_count = 0
+    rename_count = 0
 
     def request(self, method, url, **kwargs):
         """Mock request."""
@@ -151,6 +162,18 @@ class ICloudPySessionMock(base.ICloudPySession):
         if "/createFolders" in url and method == "POST":
             self.mkdir_called = True
             return ResponseMock(DRIVE_SUBFOLDER_WORKING_AFTER_MKDIR)
+        # Drive upload endpoints
+        if "/upload/web" in url and method == "POST":
+            self.upload_count += 1
+            return ResponseMock(UPLOAD_URL_RESPONSE)
+        if "/update/documents" in url and method == "POST":
+            return ResponseMock(UPDATE_CONTENTWS_RESPONSE)
+        # Drive rename/delete operations
+        if "/renameItems" in url and method == "POST":
+            self.rename_count += 1
+            return ResponseMock(RENAME_ITEMS_RESPONSE)
+        if "/moveItemsToTrash" in url and method == "POST":
+            return ResponseMock(TRASH_ITEMS_RESPONSE)
         # Drive download
         if "com.apple.CloudDocs/download/by_id" in url and method == "GET":
             if params.get("document_id") == "516C896C-6AA5-4A30-B30E-5502C2333DAE":
@@ -162,6 +185,53 @@ class ICloudPySessionMock(base.ICloudPySession):
         # Find My iPhone
         if "fmi" in url and method == "POST":
             return ResponseMock(FMI_FAMILY_WORKING)
+
+        # Photos query endpoints
+        if "com.apple.photos.cloud" in url:
+            if "zones/list" in url and method == "POST":
+                # Return zones list for photos
+                return ResponseMock(
+                    {
+                        "zones": [
+                            {
+                                "zoneID": {
+                                    "zoneName": "PrimarySync",
+                                    "ownerRecordName": "_fvhhqlzef1uvsgxnrw119mylkpjut1a0",
+                                    "zoneType": "REGULAR_CUSTOM_ZONE",
+                                },
+                                "syncToken": "HwoECJGaGRgAIhYI/ZL516KyxaXfARDm2sbu7KeQiZABKAA=",
+                                "atomic": True,
+                            }
+                        ]
+                    }
+                )
+
+            if "records/query" in url and method == "POST":
+                query_type = data.get("query", {}).get("recordType")
+
+                # Check indexing state
+                if query_type == "CheckIndexingState":
+                    return ResponseMock(
+                        PHOTOS_DATA["query?remapEnums=True&getCurrentSyncToken=True"][0]["response"]
+                    )
+
+                # Album queries
+                if query_type == "CPLAlbumByPositionLive":
+                    return ResponseMock(
+                        PHOTOS_DATA["query?remapEnums=True&getCurrentSyncToken=True"][1]["response"]
+                    )
+
+                # Asset queries
+                if query_type == "CPLAssetAndMasterByAddedDate":
+                    return ResponseMock(
+                        PHOTOS_DATA["query?remapEnums=True&getCurrentSyncToken=True"][9]["response"]
+                    )
+
+                # Smart album queries (Videos, Favorites, etc.)
+                if query_type == "CPLAssetAndMasterInSmartAlbumByAssetDate":
+                    return ResponseMock(
+                        PHOTOS_DATA["query?remapEnums=True&getCurrentSyncToken=True"][5]["response"]
+                    )
 
         return None
 
