@@ -9,24 +9,22 @@ from .const_account_family import (
     PRIMARY_EMAIL,
 )
 
+# Re-export auth constants for backwards compatibility
+from .const_auth import (  # noqa: F401
+    AUTH_OK,
+    SESSION_VALID,
+    SRP_INIT_OK,
+    TRUST_TOKEN_OK,
+    TRUSTED_DEVICE_1,
+    TRUSTED_DEVICES,
+    VERIFICATION_CODE_KO,
+    VERIFICATION_CODE_OK,
+)
+
 PERSON_ID = (FIRST_NAME + LAST_NAME).lower()
 NOTIFICATION_ID = "12345678-1234-1234-1234-123456789012" + PERSON_ID
 A_DS_ID = "123456-12-12345678-1234-1234-1234-123456789012" + PERSON_ID
 WIDGET_KEY = "widget_key" + PERSON_ID
-
-# Data
-AUTH_OK = {"authType": "hsa2"}
-
-SRP_INIT_OK = {
-    "iteration": 20433,
-    "salt": "0samK84bcBmkVsswOpZbZg==",
-    "protocol": "s2k",
-    "b": "STVHcWTN9YOYn4IgtIJ6UPdPbvzvL+zza/l+6yUHUtdEyxwzpB78y8wqZ8QWSbVqjBcpl32iEA4T3nYp0LWZ5hD3r3yIJFloXvX0kpBJkr\
-        +Nh8EfHuW1V50A8riH6VWyuJ8m3JmOO7/xkNgP7je8GMpt/5f/7qE3AOj73e3JR0fzQ7IopdU0tlyVX0tD7T6wCyHS52GJWDdq1I2bgzurIK2\
-        /ZjR/Hwzd/67oFQPtKQgjrSRaKo5MJEfDP7C9wOlXsZqbb7igX6PeZRWrfl+iQFaA/FVeWSngB07ja3wOryY9GsYO06ELGOaQ+MpsT7mouqrGT\
-        fOJ0OMh9EgrkJEM6w==",
-    "c": "e-1be-8746c235-b41c-11ef-bd17-c780acb4fe15:PRN",
-}
 
 LOGIN_WORKING = {
     "dsInfo": {
@@ -412,14 +410,3 @@ LOGIN_2FA = {
         "contacts": {},
     },
 }
-
-TRUSTED_DEVICE_1 = {
-    "deviceType": "SMS",
-    "areaCode": "",
-    "phoneNumber": "*******58",
-    "deviceId": "1",
-}
-TRUSTED_DEVICES = {"devices": [TRUSTED_DEVICE_1]}
-
-VERIFICATION_CODE_OK = {"success": True}
-VERIFICATION_CODE_KO = {"success": False}

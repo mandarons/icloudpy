@@ -24,8 +24,8 @@ UPDATE_CONTENTWS_RESPONSE = {
             "drivewsid": "DOCUMENT::com.apple.CloudDocs::NEW-DOCUMENT-ID-123",
             "etag": "ETAG_VALUE_123",
             "zone": "com.apple.CloudDocs",
-        }
-    ]
+        },
+    ],
 }
 
 # Rename items response - returned by /renameItems endpoint
@@ -44,8 +44,8 @@ RENAME_ITEMS_RESPONSE = {
             "shareCount": 0,
             "shareAliasCount": 0,
             "directChildrenCount": 0,
-        }
-    ]
+        },
+    ],
 }
 
 # Move to trash response - returned by /moveItemsToTrash endpoint
@@ -57,8 +57,8 @@ TRASH_ITEMS_RESPONSE = {
             "zone": "com.apple.CloudDocs",
             "etag": "ETAG_VALUE_TRASHED",
             "status": "OK",
-        }
-    ]
+        },
+    ],
 }
 
 # Folder creation response - returned by /createFolders endpoint

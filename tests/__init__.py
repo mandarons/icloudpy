@@ -21,11 +21,9 @@ from .const_account import ACCOUNT_DEVICES_WORKING, ACCOUNT_STORAGE_WORKING
 from .const_account_family import ACCOUNT_FAMILY_WORKING
 from .const_auth import (
     AUTH_OK,
-    SESSION_VALID,
     SRP_INIT_OK,
     TRUSTED_DEVICE_1,
     TRUSTED_DEVICES,
-    TRUST_TOKEN_OK,
     VERIFICATION_CODE_KO,
     VERIFICATION_CODE_OK,
 )
@@ -201,9 +199,9 @@ class ICloudPySessionMock(base.ICloudPySession):
                                 },
                                 "syncToken": "HwoECJGaGRgAIhYI/ZL516KyxaXfARDm2sbu7KeQiZABKAA=",
                                 "atomic": True,
-                            }
-                        ]
-                    }
+                            },
+                        ],
+                    },
                 )
 
             if "records/query" in url and method == "POST":
@@ -212,25 +210,25 @@ class ICloudPySessionMock(base.ICloudPySession):
                 # Check indexing state
                 if query_type == "CheckIndexingState":
                     return ResponseMock(
-                        PHOTOS_DATA["query?remapEnums=True&getCurrentSyncToken=True"][0]["response"]
+                        PHOTOS_DATA["query?remapEnums=True&getCurrentSyncToken=True"][0]["response"],
                     )
 
                 # Album queries
                 if query_type == "CPLAlbumByPositionLive":
                     return ResponseMock(
-                        PHOTOS_DATA["query?remapEnums=True&getCurrentSyncToken=True"][1]["response"]
+                        PHOTOS_DATA["query?remapEnums=True&getCurrentSyncToken=True"][1]["response"],
                     )
 
                 # Asset queries
                 if query_type == "CPLAssetAndMasterByAddedDate":
                     return ResponseMock(
-                        PHOTOS_DATA["query?remapEnums=True&getCurrentSyncToken=True"][9]["response"]
+                        PHOTOS_DATA["query?remapEnums=True&getCurrentSyncToken=True"][9]["response"],
                     )
 
                 # Smart album queries (Videos, Favorites, etc.)
                 if query_type == "CPLAssetAndMasterInSmartAlbumByAssetDate":
                     return ResponseMock(
-                        PHOTOS_DATA["query?remapEnums=True&getCurrentSyncToken=True"][5]["response"]
+                        PHOTOS_DATA["query?remapEnums=True&getCurrentSyncToken=True"][5]["response"],
                     )
 
         return None
