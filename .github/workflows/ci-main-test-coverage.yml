@@ -18,122 +18,94 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  cache-requirements-install:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
-
-    - name: Cache pip packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install -r requirements-test.txt
-
-    - name: Run linter
-      run: |
-        ruff check
-
-    - name: Run tests with coverage
-      run: |
-        pytest
-
-    - name: Generate coverage XML
-      run: |
-        coverage xml
-
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage.xml
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: true
-
-    - name: Upload coverage reports as artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-report
-        path: |
-          htmlcov/
-          coverage.xml
-        retention-days: 1
-
-    - name: Generate Allure Report
-      uses: simple-elf/allure-report-action@master
-      if: always()
-      with:
-        allure_results: allure-results
-        subfolder: test-results
-        allure_report: allure-report
-        allure_history: allure-history
-        keep_reports: 100
-
-    - name: Generate badges (legacy)
-      continue-on-error: true
-      run: |
-        # Legacy badge generation for gh-pages
-        mkdir -p badges
-        pip install requests
-        python3 << 'PYTHON_SCRIPT'
-        import xml.etree.ElementTree as ET
-        import requests
-        import sys
-
-        # Get coverage
-        try:
-            tree = ET.parse('./coverage.xml')
-            root = tree.getroot()
-            coverage_pct = float(root.attrib['line-rate']) * 100.0
-        except FileNotFoundError:
-            print("Error: coverage.xml file not found.", file=sys.stderr)
-            sys.exit(1)
-        except ET.ParseError as e:
-            print(f"Error: Failed to parse coverage.xml: {e}", file=sys.stderr)
-            sys.exit(1)
-        except KeyError:
-            print("Error: 'line-rate' attribute missing in coverage.xml.", file=sys.stderr)
-            sys.exit(1)
-
-        # Generate SVG badges
-        color = 'brightgreen' if coverage_pct >= 78.0 else 'critical'
-        response = requests.get(f'https://img.shields.io/static/v1?label=Coverage&message={coverage_pct:.2f}%&color={color}')
-        with open('badges/coverage.svg', 'w') as f:
-            f.write(response.text)
-
-        # Generate test badge - assume passing if we get here
-        response = requests.get('https://img.shields.io/static/v1?label=Tests&message=passing&color=brightgreen')
-        with open('badges/tests.svg', 'w') as f:
-            f.write(response.text)
-        PYTHON_SCRIPT
-
-    - name: Upload tests artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-output
-        path: allure-history/test-results/
-        retention-days: 1
-
-    - name: Upload badges artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: badges-output
-        path: badges
-        retention-days: 1
-
+      - name: Checkout source code
+        uses: actions/checkout@v4
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        id: cache-dependencies
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install dependencies
+        if: steps.cache-dependencies.outputs.cache-hit != 'true'
+        run: |
+          pip install -r requirements-test.txt
+  test:
+    needs: cache-requirements-install
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Restore pip cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install dependencies
+        run: |
+          pip install -r requirements-test.txt
+      - name: Test with pytest
+        run: |
+          pytest && rm htmlcov/.gitignore
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        if: ${{ success() }}
+        with:
+          name: coverage-output
+          path: htmlcov
+          retention-days: 1
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        if: always()
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+      - name: Generate Allure Report
+        uses: simple-elf/allure-report-action@master
+        if: always()
+        with:
+          allure_results: allure-results
+          subfolder: test-results
+          allure_report: allure-report
+          allure_history: allure-history
+          keep_reports: 100
+      - name: Generate badges
+        run: |
+          python generate_badges.py
+      - name: Upload tests artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-output
+          path: allure-history/test-results/
+          retention-days: 1
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-output
+          path: htmlcov
+          retention-days: 1
+      - name: Upload badges artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: badges-output
+          path: badges
+          retention-days: 1
   publish-test-report:
     needs: test
     runs-on: ubuntu-latest
@@ -158,7 +130,6 @@ jobs:
           publish_branch: gh-pages
           publish_dir: allure-history
           destination_dir: test-results
-
   publish-coverage-report:
     needs: publish-test-report
     runs-on: ubuntu-latest
@@ -166,7 +137,7 @@ jobs:
       - name: Download coverage artifacts
         uses: actions/download-artifact@v4
         with:
-          name: coverage-report
+          name: coverage-output
           path: coverage
       - name: Checkout gh-pages
         uses: actions/checkout@v4
@@ -183,7 +154,6 @@ jobs:
           publish_branch: gh-pages
           publish_dir: coverage
           destination_dir: test-coverage
-
   publish-badges:
     needs: publish-coverage-report
     runs-on: ubuntu-latest
