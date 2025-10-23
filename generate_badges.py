@@ -1,72 +1,89 @@
 #!/usr/bin/env python3
-"""Generate coverage badges from coverage.xml report"""
+"""Generate coverage and test badges from coverage.xml and allure reports"""
 
+import json
+import os
+import shutil
 import sys
 import xml.etree.ElementTree as ET
 
+import requests
 
-def get_coverage_percentage(coverage_xml_path: str) -> float:
-    """Extract coverage percentage from coverage.xml"""
+
+def generate_badges():
+    """Generate SVG badges for tests and coverage"""
+    badges_directory = "./badges"
+
+    # Read test results from allure report
     try:
-        tree = ET.parse(coverage_xml_path)
-        root = tree.getroot()
+        with open("./allure-report/widgets/summary.json") as f:
+            test_data = json.load(f)
+            test_result = test_data["statistic"]["total"] == test_data["statistic"]["passed"]
+    except FileNotFoundError:
+        print("Warning: allure-report/widgets/summary.json not found, skipping test badge", file=sys.stderr)
+        test_result = None
 
-        # Parse coverage percentage from line-rate
-        line_rate = float(root.attrib.get("line-rate", 0))
-        return round(line_rate * 100, 2)
-    except Exception as e:
-        print(f"Error parsing coverage: {e}", file=sys.stderr)
-        return 0.0
+    # Read coverage from coverage.xml
+    coverage_result = float(ET.parse("./coverage.xml").getroot().attrib["line-rate"]) * 100.0
 
+    # Create badges directory
+    if os.path.exists(badges_directory) and os.path.isdir(badges_directory):
+        shutil.rmtree(badges_directory)
+        os.mkdir(badges_directory)
+    else:
+        os.mkdir(badges_directory)
 
-def generate_badge_json(coverage_pct: float) -> dict:
-    """Generate badge JSON for shields.io endpoint"""
-    if coverage_pct >= 95:
+    # Generate test badge
+    if test_result is not None:
+        url_data = "passing&color=brightgreen" if test_result else "failing&color=critical"
+        response = requests.get(
+            "https://img.shields.io/static/v1?label=Tests&message=" + url_data,
+            timeout=10,
+        )
+        with open(badges_directory + "/tests.svg", "w") as f:
+            f.write(response.text)
+        print(f"Test badge generated: {'passing' if test_result else 'failing'}")
+
+    # Generate coverage badge
+    url_data = "brightgreen" if coverage_result == 100.0 else "critical"
+    response = requests.get(
+        f"https://img.shields.io/static/v1?label=Coverage&message={coverage_result:.2f}%&color={url_data}",
+        timeout=10,
+    )
+    with open(badges_directory + "/coverage.svg", "w") as f:
+        f.write(response.text)
+    print(f"Coverage badge generated: {coverage_result:.2f}%")
+
+    # Also generate JSON badge for compatibility
+    if coverage_result >= 95:
         color = "brightgreen"
-    elif coverage_pct >= 80:
+    elif coverage_result >= 80:
         color = "green"
-    elif coverage_pct >= 60:
+    elif coverage_result >= 60:
         color = "yellow"
     else:
         color = "red"
 
-    return {
+    badge_json = {
         "schemaVersion": 1,
         "label": "coverage",
-        "message": f"{coverage_pct}%",
+        "message": f"{coverage_result:.2f}%",
         "color": color,
     }
 
-
-def main():
-    coverage_xml_path = "coverage.xml"
-    coverage_pct = get_coverage_percentage(coverage_xml_path)
-
-    print(f"Coverage: {coverage_pct}%")
-
-    # Create badges directory if it doesn't exist
-    import os
-
-    os.makedirs("badges", exist_ok=True)
-
-    # Generate badge JSON
-    import json
-
-    badge = generate_badge_json(coverage_pct)
-
     badge_path = "badges/coverage-badge.json"
     with open(badge_path, "w") as f:
-        json.dump(badge, f, indent=2)
+        json.dump(badge_json, f, indent=2)
 
     print(f"Badge JSON generated: {badge_path}")
 
     # Exit with error if below threshold
-    if coverage_pct < 78:
-        print(f"ERROR: Coverage {coverage_pct}% is below 78% threshold", file=sys.stderr)
+    if coverage_result < 78:
+        print(f"ERROR: Coverage {coverage_result:.2f}% is below 78% threshold", file=sys.stderr)
         sys.exit(1)
 
     sys.exit(0)
 
 
 if __name__ == "__main__":
-    main()
+    generate_badges()
