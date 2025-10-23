@@ -9,12 +9,14 @@ This module contains fixtures for drive file operations including:
 """
 
 # Upload URL response - returned by /upload/web endpoint
-UPLOAD_URL_RESPONSE = {
-    "document_id": "NEW-DOCUMENT-ID-123",
-    "url": "https://p31-docws.icloud.com:443/ws/upload/file",
-    "owner": "OWNER_ID",
-    "zone": "com.apple.CloudDocs",
-}
+UPLOAD_URL_RESPONSE = [
+    {
+        "document_id": "NEW-DOCUMENT-ID-123",
+        "url": "https://p31-docws.icloud.com:443/ws/upload/file",
+        "owner": "OWNER_ID",
+        "zone": "com.apple.CloudDocs",
+    },
+]
 
 # Content update response - returned by /update/documents endpoint
 UPDATE_CONTENTWS_RESPONSE = {

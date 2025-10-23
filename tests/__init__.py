@@ -75,7 +75,9 @@ class ICloudPySessionMock(base.ICloudPySession):
         """Mock request."""
         params = kwargs.get("params")
         headers = kwargs.get("headers")
-        data = json.loads(kwargs.get("data", "{}"))
+        # Only parse data if it exists and is not a file upload
+        data_str = kwargs.get("data", "{}")
+        data = json.loads(data_str) if data_str else {}
 
         # Login
         if self.service.setup_endpoint in url:
@@ -164,10 +166,24 @@ class ICloudPySessionMock(base.ICloudPySession):
         if "/createFolders" in url and method == "POST":
             self.mkdir_called = True
             return ResponseMock(DRIVE_SUBFOLDER_WORKING_AFTER_MKDIR)
+        # Drive app library
+        if "retrieveAppLibraries" in url and method == "GET":
+            return ResponseMock({"items": []})
         # Drive upload endpoints
         if "/upload/web" in url and method == "POST":
             self.upload_count += 1
             return ResponseMock(UPLOAD_URL_RESPONSE)
+        if "/ws/upload/file" in url and method == "POST":
+            # Mock the actual file upload endpoint
+            return ResponseMock({
+                "singleFile": {
+                    "fileChecksum": "test_checksum",
+                    "wrappingKey": "test_wrapping_key",
+                    "referenceChecksum": "test_ref_checksum",
+                    "size": 123,
+                    "receipt": "test_receipt",
+                },
+            })
         if "/update/documents" in url and method == "POST":
             return ResponseMock(UPDATE_CONTENTWS_RESPONSE)
         # Drive rename/delete operations
