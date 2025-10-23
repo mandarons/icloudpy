@@ -20,15 +20,15 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
-    
-    - name: Set up Python 3.8
+
+    - name: Set up Python 3.10
       uses: actions/setup-python@v5
       with:
-        python-version: '3.8'
-    
+        python-version: '3.10'
+
     - name: Cache pip packages
       uses: actions/cache@v4
       with:
@@ -36,25 +36,25 @@ jobs:
         key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
-    
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install -r requirements-test.txt
-    
+
     - name: Run linter
       run: |
         ruff check
-    
+
     - name: Run tests with coverage
       run: |
         pytest
-    
+
     - name: Generate coverage XML
       run: |
         coverage xml
-    
+
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
@@ -62,7 +62,7 @@ jobs:
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: true
-    
+
     - name: Upload coverage reports as artifact
       uses: actions/upload-artifact@v4
       with:
@@ -71,7 +71,7 @@ jobs:
           htmlcov/
           coverage.xml
         retention-days: 1
-    
+
     - name: Generate Allure Report
       uses: simple-elf/allure-report-action@master
       if: always()
@@ -81,7 +81,7 @@ jobs:
         allure_report: allure-report
         allure_history: allure-history
         keep_reports: 100
-    
+
     - name: Generate badges (legacy)
       continue-on-error: true
       run: |
@@ -90,29 +90,29 @@ jobs:
         python3 << 'PYTHON_SCRIPT'
         import xml.etree.ElementTree as ET
         import requests
-        
+
         # Get coverage
         coverage_pct = float(ET.parse('./coverage.xml').getroot().attrib['line-rate']) * 100.0
-        
+
         # Generate SVG badges
         color = 'brightgreen' if coverage_pct == 100.0 else 'critical'
         response = requests.get(f'https://img.shields.io/static/v1?label=Coverage&message={coverage_pct:.2f}%&color={color}')
         with open('badges/coverage.svg', 'w') as f:
             f.write(response.text)
-        
+
         # Generate test badge - assume passing if we get here
         response = requests.get('https://img.shields.io/static/v1?label=Tests&message=passing&color=brightgreen')
         with open('badges/tests.svg', 'w') as f:
             f.write(response.text)
         PYTHON_SCRIPT
-    
+
     - name: Upload tests artifacts
       uses: actions/upload-artifact@v4
       with:
         name: test-output
         path: allure-history/test-results/
         retention-days: 1
-    
+
     - name: Upload badges artifacts
       uses: actions/upload-artifact@v4
       with:
