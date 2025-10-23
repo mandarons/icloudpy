@@ -77,7 +77,11 @@ class ICloudPySessionMock(base.ICloudPySession):
         headers = kwargs.get("headers")
         # Only parse data if it exists and is not a file upload
         data_str = kwargs.get("data", "{}")
-        data = json.loads(data_str) if data_str else {}
+        # Only parse JSON if data_str is a string and not the default '{}'
+        if isinstance(data_str, str) and data_str != '{}':
+            data = json.loads(data_str)
+        else:
+            data = {}
 
         # Login
         if self.service.setup_endpoint in url:
