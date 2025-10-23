@@ -78,7 +78,7 @@ class ICloudPySessionMock(base.ICloudPySession):
         # Only parse data if it exists and is not a file upload
         data_str = kwargs.get("data", "{}")
         # Only parse JSON if data_str is a string and not the default '{}'
-        if isinstance(data_str, str) and data_str != '{}':
+        if isinstance(data_str, str) and data_str != "{}":
             data = json.loads(data_str)
         else:
             data = {}

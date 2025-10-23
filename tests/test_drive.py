@@ -1,9 +1,13 @@
 """Drive service tests."""
+import http.cookiejar as cookielib
+import io
 from unittest import TestCase
 
 import pytest
 
-from . import ICloudPyServiceMock
+from icloudpy.exceptions import ICloudPyAPIResponseException
+
+from . import ICloudPyServiceMock, ResponseMock
 from .const import AUTHENTICATED_USER, CLIENT_ID, VALID_PASSWORD
 
 
@@ -119,7 +123,6 @@ class DriveTokenTests(TestCase):
         self.service.session.cookies.clear()
 
         # Create a malformed cookie (without the t= pattern)
-        import http.cookiejar as cookielib
 
         cookie = cookielib.Cookie(
             version=0,
@@ -148,8 +151,6 @@ class DriveTokenTests(TestCase):
         """Test successful token extraction from valid cookie."""
         # Clear cookies and add a valid one
         self.service.session.cookies.clear()
-
-        import http.cookiejar as cookielib
 
         cookie = cookielib.Cookie(
             version=0,
@@ -193,7 +194,6 @@ class DriveFileOperationsTests(TestCase):
 
         response = file_node.open(stream=True)
         assert response.raw is not None
-        import io
 
         assert isinstance(response.raw, io.BytesIO)
         # Verify it's empty
@@ -216,6 +216,9 @@ class DriveFolderOperationsTests(TestCase):
 
         result = file.rename(new_name)
         assert result is not None
+        # Verify the response structure
+        assert "items" in result
+        assert len(result["items"]) > 0
         # Verify the mock was called
         assert self.service.session.rename_count > 0
 
@@ -305,8 +308,6 @@ class DriveUploadTests(TestCase):
 
     def test_get_upload_contentws_url_success(self):
         """Test upload URL generation."""
-        import http.cookiejar as cookielib
-        import io
 
         # Add a valid cookie for token extraction
         cookie = cookielib.Cookie(
@@ -339,8 +340,6 @@ class DriveUploadTests(TestCase):
 
     def test_send_file_complete_flow(self):
         """Test full file upload process."""
-        import http.cookiejar as cookielib
-        import io
 
         # Add a valid cookie for token extraction
         cookie = cookielib.Cookie(
@@ -404,11 +403,6 @@ class DriveErrorHandlingTests(TestCase):
         self.service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD, None, True, CLIENT_ID)
         self.drive = self.service.drive
 
-    def test_get_file_with_package_token(self):
-        """Test file download using package_token instead of data_token."""
-        # We need to add a fixture that returns package_token
-        # For now, we'll test the error case when both tokens are missing
-
     def test_get_node_data_success(self):
         """Test successful node data retrieval."""
         # Test the get_node_data method
@@ -454,7 +448,6 @@ class DriveErrorPathTests(TestCase):
         """Test error when neither data_token nor package_token present."""
         # We need to mock a response without tokens
         # Let's create a custom mock for this case
-        from tests import ResponseMock
 
         # Save the original request method
         original_request = self.service.session.request
@@ -475,7 +468,6 @@ class DriveErrorPathTests(TestCase):
 
     def test_get_file_with_package_token(self):
         """Test file download using package_token instead of data_token."""
-        from tests import ResponseMock
 
         # Save the original request method
         original_request = self.service.session.request
@@ -490,7 +482,6 @@ class DriveErrorPathTests(TestCase):
                     },
                 })
             if "icloud-content.com" in url:
-                import io
                 return ResponseMock({}, raw=io.BytesIO(b"test content"))
             return original_request(method, url, **kwargs)
 
@@ -504,8 +495,6 @@ class DriveErrorPathTests(TestCase):
 
     def test_content_type_detection(self):
         """Test MIME type guessing for various extensions."""
-        import http.cookiejar as cookielib
-        import io
 
         # Add a valid cookie for token extraction
         cookie = cookielib.Cookie(
@@ -542,6 +531,9 @@ class DriveErrorPathTests(TestCase):
             doc_id, url = self.drive._get_upload_contentws_url(file_obj)
             # Verify it didn't fail - content type is handled internally
             assert doc_id is not None
+            assert url is not None
+            # Verify the URL contains the upload endpoint
+            assert "upload" in url
 
 
 class DriveHTTPErrorTests(TestCase):
@@ -554,8 +546,6 @@ class DriveHTTPErrorTests(TestCase):
 
     def test_get_node_data_http_error(self):
         """Test get_node_data with HTTP error response."""
-        from icloudpy.exceptions import ICloudPyAPIResponseException
-        from tests import ResponseMock
 
         # Save the original request method
         original_request = self.service.session.request
@@ -577,8 +567,6 @@ class DriveHTTPErrorTests(TestCase):
 
     def test_get_file_http_error(self):
         """Test get_file with HTTP error response."""
-        from icloudpy.exceptions import ICloudPyAPIResponseException
-        from tests import ResponseMock
 
         # Save the original request method
         original_request = self.service.session.request
@@ -600,8 +588,6 @@ class DriveHTTPErrorTests(TestCase):
 
     def test_get_app_data_http_error(self):
         """Test get_app_data with HTTP error response."""
-        from icloudpy.exceptions import ICloudPyAPIResponseException
-        from tests import ResponseMock
 
         # Save the original request method
         original_request = self.service.session.request
@@ -623,11 +609,6 @@ class DriveHTTPErrorTests(TestCase):
 
     def test_upload_url_http_error(self):
         """Test upload URL generation with HTTP error."""
-        import http.cookiejar as cookielib
-        import io
-
-        from icloudpy.exceptions import ICloudPyAPIResponseException
-        from tests import ResponseMock
 
         # Add a valid cookie
         cookie = cookielib.Cookie(
@@ -673,11 +654,6 @@ class DriveHTTPErrorTests(TestCase):
 
     def test_update_contentws_http_error(self):
         """Test content update with HTTP error."""
-        import http.cookiejar as cookielib
-        import io
-
-        from icloudpy.exceptions import ICloudPyAPIResponseException
-        from tests import ResponseMock
 
         # Add a valid cookie
         cookie = cookielib.Cookie(
@@ -731,11 +707,6 @@ class DriveHTTPErrorTests(TestCase):
 
     def test_send_file_upload_http_error(self):
         """Test send_file with HTTP error during file upload."""
-        import http.cookiejar as cookielib
-        import io
-
-        from icloudpy.exceptions import ICloudPyAPIResponseException
-        from tests import ResponseMock
 
         # Add a valid cookie
         cookie = cookielib.Cookie(
@@ -781,8 +752,6 @@ class DriveHTTPErrorTests(TestCase):
 
     def test_move_to_trash_http_error(self):
         """Test move to trash with HTTP error."""
-        from icloudpy.exceptions import ICloudPyAPIResponseException
-        from tests import ResponseMock
 
         # Save the original request method
         original_request = self.service.session.request
