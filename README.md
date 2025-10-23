@@ -3,7 +3,7 @@
 [![CI - Main](https://github.com/mandarons/icloudpy/actions/workflows/ci-main-test-coverage.yml/badge.svg)](https://github.com/mandarons/icloudpy/actions/workflows/ci-main-test-coverage.yml)
 [![Tests](https://mandarons.github.io/icloudpy/badges/tests.svg)](https://mandarons.github.io/icloudpy/test-results/)
 [![Coverage](https://mandarons.github.io/icloudpy/badges/coverage.svg)](https://mandarons.github.io/icloudpy/test-coverage/index.html)
-![Python Version](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-blue)
+![Python Version](https://img.shields.io/badge/python-3.8-blue)
 [![Discord](https://img.shields.io/discord/871555550444408883?style=for-the-badge)](https://discord.gg/BnNpJUQ2)
 <a href="https://www.buymeacoffee.com/mandarons" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 30px !important;width: 150px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
 

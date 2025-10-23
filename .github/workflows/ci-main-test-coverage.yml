@@ -20,17 +20,14 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11']
     
     steps:
     - uses: actions/checkout@v4
     
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python 3.8
       uses: actions/setup-python@v5
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: '3.8'
     
     - name: Cache pip packages
       uses: actions/cache@v4
@@ -55,12 +52,10 @@ jobs:
         pytest
     
     - name: Generate coverage XML
-      if: matrix.python-version == '3.10'
       run: |
         coverage xml
     
     - name: Upload coverage to Codecov
-      if: matrix.python-version == '3.10'
       uses: codecov/codecov-action@v3
       with:
         file: ./coverage.xml
@@ -69,7 +64,6 @@ jobs:
         fail_ci_if_error: true
     
     - name: Upload coverage reports as artifact
-      if: matrix.python-version == '3.10'
       uses: actions/upload-artifact@v4
       with:
         name: coverage-report
@@ -80,7 +74,7 @@ jobs:
     
     - name: Generate Allure Report
       uses: simple-elf/allure-report-action@master
-      if: always() && matrix.python-version == '3.10'
+      if: always()
       with:
         allure_results: allure-results
         subfolder: test-results
@@ -89,7 +83,6 @@ jobs:
         keep_reports: 100
     
     - name: Generate badges (legacy)
-      if: matrix.python-version == '3.10'
       continue-on-error: true
       run: |
         # Legacy badge generation for gh-pages
@@ -114,7 +107,6 @@ jobs:
         PYTHON_SCRIPT
     
     - name: Upload tests artifacts
-      if: matrix.python-version == '3.10'
       uses: actions/upload-artifact@v4
       with:
         name: test-output
@@ -122,7 +114,6 @@ jobs:
         retention-days: 1
     
     - name: Upload badges artifacts
-      if: matrix.python-version == '3.10'
       uses: actions/upload-artifact@v4
       with:
         name: badges-output
