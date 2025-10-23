@@ -75,6 +75,20 @@ class ICloudPySessionMock(base.ICloudPySession):
         self.rename_count = 0
         self.photo_query_count = {}  # Track queries per album to prevent infinite loops
 
+    def _get_query_offset(self, data):
+        """Extract offset value from query data for pagination tracking.
+
+        Args:
+            data: Query data dictionary
+
+        Returns:
+            int: Offset value from the first filterBy entry, or 0 if not found
+        """
+        filter_by = data.get("query", {}).get("filterBy", [{}])
+        if isinstance(filter_by, list) and len(filter_by) > 0:
+            return filter_by[0].get("fieldValue", {}).get("value", 0)
+        return 0
+
     def request(self, method, url, **kwargs):
         """Mock request."""
         params = kwargs.get("params")
@@ -278,7 +292,8 @@ class ICloudPySessionMock(base.ICloudPySession):
                 # Asset queries - CPLAssetAndMasterByAddedDate
                 if query_type == "CPLAssetAndMasterByAddedDate":
                     # Track query count to prevent infinite loops
-                    query_key = f"{query_type}_offset_{data.get('query', {}).get('filterBy', [{}])[0].get('fieldValue', {}).get('value', 0)}"
+                    offset = self._get_query_offset(data)
+                    query_key = f"{query_type}_offset_{offset}"
                     if query_key not in self.photo_query_count:
                         self.photo_query_count[query_key] = 0
 
@@ -295,7 +310,8 @@ class ICloudPySessionMock(base.ICloudPySession):
                 # Smart album queries (Videos, Favorites, etc.)
                 if query_type == "CPLAssetAndMasterInSmartAlbumByAssetDate":
                     # Track query count
-                    query_key = f"{query_type}_offset_{data.get('query', {}).get('filterBy', [{}])[0].get('fieldValue', {}).get('value', 0)}"
+                    offset = self._get_query_offset(data)
+                    query_key = f"{query_type}_offset_{offset}"
                     if query_key not in self.photo_query_count:
                         self.photo_query_count[query_key] = 0
 
@@ -312,7 +328,8 @@ class ICloudPySessionMock(base.ICloudPySession):
                 # Container relation queries (for user albums)
                 if query_type == "CPLContainerRelationLiveByAssetDate":
                     # Track query count
-                    query_key = f"{query_type}_offset_{data.get('query', {}).get('filterBy', [{}])[0].get('fieldValue', {}).get('value', 0)}"
+                    offset = self._get_query_offset(data)
+                    query_key = f"{query_type}_offset_{offset}"
                     if query_key not in self.photo_query_count:
                         self.photo_query_count[query_key] = 0
 
