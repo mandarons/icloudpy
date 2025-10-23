@@ -22,5 +22,5 @@ echo "Ruffing ..." &&
     echo "Reporting ..." &&
     allure generate --clean &&
     echo "Building the distribution ..." &&
-    python setup.py sdist bdist_wheel &&
+    python -m build &&
     echo "Done."

@@ -8,3 +8,4 @@ ruff
 ipython
 pre-commit
 setuptools
+build

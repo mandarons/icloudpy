@@ -94,12 +94,6 @@ jobs:
           name: test-output
           path: allure-history/test-results/
           retention-days: 1
-      - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-output
-          path: htmlcov
-          retention-days: 1
       - name: Upload badges artifacts
         uses: actions/upload-artifact@v4
         with:
