@@ -1,0 +1,1 @@
+ERROR    icloudpy.base:base.py:168 Zone not found. Please log into https://icloud.com/ to manually finish setting up your iCloud service (ZONE_NOT_FOUND)

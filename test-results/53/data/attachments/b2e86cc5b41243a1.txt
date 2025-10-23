@@ -1,0 +1,1 @@
+ERROR    icloudpy.base:base.py:180 Authentication required for Account. (500)
