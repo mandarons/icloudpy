@@ -102,7 +102,10 @@ class ICloudPySessionMock(base.ICloudPySession):
                 self._raise_error(None, "FOUND_CODE")
 
             if "validate" in url and method == "POST":
-                if headers.get("X-APPLE-WEBAUTH-TOKEN") == VALID_COOKIE:
+                if headers and headers.get("X-APPLE-WEBAUTH-TOKEN") == VALID_COOKIE:
+                    return ResponseMock(LOGIN_WORKING)
+                # If no specific header, return success (token validation passes)
+                if self.service.session_data.get("session_token") in [VALID_TOKEN, REQUIRES_2FA_TOKEN]:
                     return ResponseMock(LOGIN_WORKING)
                 self._raise_error(None, "Session expired")
 
@@ -125,7 +128,7 @@ class ICloudPySessionMock(base.ICloudPySession):
 
             if "securitycode" in url and method == "POST":
                 if data.get("securityCode", {}).get("code") != VALID_2FA_CODE:
-                    self._raise_error(None, "Incorrect code")
+                    self._raise_error(-21669, "Incorrect verification code")
 
                 self.service.session_data["session_token"] = VALID_TOKEN
                 return ResponseMock("", status_code=204)
