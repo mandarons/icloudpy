@@ -770,27 +770,3 @@ class DriveHTTPErrorTests(TestCase):
 
         # Restore original
         self.service.session.request = original_request
-
-
-class DrivePython2CompatTests(TestCase):
-    """Test Python 2 compatibility paths.
-
-    Note: Line 368 in drive.py (PY2 encode path) is marked with pragma: no cover
-    because it's unreachable in Python 3.8+ which is the minimum supported version.
-    This is legacy code from when the project supported Python 2.
-    """
-
-    def setUp(self):
-        """Set up test."""
-        self.service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD, None, True, CLIENT_ID)
-        self.drive = self.service.drive
-
-    def test_drive_node_str_python3_path(self):
-        """Test __str__ method Python 3 code path."""
-        file = self.drive["iCloudPy"]["Test"]["Scanned document 1.pdf"]
-
-        # In Python 3, __str__ returns unicode string directly
-        result = str(file)
-        assert result is not None
-        assert "file" in result
-        assert isinstance(result, str)

@@ -9,7 +9,6 @@ from datetime import datetime
 from urllib.parse import urlencode  # pylint: disable=bad-option-value,relative-import
 
 from pytz import UTC
-from six import PY2
 
 # fmt: on
 from icloudpy.exceptions import ICloudPyServiceNotActivatedException
@@ -607,10 +606,7 @@ class PhotoAlbum:
         return self.title
 
     def __str__(self):
-        as_unicode = self.__unicode__()
-        if PY2:
-            return as_unicode.encode("utf-8", "ignore")
-        return as_unicode
+        return self.__unicode__()
 
     def __repr__(self):
         return f"<{type(self).__name__}: '{self}'>"

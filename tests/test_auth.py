@@ -939,20 +939,6 @@ class TestSRPAuthenticationWithHeaders(TestCase):
         assert service.data is not None
 
 
-class TestPy2Compatibility(TestCase):
-    """Test Python 2 compatibility code paths."""
-
-    def test_str_with_py2_flag(self):
-        """Test __str__ method with PY2 flag."""
-        service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD)
-
-        # PY2 is imported from six and will be False in Python 3
-        # But the code path exists for backwards compatibility
-        str_repr = str(service)
-        assert isinstance(str_repr, str)
-        assert AUTHENTICATED_USER in str_repr
-
-
 class TestAuthenticationWithCredentialsService(TestCase):
     """Test _authenticate_with_credentials_service method."""
 
