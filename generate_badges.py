@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate coverage badges from coverage.xml report"""
+
 import sys
 import xml.etree.ElementTree as ET
 
@@ -43,14 +44,21 @@ def main():
 
     print(f"Coverage: {coverage_pct}%")
 
+    # Create badges directory if it doesn't exist
+    import os
+
+    os.makedirs("badges", exist_ok=True)
+
     # Generate badge JSON
     import json
+
     badge = generate_badge_json(coverage_pct)
 
-    with open("coverage-badge.json", "w") as f:
+    badge_path = "badges/coverage-badge.json"
+    with open(badge_path, "w") as f:
         json.dump(badge, f, indent=2)
 
-    print("Badge JSON generated: coverage-badge.json")
+    print(f"Badge JSON generated: {badge_path}")
 
     # Exit with error if below threshold
     if coverage_pct < 78:
