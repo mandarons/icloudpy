@@ -14,7 +14,6 @@ from uuid import uuid1
 
 import srp
 from requests import Session
-from six import PY2
 
 from icloudpy.exceptions import (
     ICloudPy2SARequiredException,
@@ -689,10 +688,7 @@ class ICloudPyService:
         return f"iCloud API: {self.user.get('accountName')}"
 
     def __str__(self):
-        as_unicode = self.__unicode__()
-        if PY2:
-            return as_unicode.encode("utf-8", "ignore")
-        return as_unicode
+        return self.__unicode__()
 
     def __repr__(self):
         return f"<{str(self)}>"

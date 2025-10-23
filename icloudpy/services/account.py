@@ -1,8 +1,6 @@
 """Account service."""
 from collections import OrderedDict
 
-from six import PY2
-
 from icloudpy.utils import underscore_to_camelcase
 
 
@@ -74,10 +72,7 @@ class AccountService:
         return f"{{devices: {len(self.devices)}, family: {len(self.family)}, storage: {storage_available} bytes free}}"
 
     def __str__(self):
-        as_unicode = self.__unicode__()
-        if PY2:
-            return as_unicode.encode("utf-8", "ignore")
-        return as_unicode
+        return self.__unicode__()
 
     def __repr__(self):
         return f"<{type(self).__name__}: {str(self)}>"
@@ -93,10 +88,7 @@ class AccountDevice(dict):
         return f"{{model: {self.model_display_name}, name: {self.name}}}"
 
     def __str__(self):
-        as_unicode = self.__unicode__()
-        if PY2:
-            return as_unicode.encode("utf-8", "ignore")
-        return as_unicode
+        return self.__unicode__()
 
     def __repr__(self):
         return f"<{type(self).__name__}: {str(self)}>"
@@ -210,10 +202,7 @@ class FamilyMember:
         )
 
     def __str__(self):
-        as_unicode = self.__unicode__()
-        if PY2:
-            return as_unicode.encode("utf-8", "ignore")
-        return as_unicode
+        return self.__unicode__()
 
     def __repr__(self):
         return f"<{type(self).__name__}: {str(self)}>"
@@ -249,10 +238,7 @@ class AccountStorageUsageForMedia:
         return f"{{key: {self.key}, usage: {self.usage_in_bytes} bytes}}"
 
     def __str__(self):
-        as_unicode = self.__unicode__()
-        if PY2:
-            return as_unicode.encode("utf-8", "ignore")
-        return as_unicode
+        return self.__unicode__()
 
     def __repr__(self):
         return f"<{type(self).__name__}: {str(self)}>"
@@ -326,10 +312,7 @@ class AccountStorageUsage:
         return f"{self.used_storage_in_percent}% used of {self.total_storage_in_bytes} bytes"
 
     def __str__(self):
-        as_unicode = self.__unicode__()
-        if PY2:
-            return as_unicode.encode("utf-8", "ignore")
-        return as_unicode
+        return self.__unicode__()
 
     def __repr__(self):
         return f"<{type(self).__name__}: {str(self)}>"
@@ -353,10 +336,7 @@ class AccountStorage:
         return f"{{usage: {self.usage}, usages_by_media: {self.usages_by_media}}}"
 
     def __str__(self):
-        as_unicode = self.__unicode__()
-        if PY2:
-            return as_unicode.encode("utf-8", "ignore")
-        return as_unicode
+        return self.__unicode__()
 
     def __repr__(self):
         return f"<{type(self).__name__}: {str(self)}>"

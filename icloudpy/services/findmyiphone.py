@@ -2,8 +2,6 @@
 
 import json
 
-from six import PY2
-
 from icloudpy.exceptions import ICloudPyNoDevicesException
 
 
@@ -80,10 +78,7 @@ class FindMyiPhoneServiceManager:
         return str(self._devices)
 
     def __str__(self):
-        as_unicode = self.__unicode__()
-        if PY2:
-            return as_unicode.encode("utf-8", "ignore")
-        return as_unicode
+        return self.__unicode__()
 
     def __repr__(self):
         return str(self)
@@ -210,10 +205,7 @@ class AppleDevice:
         return f"{display_name}: {name}"
 
     def __str__(self):
-        as_unicode = self.__unicode__()
-        if PY2:
-            return as_unicode.encode("utf-8", "ignore")
-        return as_unicode
+        return self.__unicode__()
 
     def __repr__(self):
         return f"<AppleDevice({self})>"

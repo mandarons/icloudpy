@@ -8,7 +8,6 @@ from datetime import datetime, timedelta
 from re import search
 
 from requests import Response
-from six import PY2
 
 
 class DriveService:
@@ -363,10 +362,7 @@ class DriveNode:
         return f"{{type: {self.type}, name: {self.name}}}"
 
     def __str__(self):
-        as_unicode = self.__unicode__()
-        if PY2:  # pragma: no cover
-            return as_unicode.encode("utf-8", "ignore")
-        return as_unicode
+        return self.__unicode__()
 
     def __repr__(self):
         return f"<{type(self).__name__}: {str(self)}>"
