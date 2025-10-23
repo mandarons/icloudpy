@@ -87,6 +87,7 @@ jobs:
       run: |
         # Legacy badge generation for gh-pages
         mkdir -p badges
+        pip install requests
         python3 << 'PYTHON_SCRIPT'
         import xml.etree.ElementTree as ET
         import requests
