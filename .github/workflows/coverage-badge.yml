@@ -1,0 +1,41 @@
+name: Update Coverage Badge
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'icloudpy/**'
+      - 'tests/**'
+
+jobs:
+  badge:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install -r requirements-test.txt
+    
+    - name: Run tests with coverage
+      run: |
+        pytest
+    
+    - name: Generate badge
+      run: |
+        python generate_badges.py
+    
+    - name: Commit badge
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add coverage-badge.json
+        git diff --quiet && git diff --staged --quiet || git commit -m "Update coverage badge [skip ci]"
+        git push
