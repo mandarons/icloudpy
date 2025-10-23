@@ -12,10 +12,12 @@ SRP_INIT_OK = {
     "iteration": 20433,
     "salt": "0samK84bcBmkVsswOpZbZg==",
     "protocol": "s2k",
-    "b": "STVHcWTN9YOYn4IgtIJ6UPdPbvzvL+zza/l+6yUHUtdEyxwzpB78y8wqZ8QWSbVqjBcpl32iEA4T3nYp0LWZ5hD3r3yIJFloXvX0kpBJkr\
-        +Nh8EfHuW1V50A8riH6VWyuJ8m3JmOO7/xkNgP7je8GMpt/5f/7qE3AOj73e3JR0fzQ7IopdU0tlyVX0tD7T6wCyHS52GJWDdq1I2bgzurIK2\
-        /ZjR/Hwzd/67oFQPtKQgjrSRaKo5MJEfDP7C9wOlXsZqbb7igX6PeZRWrfl+iQFaA/FVeWSngB07ja3wOryY9GsYO06ELGOaQ+MpsT7mouqrGT\
-        fOJ0OMh9EgrkJEM6w==",
+    "b": (
+        "STVHcWTN9YOYn4IgtIJ6UPdPbvzvL+zza/l+6yUHUtdEyxwzpB78y8wqZ8QWSbVqjBcpl32iEA4T3nYp0LWZ5hD3r3yIJFloXvX0kpBJkr"
+        "+Nh8EfHuW1V50A8riH6VWyuJ8m3JmOO7/xkNgP7je8GMpt/5f/7qE3AOj73e3JR0fzQ7IopdU0tlyVX0tD7T6wCyHS52GJWDdq1I2bgzurIK2"
+        "/ZjR/Hwzd/67oFQPtKQgjrSRaKo5MJEfDP7C9wOlXsZqbb7igX6PeZRWrfl+iQFaA/FVeWSngB07ja3wOryY9GsYO06ELGOaQ+MpsT7mouqrGT"
+        "fOJ0OMh9EgrkJEM6w=="
+    ),
     "c": "e-1be-8746c235-b41c-11ef-bd17-c780acb4fe15:PRN",
 }
 
