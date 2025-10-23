@@ -7,6 +7,9 @@ on:
       - 'icloudpy/**'
       - 'tests/**'
 
+permissions:
+  contents: write
+
 jobs:
   badge:
     runs-on: ubuntu-latest
