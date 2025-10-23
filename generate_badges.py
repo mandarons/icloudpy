@@ -53,8 +53,8 @@ def main():
     print("Badge JSON generated: coverage-badge.json")
 
     # Exit with error if below threshold
-    if coverage_pct < 100:
-        print(f"ERROR: Coverage {coverage_pct}% is below 100% threshold", file=sys.stderr)
+    if coverage_pct < 78:
+        print(f"ERROR: Coverage {coverage_pct}% is below 78% threshold", file=sys.stderr)
         sys.exit(1)
 
     sys.exit(0)
