@@ -1,5 +1,6 @@
 """Tests for Photos service."""
 import unittest
+from unittest.mock import patch
 
 from icloudpy.exceptions import ICloudPyServiceNotActivatedException
 
@@ -78,19 +79,68 @@ class PhotoLibraryInitializationTests(unittest.TestCase):
 
     def test_photo_library_indexing_not_finished_raises_exception(self):
         """Test that indexing not finished raises appropriate exception."""
-        # We need to mock a service that returns indexing in progress
-        # Since our mock always returns FINISHED, we'll test the behavior indirectly
-        # by verifying the exception is defined correctly
+        # Create a mock response with IN_PROGRESS state
+        in_progress_response = {
+            "records": [
+                {
+                    "recordName": "_5c82ba39-fa99-4f36-ad2a-1a87028f8fa4",
+                    "recordType": "CheckIndexingState",
+                    "fields": {
+                        "progress": {"value": 50, "type": "INT64"},
+                        "state": {"value": "IN_PROGRESS", "type": "STRING"},
+                    },
+                    "pluginFields": {},
+                    "recordChangeTag": "0",
+                    "created": {
+                        "timestamp": 1629754179814,
+                        "userRecordName": "_10",
+                        "deviceID": "1",
+                    },
+                    "modified": {
+                        "timestamp": 1629754179814,
+                        "userRecordName": "_10",
+                        "deviceID": "1",
+                    },
+                    "deleted": False,
+                    "zoneID": {
+                        "zoneName": "PrimarySync",
+                        "ownerRecordName": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23",
+                        "zoneType": "REGULAR_CUSTOM_ZONE",
+                    },
+                },
+            ],
+            "syncToken": "AQAAAAAAArKjf//////////fSxWSKv5JfZ34edrt875d",
+        }
 
-        # Verify the exception class exists and is properly defined
-        assert ICloudPyServiceNotActivatedException is not None
+        # Patch the session's post method to return IN_PROGRESS for CheckIndexingState
+        with patch.object(
+            ICloudPyServiceMock,
+            "__init__",
+            side_effect=lambda self, *args, **kwargs: (
+                ICloudPyServiceMock.__bases__[0].__init__(self, *args, **kwargs),
+                setattr(self.session, "_in_progress_response", in_progress_response),
+            )[0],
+        ):
+            # This approach is complex, let's use a simpler method
+            pass
 
-        # Try to instantiate it to ensure it works correctly
-        exc = ICloudPyServiceNotActivatedException(
-            "iCloud Photo Library not finished indexing.  Please try again in a few minutes",
-            None,
-        )
-        assert exc is not None
+        # Simpler approach: patch the const_photos DATA to return IN_PROGRESS
+        from . import const_photos
+
+        original_data = const_photos.DATA["query?remapEnums=True&getCurrentSyncToken=True"][0]["response"]
+        const_photos.DATA["query?remapEnums=True&getCurrentSyncToken=True"][0]["response"] = in_progress_response
+
+        try:
+            # This should raise ICloudPyServiceNotActivatedException
+            with self.assertRaises(ICloudPyServiceNotActivatedException) as context:
+                service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD)
+                _ = service.photos  # Accessing photos property triggers initialization
+
+            # Verify the exception message
+            self.assertIn("not finished indexing", str(context.exception))
+        finally:
+            # Restore original data
+            const_photos.DATA["query?remapEnums=True&getCurrentSyncToken=True"][0]["response"] = original_data
 
 
 class AlbumsPropertyTests(unittest.TestCase):
@@ -159,12 +209,72 @@ class AlbumsPropertyTests(unittest.TestCase):
 
     def test_albums_filter_deleted_folders(self):
         """Test deleted albums are excluded."""
-        albums = self.photos.albums
+        from . import const_photos
 
-        # Verify no album has isDeleted=True
-        # All albums in dict should be non-deleted
-        # According to fixtures, none of the albums are marked as deleted
-        assert len(albums) > 0
+        # Add a deleted album to the fixture temporarily
+        deleted_album = {
+            "recordName": "DELETED-ALBUM-ID",
+            "recordType": "CPLAlbum",
+            "fields": {
+                "recordModificationDate": {
+                    "value": 1608493440571,
+                    "type": "TIMESTAMP",
+                },
+                "sortAscending": {"value": 1, "type": "INT64"},
+                "sortType": {"value": 0, "type": "INT64"},
+                "albumType": {"value": 0, "type": "INT64"},
+                "albumNameEnc": {
+                    "value": "RGVsZXRlZCBBbGJ1bQ==",  # "Deleted Album" in base64
+                    "type": "ENCRYPTED_BYTES",
+                },
+                "position": {"value": 1063936, "type": "INT64"},
+                "sortTypeExt": {"value": 0, "type": "INT64"},
+                "isDeleted": {"value": True, "type": "BOOL"},  # This album is deleted
+            },
+            "pluginFields": {},
+            "recordChangeTag": "3km2",
+            "created": {
+                "timestamp": 1608493450571,
+                "userRecordName": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23",
+                "deviceID": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23_1d5r3c201b3a4r5daac8ff7e7fbc0c23",
+            },
+            "modified": {
+                "timestamp": 1608493460571,
+                "userRecordName": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23",
+                "deviceID": "D41A228F-D89E-494A-8EEF-853D461B68CF",
+            },
+            "deleted": False,
+            "zoneID": {
+                "zoneName": "PrimarySync",
+                "ownerRecordName": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23",
+                "zoneType": "REGULAR_CUSTOM_ZONE",
+            },
+        }
+
+        # Store original albums data
+        original_records = const_photos.DATA["query?remapEnums=True&getCurrentSyncToken=True"][1]["response"]["records"]
+
+        # Add deleted album to fixtures
+        const_photos.DATA["query?remapEnums=True&getCurrentSyncToken=True"][1]["response"]["records"] = (
+            original_records + [deleted_album]
+        )
+
+        try:
+            # Create a new service to pick up the modified fixture
+            service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD)
+            photos = service.photos
+            albums = photos.albums
+
+            # Verify the deleted album is NOT in the albums dict
+            assert "Deleted Album" not in albums, "Deleted album should be filtered out"
+
+            # Verify non-deleted albums are still present
+            assert "album-1" in albums
+            assert "album 2" in albums
+            assert len(albums) > 0
+        finally:
+            # Restore original data
+            const_photos.DATA["query?remapEnums=True&getCurrentSyncToken=True"][1]["response"]["records"] = original_records
 
     def test_albums_decode_folder_names(self):
         """Test base64 decoding of albumNameEnc."""
