@@ -66,10 +66,14 @@ class ResponseMock(Response):
 class ICloudPySessionMock(base.ICloudPySession):
     """Mocked ICloudPySession."""
 
-    # State tracking for multi-step operations
-    mkdir_called = False
-    upload_count = 0
-    rename_count = 0
+    def __init__(self, *args, **kwargs):
+        """Initialize the mock session."""
+        super().__init__(*args, **kwargs)
+        # State tracking for multi-step operations (instance variables)
+        self.mkdir_called = False
+        self.upload_count = 0
+        self.rename_count = 0
+        self.photo_query_count = {}  # Track queries per album to prevent infinite loops
 
     def request(self, method, url, **kwargs):
         """Mock request."""
@@ -203,6 +207,9 @@ class ICloudPySessionMock(base.ICloudPySession):
         if "icloud-content.com" in url and method == "GET":
             if "Scanned+document+1.pdf" in url:
                 return ResponseMock({}, raw=open(".gitignore", "rb"))
+            # Handle photo download URLs from versions
+            if "cvws.icloud-content.com" in url:
+                return ResponseMock({}, raw=open(".gitignore", "rb"))
 
         # Find My iPhone
         if "fmi" in url and method == "POST":
@@ -228,8 +235,20 @@ class ICloudPySessionMock(base.ICloudPySession):
                     },
                 )
 
+            if "records/query/batch" in url and method == "POST":
+                # Handle batch queries (e.g., HyperionIndexCountLookup for album length)
+                batch = data.get("batch", [])
+                if batch and len(batch) > 0:
+                    query_type = batch[0].get("query", {}).get("recordType")
+                    if query_type == "HyperionIndexCountLookup":
+                        # Return count lookup response
+                        return ResponseMock(
+                            PHOTOS_DATA["query/batch?remapEnums=True&getCurrentSyncToken=True"][0]["response"],
+                        )
+
             if "records/query" in url and method == "POST":
                 query_type = data.get("query", {}).get("recordType")
+                filter_by = data.get("query", {}).get("filterBy", [])
 
                 # Check indexing state
                 if query_type == "CheckIndexingState":
@@ -239,21 +258,93 @@ class ICloudPySessionMock(base.ICloudPySession):
 
                 # Album queries
                 if query_type == "CPLAlbumByPositionLive":
-                    return ResponseMock(
-                        PHOTOS_DATA["query?remapEnums=True&getCurrentSyncToken=True"][1]["response"],
-                    )
+                    # Check if this is a subalbum query (has parentId filter)
+                    has_parent_filter = False
+                    if isinstance(filter_by, list):
+                        for f in filter_by:
+                            if isinstance(f, dict) and f.get("fieldName") == "parentId":
+                                has_parent_filter = True
+                                break
 
-                # Asset queries
+                    if has_parent_filter:
+                        # Return subalbum response (empty for now, can be enhanced later)
+                        return ResponseMock({"records": [], "syncToken": "test-token"})
+                    else:
+                        # Return main album list
+                        return ResponseMock(
+                            PHOTOS_DATA["query?remapEnums=True&getCurrentSyncToken=True"][1]["response"],
+                        )
+
+                # Asset queries - CPLAssetAndMasterByAddedDate
                 if query_type == "CPLAssetAndMasterByAddedDate":
-                    return ResponseMock(
-                        PHOTOS_DATA["query?remapEnums=True&getCurrentSyncToken=True"][9]["response"],
-                    )
+                    # Track query count to prevent infinite loops
+                    query_key = f"{query_type}_offset_{data.get('query', {}).get('filterBy', [{}])[0].get('fieldValue', {}).get('value', 0)}"
+                    if query_key not in self.photo_query_count:
+                        self.photo_query_count[query_key] = 0
+
+                    self.photo_query_count[query_key] += 1
+
+                    # Return results only on first query, then empty
+                    if self.photo_query_count[query_key] == 1:
+                        return ResponseMock(
+                            PHOTOS_DATA["query?remapEnums=True&getCurrentSyncToken=True"][9]["response"],
+                        )
+                    else:
+                        return ResponseMock({"records": [], "syncToken": "test-token"})
 
                 # Smart album queries (Videos, Favorites, etc.)
                 if query_type == "CPLAssetAndMasterInSmartAlbumByAssetDate":
-                    return ResponseMock(
-                        PHOTOS_DATA["query?remapEnums=True&getCurrentSyncToken=True"][5]["response"],
-                    )
+                    # Track query count
+                    query_key = f"{query_type}_offset_{data.get('query', {}).get('filterBy', [{}])[0].get('fieldValue', {}).get('value', 0)}"
+                    if query_key not in self.photo_query_count:
+                        self.photo_query_count[query_key] = 0
+
+                    self.photo_query_count[query_key] += 1
+
+                    # Return results only on first query
+                    if self.photo_query_count[query_key] == 1:
+                        return ResponseMock(
+                            PHOTOS_DATA["query?remapEnums=True&getCurrentSyncToken=True"][5]["response"],
+                        )
+                    else:
+                        return ResponseMock({"records": [], "syncToken": "test-token"})
+
+                # Container relation queries (for user albums)
+                if query_type == "CPLContainerRelationLiveByAssetDate":
+                    # Track query count
+                    query_key = f"{query_type}_offset_{data.get('query', {}).get('filterBy', [{}])[0].get('fieldValue', {}).get('value', 0)}"
+                    if query_key not in self.photo_query_count:
+                        self.photo_query_count[query_key] = 0
+
+                    self.photo_query_count[query_key] += 1
+
+                    # Return results only on first query
+                    if self.photo_query_count[query_key] == 1:
+                        return ResponseMock(
+                            PHOTOS_DATA["query?remapEnums=True&getCurrentSyncToken=True"][2]["response"],
+                        )
+                    else:
+                        return ResponseMock({"records": [], "syncToken": "test-token"})
+
+            if "records/modify" in url and method == "POST":
+                # Handle delete operations
+                operations = data.get("operations", [])
+                if operations and len(operations) > 0:
+                    operation = operations[0]
+                    if operation.get("operationType") == "update":
+                        # Return success response for delete
+                        return ResponseMock(
+                            {
+                                "records": [
+                                    {
+                                        "recordName": operation["record"]["recordName"],
+                                        "recordType": operation["record"]["recordType"],
+                                        "fields": {"isDeleted": {"value": 1}},
+                                        "recordChangeTag": "updated",
+                                    },
+                                ],
+                            },
+                        )
 
         return None
 

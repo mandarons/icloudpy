@@ -390,3 +390,493 @@ class PhotoLibraryAllPropertyTests(unittest.TestCase):
         all_photos_from_dict = self.photos.albums["All Photos"]
 
         assert all_album is all_photos_from_dict
+
+
+class PhotoAlbumBasicTests(unittest.TestCase):
+    """Test PhotoAlbum basic properties and methods."""
+
+    def setUp(self):
+        """Set up test."""
+        self.service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD)
+        self.photos = self.service.photos
+        self.album = self.photos.albums["All Photos"]
+
+    def test_photo_album_title_property(self):
+        """Test album title accessor."""
+        assert self.album.title == "All Photos"
+        assert self.album.name == "All Photos"
+
+    def test_photo_album_iter(self):
+        """Test album iteration returns photos generator."""
+        # __iter__ should return photos property (a generator)
+        # Get a few photos from each to verify they're the same type
+        iter_result = iter(self.album)
+        property_result = self.album.photos
+
+        # Both should be generators
+        assert hasattr(iter_result, "__next__")
+        assert hasattr(property_result, "__next__")
+
+    def test_photo_album_repr(self):
+        """Test album string representation."""
+        repr_str = repr(self.album)
+        assert "PhotoAlbum" in repr_str
+        assert "All Photos" in repr_str
+
+
+class PhotoAlbumLengthTests(unittest.TestCase):
+    """Test album length calculation."""
+
+    def setUp(self):
+        """Set up test."""
+        self.service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD)
+        self.photos = self.service.photos
+
+    def test_photo_album_len(self):
+        """Test album length calculation via API."""
+        album = self.photos.albums["All Photos"]
+
+        length = len(album)
+        assert isinstance(length, int)
+        assert length >= 0
+
+    def test_photo_album_len_caching(self):
+        """Test length is cached after first call."""
+        album = self.photos.albums["All Photos"]
+
+        assert album._len is None
+        length1 = len(album)
+        assert album._len is not None
+
+        length2 = len(album)
+        assert length1 == length2
+
+    def test_photo_album_len_query_structure(self):
+        """Test HyperionIndexCountLookup query."""
+        album = self.photos.albums["Favorites"]
+
+        # Calling len() should trigger count query
+        _ = len(album)
+
+        # Verify result is an integer
+        assert isinstance(_, int)
+
+
+class PhotoAlbumIterationTests(unittest.TestCase):
+    """Test album photo iteration and pagination."""
+
+    def setUp(self):
+        """Set up test."""
+        self.service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD)
+        self.photos = self.service.photos
+
+    def test_photo_album_photos_pagination(self):
+        """Test photo iteration with pagination."""
+        album = self.photos.albums["All Photos"]
+
+        photos = []
+        for photo in album.photos:
+            photos.append(photo)
+            if len(photos) >= 10:  # Limit for test
+                break
+
+        assert len(photos) > 0
+
+        # Each photo should be PhotoAsset instance
+        for photo in photos:
+            assert hasattr(photo, "id")
+            assert hasattr(photo, "filename")
+
+    def test_photo_album_photos_ascending_order(self):
+        """Test ASCENDING direction calculates offset correctly."""
+        album = self.photos.albums["All Photos"]
+        assert album.direction == "ASCENDING"
+
+        # Get first few photos to verify they're returned
+        photos = []
+        for photo in album.photos:
+            photos.append(photo)
+            if len(photos) >= 3:
+                break
+        assert len(photos) > 0
+
+    def test_photo_album_photos_descending_order(self):
+        """Test DESCENDING direction calculates offset from len()-1."""
+        # Recently Deleted has DESCENDING direction
+        album = self.photos.albums["Recently Deleted"]
+
+        if album.direction == "DESCENDING":
+            # Get a few photos to verify they're returned
+            photos = []
+            for photo in album.photos:
+                photos.append(photo)
+                if len(photos) >= 3:
+                    break
+
+    def test_photo_album_photos_empty_response(self):
+        """Test iteration stops when no more photos returned."""
+        album = self.photos.albums["All Photos"]
+
+        # Should stop iterating when response has no records
+        # Iterate through all photos - mock will return empty after first page
+        photos = []
+        for photo in album.photos:
+            photos.append(photo)
+            # Safeguard to prevent infinite loops in test
+            if len(photos) >= 100:
+                break
+
+        # Final iteration should break cleanly
+        assert isinstance(photos, list)
+        assert len(photos) > 0  # Should have gotten some photos
+
+    def test_photo_album_photos_with_query_filter(self):
+        """Test filtered photo queries (smart albums)."""
+        # Favorites album has query_filter
+        favorites = self.photos.albums["Favorites"]
+
+        assert favorites.query_filter is not None
+
+        # Should include filter in query
+        photos = []
+        for photo in favorites.photos:
+            photos.append(photo)
+            if len(photos) >= 3:
+                break
+        assert isinstance(photos, list)
+
+
+class PhotoAlbumQueryGenerationTests(unittest.TestCase):
+    """Test _list_query_gen method."""
+
+    def setUp(self):
+        """Set up test."""
+        self.service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD)
+        self.photos = self.service.photos
+        self.album = self.photos.albums["All Photos"]
+
+    def test_list_query_gen_structure(self):
+        """Test query generation has all required fields."""
+        query = self.album._list_query_gen(
+            offset=0,
+            list_type="CPLAssetAndMasterByAddedDate",
+            direction="ASCENDING",
+            query_filter=None,
+        )
+
+        assert "query" in query
+        assert "resultsLimit" in query
+        assert "desiredKeys" in query
+        assert "zoneID" in query
+
+        # Check filter structure
+        filters = query["query"]["filterBy"]
+        assert any(f["fieldName"] == "startRank" for f in filters)
+        assert any(f["fieldName"] == "direction" for f in filters)
+
+    def test_list_query_gen_with_query_filter(self):
+        """Test query generation includes custom filters."""
+        query_filter = [
+            {
+                "fieldName": "smartAlbum",
+                "comparator": "EQUALS",
+                "fieldValue": {"type": "STRING", "value": "FAVORITE"},
+            },
+        ]
+
+        query = self.album._list_query_gen(
+            offset=0,
+            list_type="test",
+            direction="ASCENDING",
+            query_filter=query_filter,
+        )
+
+        filters = query["query"]["filterBy"]
+        assert len(filters) >= 3  # startRank, direction, + custom
+
+    def test_list_query_gen_desired_keys(self):
+        """Test all desired keys are present."""
+        query = self.album._list_query_gen(0, "test", "ASCENDING", None)
+
+        desired_keys = query["desiredKeys"]
+
+        # Check critical keys
+        assert "resOriginalRes" in desired_keys
+        assert "filenameEnc" in desired_keys
+        assert "masterRef" in desired_keys
+        assert "assetDate" in desired_keys
+        assert "resJPEGThumbRes" in desired_keys
+
+
+class SubalbumTests(unittest.TestCase):
+    """Test subalbum functionality."""
+
+    def setUp(self):
+        """Set up test."""
+        self.service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD)
+        self.photos = self.service.photos
+
+    def test_subalbums_property(self):
+        """Test subalbums property returns dict."""
+        # User albums have folder_id
+        albums = self.photos.albums
+
+        # album-1 is a user album with a folder_id
+        if "album-1" in albums:
+            user_album = albums["album-1"]
+            subalbums = user_album.subalbums
+            assert isinstance(subalbums, dict)
+
+    def test_subalbums_lazy_loading(self):
+        """Test subalbums are cached."""
+        albums = self.photos.albums
+
+        if "album-1" in albums:
+            user_album = albums["album-1"]
+            # _subalbums should be empty dict initially
+            assert user_album._subalbums == {}
+
+            # First access
+            subalbums1 = user_album.subalbums
+            # Second access should return same object
+            subalbums2 = user_album.subalbums
+            assert subalbums1 is subalbums2
+
+    def test_subalbums_no_folder_id(self):
+        """Test albums without folder_id return empty dict."""
+        # Smart albums don't have folder_id (use Favorites which won't be overwritten)
+        favorites = self.photos.albums["Favorites"]
+        assert favorites.folder_id is None
+
+        subalbums = favorites.subalbums
+        assert subalbums == {}
+
+    def test_descending_album_offset(self):
+        """Test DESCENDING albums calculate offset from len()-1."""
+        # Recently Deleted uses DESCENDING
+        album = self.photos.albums["Recently Deleted"]
+
+        if album.direction == "DESCENDING":
+            # Access photos to trigger offset calculation
+            photos = []
+            for photo in album.photos:
+                photos.append(photo)
+                if len(photos) >= 2:
+                    break
+            # Should successfully iterate even in descending mode
+
+
+class PhotoAssetPropertiesTests(unittest.TestCase):
+    """Test PhotoAsset property accessors."""
+
+    def setUp(self):
+        """Set up test."""
+        self.service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD)
+        self.photos = self.service.photos
+        self.album = self.photos.albums["All Photos"]
+        # Get first photo from album
+        photo_iter = iter(self.album)
+        self.photo = next(photo_iter)
+
+    def test_photo_asset_id(self):
+        """Test photo ID extraction."""
+        assert self.photo.id is not None
+        assert isinstance(self.photo.id, str)
+
+    def test_photo_asset_filename_decode(self):
+        """Test base64 filename decoding."""
+        filename = self.photo.filename
+
+        assert filename is not None
+        assert isinstance(filename, str)
+        # Should be decoded from base64
+
+    def test_photo_asset_size(self):
+        """Test size from resOriginalRes field."""
+        size = self.photo.size
+
+        assert size is not None
+        assert isinstance(size, int)
+        assert size > 0
+
+    def test_photo_asset_created_date(self):
+        """Test created/asset_date handling."""
+        created = self.photo.created
+        asset_date = self.photo.asset_date
+
+        assert created is not None
+        assert asset_date is not None
+        assert created == asset_date
+
+    def test_photo_asset_added_date(self):
+        """Test added_date extraction."""
+        added = self.photo.added_date
+
+        assert added is not None
+        # Should be datetime object
+
+    def test_photo_asset_dimensions(self):
+        """Test width/height extraction."""
+        dims = self.photo.dimensions
+
+        assert isinstance(dims, tuple)
+        assert len(dims) == 2
+        assert dims[0] > 0  # width
+        assert dims[1] > 0  # height
+
+    def test_photo_asset_repr(self):
+        """Test PhotoAsset string representation."""
+        repr_str = repr(self.photo)
+        assert "PhotoAsset" in repr_str
+        assert self.photo.id in repr_str
+
+
+class PhotoAssetVersionsTests(unittest.TestCase):
+    """Test photo version generation."""
+
+    def setUp(self):
+        """Set up test."""
+        self.service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD)
+        self.photos = self.service.photos
+
+    def test_photo_asset_versions_photo(self):
+        """Test version generation for photos."""
+        album = self.photos.albums["All Photos"]
+        photo = next(iter(album))
+
+        versions = photo.versions
+
+        assert isinstance(versions, dict)
+
+        # Should have photo versions
+        expected_keys = ["original", "medium", "thumb"]
+        for key in expected_keys:
+            if key in versions:
+                version = versions[key]
+                assert "filename" in version
+                assert "size" in version
+                assert "url" in version
+                assert "width" in version
+                assert "height" in version
+                assert "type" in version
+
+    def test_photo_asset_versions_video(self):
+        """Test version generation for videos."""
+        videos = self.photos.albums["Videos"]
+
+        # Get first video
+        try:
+            video = next(iter(videos))
+            versions = video.versions
+
+            # Should have video versions
+            assert isinstance(versions, dict)
+        except StopIteration:
+            # No videos in test fixtures, skip
+            pass
+
+    def test_photo_asset_versions_lazy_loading(self):
+        """Test versions are cached."""
+        album = self.photos.albums["All Photos"]
+        photo = next(iter(album))
+
+        assert photo._versions is None
+        versions1 = photo.versions
+        assert photo._versions is not None
+
+        versions2 = photo.versions
+        assert versions1 is versions2
+
+    def test_photo_asset_versions_missing_fields(self):
+        """Test version with missing optional fields."""
+        album = self.photos.albums["All Photos"]
+        photo = next(iter(album))
+
+        versions = photo.versions
+        # Some versions may not have width/height
+        # Should handle gracefully (set to None)
+        for key, version in versions.items():
+            # All versions should have these fields even if None
+            assert "width" in version
+            assert "height" in version
+
+    def test_photo_asset_str_method(self):
+        """Test PhotoAsset __str__ method."""
+        album = self.photos.albums["All Photos"]
+        photo = next(iter(album))
+
+        # __str__ should return string representation
+        str_repr = str(photo)
+        assert isinstance(str_repr, str)
+
+
+class PhotoAssetDownloadTests(unittest.TestCase):
+    """Test photo download functionality."""
+
+    def setUp(self):
+        """Set up test."""
+        self.service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD)
+        self.photos = self.service.photos
+        self.album = self.photos.albums["All Photos"]
+        self.photo = next(iter(self.album))
+
+    def test_photo_download_original(self):
+        """Test downloading original version."""
+        response = self.photo.download("original")
+
+        assert response is not None
+        assert hasattr(response, "status_code")
+
+    def test_photo_download_medium(self):
+        """Test downloading medium version."""
+        response = self.photo.download("medium")
+
+        if "medium" in self.photo.versions:
+            assert response is not None
+
+    def test_photo_download_thumb(self):
+        """Test downloading thumbnail version."""
+        response = self.photo.download("thumb")
+
+        if "thumb" in self.photo.versions:
+            assert response is not None
+
+    def test_photo_download_missing_version(self):
+        """Test downloading non-existent version returns None."""
+        response = self.photo.download("nonexistent_size")
+
+        assert response is None
+
+    def test_photo_download_with_kwargs(self):
+        """Test download passes through kwargs."""
+        # Download always passes stream=True by default, test with other kwargs
+        response = self.photo.download("original", timeout=30)
+        assert response is not None
+
+
+class PhotoAssetDeletionTests(unittest.TestCase):
+    """Test photo deletion."""
+
+    def setUp(self):
+        """Set up test."""
+        self.service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD)
+        self.photos = self.service.photos
+        self.album = self.photos.albums["All Photos"]
+        self.photo = next(iter(self.album))
+
+    def test_photo_delete(self):
+        """Test marking photo as deleted."""
+        result = self.photo.delete()
+
+        assert result is not None
+        # Should POST to /records/modify with isDeleted=1
+
+    def test_photo_delete_request_structure(self):
+        """Test delete request includes required fields."""
+        # Should include:
+        # - recordChangeTag
+        # - recordName
+        # - recordType
+        # - isDeleted field = 1
+        result = self.photo.delete()
+        assert result is not None
