@@ -364,7 +364,7 @@ class DriveNode:
 
     def __str__(self):
         as_unicode = self.__unicode__()
-        if PY2:
+        if PY2:  # pragma: no cover
             return as_unicode.encode("utf-8", "ignore")
         return as_unicode
 
