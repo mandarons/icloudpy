@@ -91,25 +91,24 @@ jobs:
       run: |
         # Legacy badge generation for gh-pages
         mkdir -p badges
-        python -c "
-import xml.etree.ElementTree as ET
-import requests
-import os
-
-# Get coverage
-coverage_pct = float(ET.parse('./coverage.xml').getroot().attrib['line-rate']) * 100.0
-
-# Generate SVG badges
-color = 'brightgreen' if coverage_pct == 100.0 else 'critical'
-response = requests.get(f'https://img.shields.io/static/v1?label=Coverage&message={coverage_pct:.2f}%&color={color}')
-with open('badges/coverage.svg', 'w') as f:
-    f.write(response.text)
-
-# Generate test badge - assume passing if we get here
-response = requests.get('https://img.shields.io/static/v1?label=Tests&message=passing&color=brightgreen')
-with open('badges/tests.svg', 'w') as f:
-    f.write(response.text)
-"
+        python3 << 'PYTHON_SCRIPT'
+        import xml.etree.ElementTree as ET
+        import requests
+        
+        # Get coverage
+        coverage_pct = float(ET.parse('./coverage.xml').getroot().attrib['line-rate']) * 100.0
+        
+        # Generate SVG badges
+        color = 'brightgreen' if coverage_pct == 100.0 else 'critical'
+        response = requests.get(f'https://img.shields.io/static/v1?label=Coverage&message={coverage_pct:.2f}%&color={color}')
+        with open('badges/coverage.svg', 'w') as f:
+            f.write(response.text)
+        
+        # Generate test badge - assume passing if we get here
+        response = requests.get('https://img.shields.io/static/v1?label=Tests&message=passing&color=brightgreen')
+        with open('badges/tests.svg', 'w') as f:
+            f.write(response.text)
+        PYTHON_SCRIPT
     
     - name: Upload tests artifacts
       if: matrix.python-version == '3.10'
