@@ -1,84 +1,89 @@
-name: CI - Pull Request
+name: Python Tests
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, develop]
     paths:
-      - icloudpy/**
-      - tests/**
-      - Dockerfile
-      - pylintrc
-      - pytest.ini
-      - requirements-test.txt
-      - requirements.txt
-      - run-ci.sh
+      - 'icloudpy/**'
+      - 'tests/**'
+      - 'pytest.ini'
+      - 'requirements*.txt'
+      - '.github/workflows/ci-pr-test.yml'
   workflow_dispatch:
-jobs:
-  cache-requirements-install:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout source code
-        uses: actions/checkout@v4
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-      - name: Cache pip dependencies
-        uses: actions/cache@v4
-        id: cache-dependencies
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-      - name: Install dependencies
-        if: steps.cache-dependencies.outputs.cache-hit != 'true'
-        run: |
-          pip install -r requirements-test.txt
 
+jobs:
   test:
-    needs: cache-requirements-install
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11']
+    
     steps:
-      - name: Checkout source code
-        uses: actions/checkout@v4
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-      - name: Restore pip cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements-test.txt
-      #      - name: Setup tmate session
-      #       uses: mxschmitt/action-tmate@v3
-      - name: Test with pytest
-        run: |
-          ruff check && pytest
-      - name: Generate Allure Report
-        uses: simple-elf/allure-report-action@master
-        if: always()
-        with:
-          allure_results: allure-results
-          allure_history: allure-history
-          keep_reports: 100
-      - name: Upload tests artifacts
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: tests-output
-          path: allure-history
-          retention-days: 1
-      - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v4
-        if: ${{ success() }}
-        with:
-          name: coverage-output
-          path: htmlcov
-          retention-days: 1
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Cache pip packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r requirements-test.txt
+    
+    - name: Run linter
+      run: |
+        ruff check
+    
+    - name: Run tests with coverage
+      run: |
+        pytest
+    
+    - name: Generate coverage XML
+      if: matrix.python-version == '3.10'
+      run: |
+        coverage xml
+    
+    - name: Upload coverage to Codecov
+      if: matrix.python-version == '3.10'
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: true
+    
+    - name: Upload coverage reports as artifact
+      if: matrix.python-version == '3.10'
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: |
+          htmlcov/
+          coverage.xml
+        retention-days: 1
+    
+    - name: Generate Allure Report
+      uses: simple-elf/allure-report-action@master
+      if: always() && matrix.python-version == '3.10'
+      with:
+        allure_results: allure-results
+        allure_history: allure-history
+        keep_reports: 100
+    
+    - name: Upload tests artifacts
+      if: failure() && matrix.python-version == '3.10'
+      uses: actions/upload-artifact@v4
+      with:
+        name: tests-output
+        path: allure-history
+        retention-days: 1

@@ -1,35 +1,64 @@
-import json
-import os
-import shutil
+#!/usr/bin/env python3
+"""Generate coverage badges from coverage.xml report"""
+import sys
 import xml.etree.ElementTree as ET
 
-import requests
 
-badges_directory = "./badges"
+def get_coverage_percentage(coverage_xml_path: str) -> float:
+    """Extract coverage percentage from coverage.xml"""
+    try:
+        tree = ET.parse(coverage_xml_path)
+        root = tree.getroot()
 
-with open("./allure-report/widgets/summary.json") as f:
-    test_data = json.load(f)
-    test_result = test_data["statistic"]["total"] == test_data["statistic"]["passed"]
+        # Parse coverage percentage from line-rate
+        line_rate = float(root.attrib.get("line-rate", 0))
+        return round(line_rate * 100, 2)
+    except Exception as e:
+        print(f"Error parsing coverage: {e}", file=sys.stderr)
+        return 0.0
 
-coverage_result = (
-    float(ET.parse("./coverage.xml").getroot().attrib["line-rate"]) * 100.0
-)
 
-if os.path.exists(badges_directory) and os.path.isdir(badges_directory):
-    shutil.rmtree(badges_directory)
-    os.mkdir(badges_directory)
-else:
-    os.mkdir(badges_directory)
+def generate_badge_json(coverage_pct: float) -> dict:
+    """Generate badge JSON for shields.io endpoint"""
+    if coverage_pct >= 95:
+        color = "brightgreen"
+    elif coverage_pct >= 80:
+        color = "green"
+    elif coverage_pct >= 60:
+        color = "yellow"
+    else:
+        color = "red"
 
-url_data = "passing&color=brightgreen" if test_result else "failing&color=critical"
-response = requests.get(
-    "https://img.shields.io/static/v1?label=Tests&message=" + url_data,
-)
-with open(badges_directory + "/tests.svg", "w") as f:
-    f.write(response.text)
-url_data = "brightgreen" if coverage_result == 100.0 else "critical"
-response = requests.get(
-    f"https://img.shields.io/static/v1?label=Coverage&message={coverage_result}%&color={url_data}",
-)
-with open(badges_directory + "/coverage.svg", "w") as f:
-    f.write(response.text)
+    return {
+        "schemaVersion": 1,
+        "label": "coverage",
+        "message": f"{coverage_pct}%",
+        "color": color,
+    }
+
+
+def main():
+    coverage_xml_path = "coverage.xml"
+    coverage_pct = get_coverage_percentage(coverage_xml_path)
+
+    print(f"Coverage: {coverage_pct}%")
+
+    # Generate badge JSON
+    import json
+    badge = generate_badge_json(coverage_pct)
+
+    with open("coverage-badge.json", "w") as f:
+        json.dump(badge, f, indent=2)
+
+    print("Badge JSON generated: coverage-badge.json")
+
+    # Exit with error if below threshold
+    if coverage_pct < 100:
+        print(f"ERROR: Coverage {coverage_pct}% is below 100% threshold", file=sys.stderr)
+        sys.exit(1)
+
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()
