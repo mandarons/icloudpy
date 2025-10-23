@@ -1,4 +1,4 @@
-# ruff: noqa
+# ruff: noqa: F401
 """Services."""
 
 from icloudpy.services.account import AccountService
