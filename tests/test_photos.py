@@ -892,11 +892,10 @@ class PhotoAssetMissingFilenameTests(unittest.TestCase):
         self.album = self.photos.albums["All Photos"]
 
         # Find the GoPro video without filename in the album
-        self.gopro_video = None
-        for photo in self.album.photos:
-            if photo.id == "GOPRO-NO-FILENAME-TEST-MASTER":
-                self.gopro_video = photo
-                break
+        self.gopro_video = next(
+            (photo for photo in self.album.photos if photo.id == "GOPRO-NO-FILENAME-TEST-MASTER"),
+            None,
+        )
 
         # Ensure we found the test photo
         assert self.gopro_video is not None, "Test fixture GOPRO-NO-FILENAME-TEST-MASTER not found"
