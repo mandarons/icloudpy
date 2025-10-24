@@ -880,3 +880,65 @@ class PhotoAssetDeletionTests(unittest.TestCase):
         # - isDeleted field = 1
         result = self.photo.delete()
         assert result is not None
+
+
+class PhotoAssetMissingFilenameTests(unittest.TestCase):
+    """Test PhotoAsset handles missing filenameEnc gracefully."""
+
+    def setUp(self):
+        """Set up test."""
+        self.service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD)
+        self.photos = self.service.photos
+        self.album = self.photos.albums["All Photos"]
+
+        # Find the GoPro video without filename in the album
+        self.gopro_video = None
+        for photo in self.album.photos:
+            if photo.id == "GOPRO-NO-FILENAME-TEST-MASTER":
+                self.gopro_video = photo
+                break
+
+        # Ensure we found the test photo
+        assert self.gopro_video is not None, "Test fixture GOPRO-NO-FILENAME-TEST-MASTER not found"
+
+    def test_photo_asset_filename_missing_returns_none(self):
+        """Test filename property returns None when filenameEnc is missing."""
+        filename = self.gopro_video.filename
+
+        assert filename is None
+
+    def test_photo_asset_versions_with_missing_filename(self):
+        """Test versions property works when filename is None."""
+        versions = self.gopro_video.versions
+
+        assert isinstance(versions, dict)
+        assert len(versions) > 0
+
+        # Check that versions were created despite missing filename
+        for key, version in versions.items():
+            assert "filename" in version
+            assert version["filename"] is None  # Should be None, not raise KeyError
+            assert "size" in version
+            assert "url" in version
+
+    def test_photo_asset_id_still_works(self):
+        """Test id property still works when filenameEnc is missing."""
+        photo_id = self.gopro_video.id
+
+        assert photo_id == "GOPRO-NO-FILENAME-TEST-MASTER"
+
+    def test_photo_asset_size_still_works(self):
+        """Test size property still works when filenameEnc is missing."""
+        size = self.gopro_video.size
+
+        assert isinstance(size, int)
+        assert size > 0
+
+    def test_photo_asset_dimensions_still_work(self):
+        """Test dimensions property still works when filenameEnc is missing."""
+        dims = self.gopro_video.dimensions
+
+        assert isinstance(dims, tuple)
+        assert len(dims) == 2
+        assert dims[0] == 1920  # width
+        assert dims[1] == 1080  # height
