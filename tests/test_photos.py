@@ -914,7 +914,7 @@ class PhotoAssetMissingFilenameTests(unittest.TestCase):
         assert len(versions) > 0
 
         # Check that versions were created despite missing filename
-        for key, version in versions.items():
+        for _, version in versions.items():
             assert "filename" in version
             assert version["filename"] is None  # Should be None, not raise KeyError
             assert "size" in version
