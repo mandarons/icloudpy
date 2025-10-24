@@ -648,9 +648,13 @@ class PhotoAsset:
     @property
     def filename(self):
         """Gets the photo file name."""
-        return base64.b64decode(
-            self._master_record["fields"]["filenameEnc"]["value"],
-        ).decode("utf-8")
+        try:
+            return base64.b64decode(
+                self._master_record["fields"]["filenameEnc"]["value"],
+            ).decode("utf-8")
+        except KeyError:
+            # Some photos/videos (e.g., GoPro videos) may not have a filename
+            return None
 
     @property
     def size(self):
