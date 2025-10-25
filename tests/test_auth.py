@@ -1,4 +1,5 @@
 """Authentication tests for base.py."""
+
 import logging
 import os
 from unittest import TestCase
@@ -288,12 +289,6 @@ class TestServiceProperties(TestCase):
         assert url is not None
         assert "remindersws" in url
 
-    def test_files_property(self):
-        """Test files property returns UbiquityService."""
-        service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD)
-        files = service.files
-        assert files is not None
-
 
 class TestSessionErrorHandling(TestCase):
     """Test session request error handling."""
@@ -361,15 +356,19 @@ class TestCookieAndSessionManagement(TestCase):
     def test_cookie_directory_creation(self):
         """Test that cookie directory is created if it doesn't exist."""
         import tempfile
+
         temp_dir = os.path.join(tempfile.gettempdir(), "test_icloud_cookies")
 
         # Clean up if exists
         if os.path.exists(temp_dir):
             import shutil
+
             shutil.rmtree(temp_dir)
 
         ICloudPyServiceMock(
-            AUTHENTICATED_USER, VALID_PASSWORD, cookie_directory=temp_dir,
+            AUTHENTICATED_USER,
+            VALID_PASSWORD,
+            cookie_directory=temp_dir,
         )
 
         # Verify directory was created (service creation triggers directory creation)
@@ -377,15 +376,19 @@ class TestCookieAndSessionManagement(TestCase):
 
         # Clean up
         import shutil
+
         shutil.rmtree(temp_dir)
 
     def test_session_data_persistence(self):
         """Test that session data is persisted to file."""
         import tempfile
+
         temp_dir = tempfile.mkdtemp()
 
         service = ICloudPyServiceMock(
-            AUTHENTICATED_USER, VALID_PASSWORD, cookie_directory=temp_dir,
+            AUTHENTICATED_USER,
+            VALID_PASSWORD,
+            cookie_directory=temp_dir,
         )
 
         # Session data is written during requests, so let's trigger one
@@ -397,6 +400,7 @@ class TestCookieAndSessionManagement(TestCase):
 
         # Clean up
         import shutil
+
         shutil.rmtree(temp_dir)
 
 
@@ -579,7 +583,9 @@ class TestClientIdHandling(TestCase):
         """Test initialization with custom client ID."""
         custom_id = "custom-client-id-12345"
         service = ICloudPyServiceMock(
-            AUTHENTICATED_USER, VALID_PASSWORD, client_id=custom_id,
+            AUTHENTICATED_USER,
+            VALID_PASSWORD,
+            client_id=custom_id,
         )
 
         assert service.client_id == custom_id
@@ -611,11 +617,14 @@ class TestInitializationEdgeCases(TestCase):
         """Test initialization when session file doesn't exist."""
         import shutil
         import tempfile
+
         temp_dir = tempfile.mkdtemp()
 
         # Ensure no session file exists
         service = ICloudPyServiceMock(
-            AUTHENTICATED_USER, VALID_PASSWORD, cookie_directory=temp_dir,
+            AUTHENTICATED_USER,
+            VALID_PASSWORD,
+            cookie_directory=temp_dir,
         )
 
         # Should handle missing session file gracefully
@@ -627,6 +636,7 @@ class TestInitializationEdgeCases(TestCase):
         """Test handling of corrupt cookie file."""
         import shutil
         import tempfile
+
         temp_dir = tempfile.mkdtemp()
 
         # Create a corrupt cookie file
@@ -637,7 +647,9 @@ class TestInitializationEdgeCases(TestCase):
         # Should handle cookie loading failure gracefully
         # Create service which should handle cookie loading failure gracefully
         ICloudPyServiceMock(
-            AUTHENTICATED_USER, VALID_PASSWORD, cookie_directory=temp_dir,
+            AUTHENTICATED_USER,
+            VALID_PASSWORD,
+            cookie_directory=temp_dir,
         )
 
         # If we got here without exception, the cookie loading failure was handled
@@ -669,7 +681,9 @@ class TestInitializationEdgeCases(TestCase):
         # The mock will still generate a new client_id, but the code path
         # for loading from session file is tested
         service = ICloudPyServiceMock(
-            AUTHENTICATED_USER, VALID_PASSWORD, cookie_directory=temp_dir,
+            AUTHENTICATED_USER,
+            VALID_PASSWORD,
+            cookie_directory=temp_dir,
         )
 
         # Service should have loaded session data
@@ -771,7 +785,9 @@ class TestServiceWithFamily(TestCase):
     def test_service_with_family_true(self):
         """Test service initialization with family enabled."""
         service = ICloudPyServiceMock(
-            AUTHENTICATED_USER, VALID_PASSWORD, with_family=True,
+            AUTHENTICATED_USER,
+            VALID_PASSWORD,
+            with_family=True,
         )
 
         assert service.with_family is True
@@ -779,7 +795,9 @@ class TestServiceWithFamily(TestCase):
     def test_service_with_family_false(self):
         """Test service initialization with family disabled."""
         service = ICloudPyServiceMock(
-            AUTHENTICATED_USER, VALID_PASSWORD, with_family=False,
+            AUTHENTICATED_USER,
+            VALID_PASSWORD,
+            with_family=False,
         )
 
         assert service.with_family is False

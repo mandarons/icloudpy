@@ -29,7 +29,6 @@ from icloudpy.services import (
     FindMyiPhoneServiceManager,
     PhotosService,
     RemindersService,
-    UbiquityService,
 )
 from icloudpy.utils import get_password_from_keyring
 
@@ -160,9 +159,7 @@ class ICloudPySession(Session):
         if self.service.requires_2sa and reason == "Missing X-APPLE-WEBAUTH-TOKEN cookie":
             raise ICloudPy2SARequiredException(self.service.user["apple_id"])
         if code in ("ZONE_NOT_FOUND", "AUTHENTICATION_FAILED"):
-            reason = (
-                reason + ". Please log into https://icloud.com/ to manually " "finish setting up your iCloud service"
-            )
+            reason = reason + ". Please log into https://icloud.com/ to manually finish setting up your iCloud service"
             api_error = ICloudPyServiceNotActivatedException(reason, code)
             LOGGER.error(api_error)
 
@@ -272,7 +269,6 @@ class ICloudPyService:
         self.authenticate()
 
         self._drive = None
-        self._files = None
         self._photos = None
 
     def authenticate(self, force_refresh=False, service=None):
@@ -637,14 +633,6 @@ class ICloudPyService:
         """Gets the 'Account' service."""
         service_root = self._get_webservice_url("account")
         return AccountService(service_root, self.session, self.params)
-
-    @property
-    def files(self):
-        """Gets the 'File' service."""
-        if not self._files:
-            service_root = self._get_webservice_url("ubiquity")
-            self._files = UbiquityService(service_root, self.session, self.params)
-        return self._files
 
     @property
     def photos(self):

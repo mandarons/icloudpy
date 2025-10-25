@@ -1,4 +1,5 @@
 """Drive service."""
+
 import io
 import json
 import mimetypes
@@ -67,16 +68,17 @@ class DriveService:
             raise KeyError("'data_token' nor 'package_token' found in response.")
 
     def get_app_data(self):
-        """Returns the app library (previously ubiquity)."""
+        """Returns the app library."""
         request = self.session.get(
-            self._service_root + "/retrieveAppLibraries", params=self.params,
+            self._service_root + "/retrieveAppLibraries",
+            params=self.params,
         )
         if not request.ok:
             self.session.raise_error(request.status_code, request.reason)
         return request.json()["items"]
 
     def get_app_node(self, app_id, folder="documents"):
-        """Returns the node of the app (ubiquity)"""
+        """Returns the node of the app."""
         return DriveNode(self, self.get_node_data("FOLDER::" + app_id + "::" + folder))
 
     def _get_upload_contentws_url(self, file_object, zone="com.apple.CloudDocs"):
@@ -112,7 +114,12 @@ class DriveService:
         return (request.json()[0]["document_id"], request.json()[0]["url"])
 
     def _update_contentws(
-        self, folder_id, sf_info, document_id, file_object, zone="com.apple.CloudDocs",
+        self,
+        folder_id,
+        sf_info,
+        document_id,
+        file_object,
+        zone="com.apple.CloudDocs",
     ):
         data = {
             "data": {
@@ -162,7 +169,11 @@ class DriveService:
         content_response = request.json()["singleFile"]
 
         self._update_contentws(
-            folder_id, content_response, document_id, file_object, zone,
+            folder_id,
+            content_response,
+            document_id,
+            file_object,
+            zone,
         )
 
     def create_folders(self, parent, name):
@@ -230,7 +241,8 @@ class DriveService:
         """Returns the root node."""
         if not self._root:
             self._root = DriveNode(
-                self, self.get_node_data("FOLDER::com.apple.CloudDocs::root"),
+                self,
+                self.get_node_data("FOLDER::com.apple.CloudDocs::root"),
             )
         return self._root
 
@@ -253,7 +265,7 @@ class DriveNode:
     def name(self):
         """Gets the node name."""
         if "extension" in self.data:
-            return f'{self.data["name"]}.{self.data["extension"]}'
+            return f"{self.data['name']}.{self.data['extension']}"
         return self.data["name"]
 
     @property
@@ -268,11 +280,8 @@ class DriveNode:
             if "items" not in self.data:
                 self.data.update(self.connection.get_node_data(self.data["drivewsid"]))
             if "items" not in self.data:
-                raise KeyError(f'No items in folder, status: {self.data["status"]}')
-            self._children = [
-                DriveNode(self.connection, item_data)
-                for item_data in self.data["items"]
-            ]
+                raise KeyError(f"No items in folder, status: {self.data['status']}")
+            self._children = [DriveNode(self.connection, item_data) for item_data in self.data["items"]]
         return self._children
 
     @property
@@ -311,13 +320,18 @@ class DriveNode:
             response.raw = io.BytesIO()
             return response
         return self.connection.get_file(
-            self.data["docwsid"], zone=self.data["zone"], **kwargs,
+            self.data["docwsid"],
+            zone=self.data["zone"],
+            **kwargs,
         )
 
     def upload(self, file_object, **kwargs):
         """ "Upload a new file."""
         return self.connection.send_file(
-            self.data["docwsid"], file_object, zone=self.data["zone"], **kwargs,
+            self.data["docwsid"],
+            file_object,
+            zone=self.data["zone"],
+            **kwargs,
         )
 
     def dir(self):
@@ -337,13 +351,16 @@ class DriveNode:
     def rename(self, name):
         """Rename an iCloud Drive item."""
         return self.connection.rename_items(
-            self.data["drivewsid"], self.data["etag"], name,
+            self.data["drivewsid"],
+            self.data["etag"],
+            name,
         )
 
     def delete(self):
         """Delete an iCloud Drive item."""
         return self.connection.move_items_to_trash(
-            self.data["drivewsid"], self.data["etag"],
+            self.data["drivewsid"],
+            self.data["etag"],
         )
 
     def get(self, name):

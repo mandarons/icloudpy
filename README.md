@@ -208,74 +208,9 @@ John [{u'field': u'+1 555-55-5555-5', u'label': u'MOBILE'}]
 
 **_Note: These contacts do not include contacts federated from e.g. Facebook, only the ones stored in iCloud._**
 
-## File Storage (Ubiquity)
-
-**NOTE: It seems like having app documents are no longer stored in Ubiquity [and migrated to iCloud Drive](https://developer.apple.com/library/archive/technotes/tn2348/_index.html). See below.**
-
-You can access documents stored in your iCloud account by using the `files` property's `dir` method:
-
-```bash
->>> api.files.dir()
-[u'.do-not-delete',
- u'.localized',
- u'com~apple~Notes',
- u'com~apple~Preview',
- u'com~apple~mail',
- u'com~apple~shoebox',
- u'com~apple~system~spotlight'
-]
-```
-
-You can access children and their children's children using the filename as an index:
-
-```bash
->>> api.files['com~apple~Notes']
-<Folder: u'com~apple~Notes'>
->>> api.files['com~apple~Notes'].type
-u'folder'
->>> api.files['com~apple~Notes'].dir()
-[u'Documents']
->>> api.files['com~apple~Notes']['Documents'].dir()
-[u'Some Document']
->>> api.files['com~apple~Notes']['Documents']['Some Document'].name
-u'Some Document'
->>> api.files['com~apple~Notes']['Documents']['Some Document'].modified
-datetime.datetime(2012, 9, 13, 2, 26, 17)
->>> api.files['com~apple~Notes']['Documents']['Some Document'].size
-1308134
->>> api.files['com~apple~Notes']['Documents']['Some Document'].type
-u'file'
-```
-
-And when you have a file that you'd like to download, the `open` method will return a response object from which you can read the `content`.
-
-```bash
->>> api.files['com~apple~Notes']['Documents']['Some Document'].open().content
-'Hello, these are the file contents'
-```
-
-The object returned from the above `open` method is a [response object](http://www.python-requests.org/en/latest/api/#classes) and the `open` method can accept any parameters you might normally use in a request using [requests](https://github.com/kennethreitz/requests).
-
-For example, if you know that the file you're opening has JSON content:
-
-```bash
->>> api.files['com~apple~Notes']['Documents']['information.json'].open().json()
-{'How much we love you': 'lots'}
->>> api.files['com~apple~Notes']['Documents']['information.json'].open().json()['How much we love you']
-'lots'
-```
-
-Or, if you're downloading a particularly large file, you may want to use the `stream` keyword argument, and read directly from the raw response object:
-
-```bash
->>> download = api.files['com~apple~Notes']['Documents']['big_file.zip'].open(stream=True)
->>> with open('downloaded_file.zip', 'wb') as opened_file:
-        opened_file.write(download.raw.read())
-```
-
 ## File Storage (iCloud Drive)
 
-You can access your iCloud Drive using an API identical to the Ubiquity one described in the previous section, except that it is rooted at `api.drive`:
+You can access your iCloud Drive through the `api.drive` property:
 
 ```bash
 >>> api.drive.dir()
