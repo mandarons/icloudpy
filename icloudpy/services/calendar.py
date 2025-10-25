@@ -1,4 +1,5 @@
 """Calendar service."""
+
 from calendar import monthrange
 from datetime import datetime
 
@@ -30,7 +31,7 @@ class CalendarService:
         params.update(
             {
                 "lang": "en-us",
-                "usertz": get_localzone().zone,
+                "usertz": str(get_localzone()),
                 "dsid": self.session.service.data["dsInfo"]["dsid"],
             },
         )
@@ -55,7 +56,7 @@ class CalendarService:
         params.update(
             {
                 "lang": "en-us",
-                "usertz": get_localzone().zone,
+                "usertz": str(get_localzone()),
                 "startDate": from_dt.strftime("%Y-%m-%d"),
                 "endDate": to_dt.strftime("%Y-%m-%d"),
                 "dsid": self.session.service.data["dsInfo"]["dsid"],
@@ -83,7 +84,7 @@ class CalendarService:
         params.update(
             {
                 "lang": "en-us",
-                "usertz": get_localzone().zone,
+                "usertz": str(get_localzone()),
                 "startDate": from_dt.strftime("%Y-%m-%d"),
                 "endDate": to_dt.strftime("%Y-%m-%d"),
                 "dsid": self.session.service.data["dsInfo"]["dsid"],

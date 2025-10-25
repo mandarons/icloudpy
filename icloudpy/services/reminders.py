@@ -1,4 +1,5 @@
 """Reminders service."""
+
 import json
 import time
 import uuid
@@ -27,14 +28,15 @@ class RemindersService:
             {
                 "clientVersion": "4.0",
                 "lang": "en-us",
-                "usertz": get_localzone().zone,
+                "usertz": str(get_localzone()),
                 "dsid": self.session.service.data["dsInfo"]["dsid"],
             },
         )
 
         # Open reminders
         req = self.session.get(
-            self._service_root + "/rd/startup", params=params_reminders,
+            self._service_root + "/rd/startup",
+            params=params_reminders,
         )
 
         data = req.json()
@@ -48,7 +50,6 @@ class RemindersService:
                 "ctag": collection["ctag"],
             }
             for reminder in data["Reminders"]:
-
                 if reminder["pGuid"] != collection["guid"]:
                     continue
 
@@ -81,7 +82,7 @@ class RemindersService:
 
         params_reminders = dict(self._params)
         params_reminders.update(
-            {"clientVersion": "4.0", "lang": "en-us", "usertz": get_localzone().zone},
+            {"clientVersion": "4.0", "lang": "en-us", "usertz": str(get_localzone())},
         )
 
         due_dates = None
