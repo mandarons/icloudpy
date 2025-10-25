@@ -122,10 +122,6 @@ LOGIN_WORKING = {
             "url": "https://p31-settingsws.icloud.com:443",
             "status": "active",
         },
-        "ubiquity": {
-            "url": "https://p31-ubiquityws.icloud.com:443",
-            "status": "active",
-        },
         "streams": {"url": "https://p31-streams.icloud.com:443", "status": "active"},
         "keyvalue": {
             "url": "https://p31-keyvalueservice.icloud.com:443",
@@ -313,10 +309,6 @@ LOGIN_2FA = {
         },
         "settings": {
             "url": "https://p31-settingsws.icloud.com:443",
-            "status": "active",
-        },
-        "ubiquity": {
-            "url": "https://p31-ubiquityws.icloud.com:443",
             "status": "active",
         },
         "streams": {"url": "https://p31-streams.icloud.com:443", "status": "active"},
