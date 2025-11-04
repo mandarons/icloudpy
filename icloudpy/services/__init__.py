@@ -8,7 +8,7 @@ from icloudpy.services.drive import DriveService
 from icloudpy.services.findmyiphone import (
     FindMyiPhoneServiceManager,
 )
-from icloudpy.services.photos import PhotosService
+from icloudpy.services.photos import ( PhotosService, SharedPhotosService )
 from icloudpy.services.reminders import (
     RemindersService,
 )
