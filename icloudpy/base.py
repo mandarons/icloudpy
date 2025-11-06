@@ -28,8 +28,8 @@ from icloudpy.services import (
     DriveService,
     FindMyiPhoneServiceManager,
     PhotosService,
-    SharedPhotosService,
     RemindersService,
+    SharedPhotosService,
 )
 from icloudpy.utils import get_password_from_keyring
 
