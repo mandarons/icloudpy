@@ -4,7 +4,7 @@ allure-pytest==2.15.0
 coverage==7.10.7
 pytest-cov==7.0.0
 black==25.11.0
-ruff==0.14.6
+ruff==0.14.7
 ipython==8.37.0
 pre-commit==4.3.0
 setuptools==80.9.0
