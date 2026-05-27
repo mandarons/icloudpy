@@ -622,6 +622,32 @@ class PhotoAsset:
 
         self._versions = None
 
+    # Apple Uniform Type Identifiers (UTIs) for known iCloud photo/video assets.
+    # Mirrors the table in icloud_photos_downloader's pyicloud_ipd.services.photos.
+    # Anything not listed here falls back to the filename-extension heuristic in
+    # `item_type` below.
+    ITEM_TYPES = {
+        "public.heic": "image",
+        "public.heif": "image",
+        "public.jpeg": "image",
+        "public.png": "image",
+        "public.tiff": "image",
+        "com.adobe.raw-image": "image",
+        "com.canon.cr2-raw-image": "image",
+        "com.canon.cr3-raw-image": "image",
+        "com.canon.crw-raw-image": "image",
+        "com.fuji.raw-image": "image",
+        "com.nikon.nrw-raw-image": "image",
+        "com.nikon.raw-image": "image",
+        "com.olympus.or-raw-image": "image",
+        "com.olympus.raw-image": "image",
+        "com.panasonic.rw2-raw-image": "image",
+        "com.pentax.raw-image": "image",
+        "com.sony.arw-raw-image": "image",
+        "com.apple.quicktime-movie": "movie",
+        "public.mpeg-4": "movie",
+    }
+
     PHOTO_VERSION_LOOKUP = {
         "full": "resJPEGFull",
         "large": "resJPEGLarge",
@@ -630,6 +656,15 @@ class PhotoAsset:
         "sidecar": "resSidecar",
         "original": "resOriginal",
         "original_alt": "resOriginalAlt",
+        # Live Photo video components — present alongside the still image for
+        # Live Photos. The CloudKit master_record carries `resOriginalVidCompl*`
+        # (the original .mov), and may also expose `resVidMed*` / `resVidSmall*`
+        # for smaller variants. If the asset is a regular still photo, these
+        # keys are silently skipped by `versions` since the underlying fields
+        # are absent.
+        "live_video_original": "resOriginalVidCompl",
+        "live_video_medium": "resVidMed",
+        "live_video_thumb": "resVidSmall",
     }
 
     VIDEO_VERSION_LOOKUP = {
@@ -694,11 +729,53 @@ class PhotoAsset:
         )
 
     @property
+    def item_type(self):
+        """Returns 'image' or 'movie' for this asset.
+
+        Reads the CloudKit ``itemType`` field (Apple UTI string) and maps it
+        via ``ITEM_TYPES``. Falls back to a filename-extension heuristic when
+        the UTI is missing or unrecognised — that path catches GoPro footage
+        and a handful of camera-RAW formats that Apple has not assigned a
+        canonical UTI to.
+
+        Returns ``None`` only when both the UTI is missing AND no filename is
+        available (rare — usually a CloudKit record with no master payload).
+        """
+        fields = self._master_record["fields"]
+        uti = fields.get("itemType", {}).get("value")
+        if uti in self.ITEM_TYPES:
+            return self.ITEM_TYPES[uti]
+
+        # Extension-based fallback. Mirrors pyicloud_ipd's heuristic.
+        filename = self.filename
+        if filename:
+            lower = filename.lower()
+            if lower.endswith((".heic", ".heif", ".png", ".jpg", ".jpeg", ".tif", ".tiff")):
+                return "image"
+            if lower.endswith((".mov", ".mp4", ".m4v", ".avi", ".3gp")):
+                return "movie"
+        return None
+
+    @property
     def versions(self):
-        """Gets the photo versions."""
+        """Gets the photo versions.
+
+        For ``item_type == "movie"`` returns the video versions
+        (``VIDEO_VERSION_LOOKUP``). For everything else returns the image
+        versions (``PHOTO_VERSION_LOOKUP``) — which includes Live Photo video
+        keys (``live_video_original`` / ``live_video_medium`` /
+        ``live_video_thumb``) when the underlying CloudKit fields are present.
+
+        Backward compatibility: callers that previously received only photo
+        versions for still images and only video versions for movies still see
+        those keys. Live Photo callers gain new ``live_video_*`` keys that
+        were previously inaccessible — earlier icloudpy versions misclassified
+        Live Photos as movies (via the ``resVidSmallRes`` presence heuristic)
+        and dropped the still image entirely.
+        """
         if not self._versions:
             self._versions = {}
-            if "resVidSmallRes" in self._master_record["fields"]:
+            if self.item_type == "movie":
                 typed_version_lookup = self.VIDEO_VERSION_LOOKUP
             else:
                 typed_version_lookup = self.PHOTO_VERSION_LOOKUP

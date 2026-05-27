@@ -941,3 +941,164 @@ class PhotoAssetMissingFilenameTests(unittest.TestCase):
         assert len(dims) == 2
         assert dims[0] == 1920  # width
         assert dims[1] == 1080  # height
+
+
+# ─── Live Photo / item_type tests ─────────────────────────────────────────
+# Added 2026-05-27 as part of feat/live-photos.
+
+import base64 as _b64
+
+from icloudpy.services.photos import PhotoAsset
+
+
+def _b64name(name):
+    return _b64.b64encode(name.encode()).decode()
+
+
+def _photo_field(prefix, *, size=12345, url=None, file_type="public.heic", width=4032, height=3024):
+    """Build the CloudKit master_record fields for one asset version prefix."""
+    return {
+        f"{prefix}Width": {"value": width},
+        f"{prefix}Height": {"value": height},
+        f"{prefix}FileType": {"value": file_type},
+        f"{prefix}Res": {
+            "value": {
+                "size": size,
+                "downloadURL": url or f"https://example.invalid/{prefix}",
+                "fileChecksum": f"sum-{prefix}",
+            }
+        },
+    }
+
+
+def _make_master(filename, item_type_uti, *field_blocks):
+    fields = {"filenameEnc": {"value": _b64name(filename)}}
+    if item_type_uti is not None:
+        fields["itemType"] = {"value": item_type_uti}
+    for block in field_blocks:
+        fields.update(block)
+    return {"recordName": "test-record", "fields": fields}
+
+
+def _make_asset_record():
+    return {"fields": {"assetDate": {"value": 1700000000000}, "addedDate": {"value": 1700000000000}}}
+
+
+class TestItemTypeDetection(unittest.TestCase):
+    """item_type property — UTI lookup + extension fallback."""
+
+    def test_heic_uti_returns_image(self):
+        master = _make_master("photo.heic", "public.heic", _photo_field("resOriginal"))
+        asset = PhotoAsset(service=None, master_record=master, asset_record=_make_asset_record())
+        assert asset.item_type == "image"
+
+    def test_jpeg_uti_returns_image(self):
+        master = _make_master("photo.jpg", "public.jpeg", _photo_field("resOriginal", file_type="public.jpeg"))
+        asset = PhotoAsset(service=None, master_record=master, asset_record=_make_asset_record())
+        assert asset.item_type == "image"
+
+    def test_quicktime_uti_returns_movie(self):
+        master = _make_master("clip.mov", "com.apple.quicktime-movie",
+                              _photo_field("resOriginal", file_type="com.apple.quicktime-movie"))
+        asset = PhotoAsset(service=None, master_record=master, asset_record=_make_asset_record())
+        assert asset.item_type == "movie"
+
+    def test_canon_raw_uti_returns_image(self):
+        master = _make_master("raw.cr3", "com.canon.cr3-raw-image", _photo_field("resOriginal"))
+        asset = PhotoAsset(service=None, master_record=master, asset_record=_make_asset_record())
+        assert asset.item_type == "image"
+
+    def test_missing_uti_with_heic_extension_returns_image(self):
+        master = _make_master("photo.HEIC", None, _photo_field("resOriginal"))
+        asset = PhotoAsset(service=None, master_record=master, asset_record=_make_asset_record())
+        assert asset.item_type == "image"
+
+    def test_missing_uti_with_mov_extension_returns_movie(self):
+        master = _make_master("clip.MOV", None, _photo_field("resOriginal"))
+        asset = PhotoAsset(service=None, master_record=master, asset_record=_make_asset_record())
+        assert asset.item_type == "movie"
+
+    def test_no_uti_no_filename_returns_none(self):
+        master = {"recordName": "r", "fields": _photo_field("resOriginal")}
+        asset = PhotoAsset(service=None, master_record=master, asset_record=_make_asset_record())
+        # filename property raises KeyError → returns None; item_type sees None and falls through
+        assert asset.item_type is None
+
+    def test_unknown_uti_with_jpg_extension_returns_image(self):
+        master = _make_master("photo.jpg", "public.fake-format", _photo_field("resOriginal"))
+        asset = PhotoAsset(service=None, master_record=master, asset_record=_make_asset_record())
+        assert asset.item_type == "image"
+
+
+class TestLivePhotoVersions(unittest.TestCase):
+    """Live Photo asset surfaces BOTH still and .mov versions."""
+
+    def _live_photo_master(self):
+        """A Live Photo has both photo fields AND the live-video fields in master_record."""
+        return _make_master(
+            "IMG_1234.HEIC",
+            "public.heic",
+            _photo_field("resOriginal", size=2_400_000, url="https://example.invalid/heic"),
+            _photo_field("resJPEGMed", size=300_000, url="https://example.invalid/jpeg-med", file_type="public.jpeg"),
+            _photo_field("resOriginalVidCompl", size=1_800_000,
+                         url="https://example.invalid/live.mov",
+                         file_type="com.apple.quicktime-movie"),
+            _photo_field("resVidMed", size=900_000,
+                         url="https://example.invalid/live-med.mov",
+                         file_type="com.apple.quicktime-movie"),
+            _photo_field("resVidSmall", size=200_000,
+                         url="https://example.invalid/live-thumb.mov",
+                         file_type="com.apple.quicktime-movie"),
+        )
+
+    def test_live_photo_classified_as_image(self):
+        asset = PhotoAsset(service=None, master_record=self._live_photo_master(),
+                           asset_record=_make_asset_record())
+        assert asset.item_type == "image"
+
+    def test_live_photo_exposes_still_version(self):
+        asset = PhotoAsset(service=None, master_record=self._live_photo_master(),
+                           asset_record=_make_asset_record())
+        assert "original" in asset.versions
+        assert asset.versions["original"]["url"] == "https://example.invalid/heic"
+        assert asset.versions["original"]["size"] == 2_400_000
+
+    def test_live_photo_exposes_live_video_versions(self):
+        asset = PhotoAsset(service=None, master_record=self._live_photo_master(),
+                           asset_record=_make_asset_record())
+        assert "live_video_original" in asset.versions
+        assert asset.versions["live_video_original"]["url"] == "https://example.invalid/live.mov"
+        assert asset.versions["live_video_original"]["type"] == "com.apple.quicktime-movie"
+        assert "live_video_medium" in asset.versions
+        assert "live_video_thumb" in asset.versions
+
+    def test_plain_photo_has_no_live_video_versions(self):
+        """A still photo with no Live Photo .mov in CloudKit must not surface live_video_* keys."""
+        master = _make_master("plain.heic", "public.heic", _photo_field("resOriginal"))
+        asset = PhotoAsset(service=None, master_record=master, asset_record=_make_asset_record())
+        assert "original" in asset.versions
+        assert "live_video_original" not in asset.versions
+        assert "live_video_medium" not in asset.versions
+        assert "live_video_thumb" not in asset.versions
+
+    def test_regular_video_uses_video_lookup(self):
+        """Movies (item_type=movie) must use VIDEO_VERSION_LOOKUP, not PHOTO_VERSION_LOOKUP."""
+        master = _make_master(
+            "clip.MOV",
+            "com.apple.quicktime-movie",
+            _photo_field("resOriginal", size=10_000_000,
+                         url="https://example.invalid/orig.mov",
+                         file_type="com.apple.quicktime-movie"),
+            _photo_field("resVidMed", size=2_000_000,
+                         url="https://example.invalid/med.mov",
+                         file_type="com.apple.quicktime-movie"),
+            _photo_field("resVidSmall", size=500_000,
+                         url="https://example.invalid/small.mov",
+                         file_type="com.apple.quicktime-movie"),
+        )
+        asset = PhotoAsset(service=None, master_record=master, asset_record=_make_asset_record())
+        assert asset.item_type == "movie"
+        # video lookup keys are 'medium' / 'thumb' / 'original', NOT 'live_video_*'
+        assert "medium" in asset.versions
+        assert "thumb" in asset.versions
+        assert "live_video_original" not in asset.versions
