@@ -156,8 +156,6 @@ class TestTwoFactorAuthentication(TestCase):
 
     def test_trigger_2fa_push_notification_includes_session_headers(self):
         """trigger_2fa_push_notification must forward scnt + session_id headers."""
-        from unittest.mock import patch
-
         service = ICloudPyServiceMock(REQUIRES_2FA_USER, VALID_PASSWORD)
         service.session_data["scnt"] = "scnt-value"
         service.session_data["session_id"] = "session-id-value"
@@ -174,12 +172,8 @@ class TestTwoFactorAuthentication(TestCase):
         assert call_headers["scnt"] == "scnt-value"
         assert call_headers["X-Apple-ID-Session-Id"] == "session-id-value"
 
-    def test_trigger_2fa_push_notification_failure_is_non_fatal(self):
-        """Failure to trigger push must return False, not raise."""
-        from unittest.mock import patch
-
-        from icloudpy.exceptions import ICloudPyAPIResponseException
-
+    def test_trigger_2fa_push_notification_api_failure_is_non_fatal(self):
+        """Apple API errors must return False, not raise."""
         service = ICloudPyServiceMock(REQUIRES_2FA_USER, VALID_PASSWORD)
 
         with patch.object(service.session, "put") as fake_put:
@@ -187,6 +181,27 @@ class TestTwoFactorAuthentication(TestCase):
             result = service.trigger_2fa_push_notification()
 
         assert result is False
+
+    def test_trigger_2fa_push_notification_network_failure_is_non_fatal(self):
+        """Network/transport errors (timeout, SSL, connection) must return False, not raise.
+
+        The docstring promises non-fatal behavior — the implementation must
+        deliver it for all exception types, not only Apple API errors.
+        """
+        import requests
+
+        service = ICloudPyServiceMock(REQUIRES_2FA_USER, VALID_PASSWORD)
+
+        for exc in (
+            requests.exceptions.ConnectionError("network down"),
+            requests.exceptions.Timeout("too slow"),
+            requests.exceptions.SSLError("cert error"),
+        ):
+            with patch.object(service.session, "put") as fake_put:
+                fake_put.side_effect = exc
+                # Must not raise
+                result = service.trigger_2fa_push_notification()
+            assert result is False, f"network exception {type(exc).__name__} should return False"
 
 
 class TestTwoStepAuthentication(TestCase):

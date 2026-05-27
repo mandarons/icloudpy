@@ -588,6 +588,42 @@ class ICloudPyService:
             LOGGER.debug("Failed to trigger 2FA push notification.")
             return False
 
+    def trigger_2fa_push_notification(self):
+        """Asks Apple to push a 2FA verification code to trusted devices.
+
+        Apple's auth flow (changed around iOS 26 / early 2026) requires a PUT
+        to ``/verify/trusteddevice/securitycode`` (no body) to initiate code
+        delivery to trusted devices. Without this step, the user is prompted
+        for a code but no code is ever pushed to any device — auth stalls.
+
+        Callers should invoke this method before prompting the user for the
+        2FA code (i.e., right after ``requires_2fa`` returns True). Failure
+        is non-fatal — a code may still arrive via SMS or another path.
+
+        See: https://github.com/mandarons/icloud-docker/issues/426
+        Ported from icloud_photos_downloader PR #1335.
+
+        :returns: True if the push request succeeded, False otherwise.
+        """
+        headers = self._get_auth_headers({"Accept": "application/json"})
+
+        if self.session_data.get("scnt"):
+            headers["scnt"] = self.session_data.get("scnt")
+
+        if self.session_data.get("session_id"):
+            headers["X-Apple-ID-Session-Id"] = self.session_data.get("session_id")
+
+        try:
+            self.session.put(
+                f"{self.auth_endpoint}/verify/trusteddevice/securitycode",
+                headers=headers,
+            )
+            LOGGER.debug("2FA push notification triggered.")
+            return True
+        except Exception as error:  # network, SSL, or Apple API errors are all non-fatal here
+            LOGGER.debug("Failed to trigger 2FA push notification: %s", error)
+            return False
+
     def validate_2fa_code(self, code):
         """Verifies a verification code received via Apple's 2FA system (HSA2)."""
         data = {"securityCode": {"code": code}}
