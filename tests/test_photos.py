@@ -941,3 +941,56 @@ class PhotoAssetMissingFilenameTests(unittest.TestCase):
         assert len(dims) == 2
         assert dims[0] == 1920  # width
         assert dims[1] == 1080  # height
+
+
+class SharedPhotosServiceInitializationTests(unittest.TestCase):
+    """Test SharedPhotosService initialization."""
+
+    def setUp(self):
+        """Set up test."""
+        self.service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD)
+
+    def test_shared_photos_service_initialization(self):
+        """Test shared photos service setup with correct params."""
+        shared_photos = self.service.shared_photos
+
+        assert shared_photos is not None
+        assert shared_photos._service_root is not None
+        assert shared_photos._service_endpoint is not None
+        assert shared_photos.params["remapEnums"] is True
+        assert shared_photos.params["getCurrentSyncToken"] is True
+
+    def test_shared_photos_service_zone_id(self):
+        """Test zone_id is set from shared zones response."""
+        shared_photos = self.service.shared_photos
+        assert shared_photos.zone_id["zoneName"].startswith("SharedSync-")
+
+    def test_shared_photos_service_endpoint_structure(self):
+        """Test service endpoint follows correct pattern for shared photos."""
+        shared_photos = self.service.shared_photos
+        assert "/database/1/com.apple.photos.cloud/production/shared" in shared_photos._service_endpoint
+
+    def test_shared_photos_service_libraries_property(self):
+        """Test the libraries property returns libraries dict."""
+        shared_photos = self.service.shared_photos
+        libraries = shared_photos.libraries
+        assert isinstance(libraries, dict)
+        assert len(libraries) > 0
+
+    def test_shared_photos_service_libraries_cached(self):
+        """Test the libraries property caches result."""
+        shared_photos = self.service.shared_photos
+        libraries1 = shared_photos.libraries
+        libraries2 = shared_photos.libraries
+        assert libraries1 is libraries2
+
+    def test_shared_photos_exception_handling(self):
+        """Test exception handling when zones cannot be fetched."""
+        from icloudpy.services.photos import SharedPhotosService
+        from unittest.mock import MagicMock
+
+        mock_session = MagicMock()
+        mock_session.post.side_effect = Exception("Network error")
+
+        with self.assertRaises(ICloudPyServiceNotActivatedException):
+            SharedPhotosService("https://example.com", mock_session, {})

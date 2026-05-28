@@ -29,6 +29,7 @@ from icloudpy.services import (
     FindMyiPhoneServiceManager,
     PhotosService,
     RemindersService,
+    SharedPhotosService,
 )
 from icloudpy.utils import get_password_from_keyring
 
@@ -270,6 +271,7 @@ class ICloudPyService:
 
         self._drive = None
         self._photos = None
+        self._shared_photos = None
 
     def authenticate(self, force_refresh=False, service=None):
         """
@@ -641,6 +643,16 @@ class ICloudPyService:
             service_root = self._get_webservice_url("ckdatabasews")
             self._photos = PhotosService(service_root, self.session, self.params)
         return self._photos
+
+    @property
+    def shared_photos(self):
+        """Gets the 'Shared Photos' service."""
+        if not self._shared_photos:
+            service_root = self._get_webservice_url("ckdatabasews")
+            self._shared_photos = SharedPhotosService(
+                service_root, self.session, self.params
+            )
+        return self._shared_photos
 
     @property
     def calendar(self):

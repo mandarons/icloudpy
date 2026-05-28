@@ -275,6 +275,85 @@ class PhotosService(PhotoLibrary):
         return self._libraries
 
 
+class SharedPhotosService(PhotoLibrary):
+    """The 'Shared Photos' iCloud service.
+
+    Provides access to shared photo libraries, such as shared albums or libraries
+    that the user does not own. This is distinct from the regular PhotosService,
+    which provides access to the user's primary photo library.
+    """
+
+    def __init__(self, service_root, session, params):
+        self.session = session
+        self.params = dict(params)
+        self._service_root = service_root
+
+        self._libraries = None
+
+        self.params.update({"remapEnums": True, "getCurrentSyncToken": True})
+
+        self._service_endpoint = (
+            f"{self._service_root}/database/1/"
+            "com.apple.photos.cloud/production/shared"
+        )
+
+        self._photo_assets = {}
+
+        zones = []
+        try:
+            url = (
+                f"{self._service_root}/database/1/"
+                "com.apple.photos.cloud/production/shared/zones/list"
+            )
+            request = self.session.post(
+                url,
+                data="{}",
+                headers={"Content-type": "text/plain"},
+            )
+            response = request.json()
+            zones = response["zones"]
+        except Exception as e:
+            raise ICloudPyServiceNotActivatedException(
+                "Unable to fetch shared photo zones: " + str(e), None
+            )
+
+        # The call to `/records/query` requires the `ownerRecordName` to be
+        # provided, which is known only after obtaining it from the API.
+
+        if not zones:
+            raise ICloudPyServiceNotActivatedException(
+                "No shared photo zones found for this account.", None
+            )
+        super().__init__(service=self, zone_id=zones[0]["zoneID"])
+
+    @property
+    def libraries(self):
+        if not self._libraries:
+            zones = []
+            try:
+                url = f"{self._service_endpoint}/zones/list"
+                request = self.session.post(
+                    url,
+                    data="{}",
+                    headers={"Content-type": "text/plain"},
+                )
+                response = request.json()
+                zones = response["zones"]
+            except Exception as e:
+                LOGGER.error(f"library exception: {str(e)}")
+
+            libraries = {}
+            for zone in zones:
+                if not zone.get("deleted"):
+                    zone_name = zone["zoneID"]["zoneName"]
+                    libraries[zone_name] = PhotoLibrary(
+                        self, zone_id=zone["zoneID"]
+                    )
+            self._libraries = libraries
+
+        return self._libraries
+
+
 class PhotoAlbum:
     """A photo album."""
 
