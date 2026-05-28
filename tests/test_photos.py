@@ -1,8 +1,9 @@
 """Tests for Photos service."""
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from icloudpy.exceptions import ICloudPyServiceNotActivatedException
+from icloudpy.services.photos import SharedPhotosService
 
 from . import ICloudPyServiceMock
 from .const import AUTHENTICATED_USER, VALID_PASSWORD
@@ -986,9 +987,6 @@ class SharedPhotosServiceInitializationTests(unittest.TestCase):
 
     def test_shared_photos_exception_handling(self):
         """Test exception handling when zones cannot be fetched."""
-        from icloudpy.services.photos import SharedPhotosService
-        from unittest.mock import MagicMock
-
         mock_session = MagicMock()
         mock_session.post.side_effect = Exception("Network error")
 

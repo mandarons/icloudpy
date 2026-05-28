@@ -314,7 +314,7 @@ class SharedPhotosService(PhotoLibrary):
             zones = response["zones"]
         except Exception as e:
             raise ICloudPyServiceNotActivatedException(
-                "Unable to fetch shared photo zones: " + str(e), None
+                "Unable to fetch shared photo zones: " + str(e), None,
             )
 
         # The call to `/records/query` requires the `ownerRecordName` to be
@@ -322,7 +322,7 @@ class SharedPhotosService(PhotoLibrary):
 
         if not zones:
             raise ICloudPyServiceNotActivatedException(
-                "No shared photo zones found for this account.", None
+                "No shared photo zones found for this account.", None,
             )
         super().__init__(service=self, zone_id=zones[0]["zoneID"])
 
@@ -347,7 +347,7 @@ class SharedPhotosService(PhotoLibrary):
                 if not zone.get("deleted"):
                     zone_name = zone["zoneID"]["zoneName"]
                     libraries[zone_name] = PhotoLibrary(
-                        self, zone_id=zone["zoneID"]
+                        self, zone_id=zone["zoneID"],
                     )
             self._libraries = libraries
 
