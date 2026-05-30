@@ -232,6 +232,15 @@ def main(args=None):
                 utils.store_password_in_keyring(username, password)
 
             if api.requires_2fa:
+                # Apple's auth flow (2026+) requires an explicit PUT to push
+                # the code to trusted devices. Without this, the user is
+                # prompted but no code is ever delivered.
+                if not api.trigger_2fa_push_notification():
+                    print(
+                        "(Could not trigger push notification — "
+                        "a code may still arrive via SMS or another path.)",
+                    )
+
                 # fmt: off
                 print(
                     "\nTwo-step authentication required.",

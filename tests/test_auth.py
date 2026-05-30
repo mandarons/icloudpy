@@ -15,7 +15,7 @@ from icloudpy.exceptions import (
     ICloudPyServiceNotActivatedException,
 )
 
-from . import ICloudPyServiceMock
+from . import ICloudPyServiceMock, ResponseMock
 from .const import (
     AUTHENTICATED_USER,
     REQUIRES_2FA_USER,
@@ -145,6 +145,63 @@ class TestTwoFactorAuthentication(TestCase):
         # The code in base.py catches error code -21669 and returns False
         result = service.validate_2fa_code("000001")  # Wrong code
         assert result is False
+
+    def test_trigger_2fa_push_notification_success(self):
+        """trigger_2fa_push_notification PUTs to the securitycode endpoint."""
+        service = ICloudPyServiceMock(REQUIRES_2FA_USER, VALID_PASSWORD)
+        # Mock returns 204 for PUT to /verify/trusteddevice/securitycode
+        # See tests/__init__.py mock dispatch for the PUT branch.
+        result = service.trigger_2fa_push_notification()
+        assert result is True
+
+    def test_trigger_2fa_push_notification_includes_session_headers(self):
+        """trigger_2fa_push_notification must forward scnt + session_id headers."""
+        service = ICloudPyServiceMock(REQUIRES_2FA_USER, VALID_PASSWORD)
+        service.session_data["scnt"] = "scnt-value"
+        service.session_data["session_id"] = "session-id-value"
+
+        with patch.object(service.session, "put") as fake_put:
+            fake_put.return_value = ResponseMock("", status_code=204)
+            result = service.trigger_2fa_push_notification()
+
+        assert result is True
+        fake_put.assert_called_once()
+        call_url = fake_put.call_args.args[0]
+        call_headers = fake_put.call_args.kwargs["headers"]
+        assert call_url.endswith("/verify/trusteddevice/securitycode")
+        assert call_headers["scnt"] == "scnt-value"
+        assert call_headers["X-Apple-ID-Session-Id"] == "session-id-value"
+
+    def test_trigger_2fa_push_notification_api_failure_is_non_fatal(self):
+        """Apple API errors must return False, not raise."""
+        service = ICloudPyServiceMock(REQUIRES_2FA_USER, VALID_PASSWORD)
+
+        with patch.object(service.session, "put") as fake_put:
+            fake_put.side_effect = ICloudPyAPIResponseException("Bad gateway")
+            result = service.trigger_2fa_push_notification()
+
+        assert result is False
+
+    def test_trigger_2fa_push_notification_network_failure_is_non_fatal(self):
+        """Network/transport errors (timeout, SSL, connection) must return False, not raise.
+
+        The docstring promises non-fatal behavior — the implementation must
+        deliver it for all exception types, not only Apple API errors.
+        """
+        import requests
+
+        service = ICloudPyServiceMock(REQUIRES_2FA_USER, VALID_PASSWORD)
+
+        for exc in (
+            requests.exceptions.ConnectionError("network down"),
+            requests.exceptions.Timeout("too slow"),
+            requests.exceptions.SSLError("cert error"),
+        ):
+            with patch.object(service.session, "put") as fake_put:
+                fake_put.side_effect = exc
+                # Must not raise
+                result = service.trigger_2fa_push_notification()
+            assert result is False, f"network exception {type(exc).__name__} should return False"
 
 
 class TestTwoStepAuthentication(TestCase):
@@ -507,7 +564,9 @@ class TestErrorCodeHandling(TestCase):
         service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD)
 
         with pytest.raises(ICloudPyServiceNotActivatedException) as exc_info:
-            service.session._raise_error("AUTHENTICATION_FAILED", "Authentication failed")
+            service.session._raise_error(
+                "AUTHENTICATION_FAILED", "Authentication failed",
+            )
 
         assert "manually finish setting up" in str(exc_info.value)
 
