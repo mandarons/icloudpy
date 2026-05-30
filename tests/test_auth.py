@@ -565,7 +565,7 @@ class TestErrorCodeHandling(TestCase):
 
         with pytest.raises(ICloudPyServiceNotActivatedException) as exc_info:
             service.session._raise_error(
-                "AUTHENTICATION_FAILED", "Authentication failed"
+                "AUTHENTICATION_FAILED", "Authentication failed",
             )
 
         assert "manually finish setting up" in str(exc_info.value)

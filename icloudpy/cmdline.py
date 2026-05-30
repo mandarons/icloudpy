@@ -238,7 +238,7 @@ def main(args=None):
                 if not api.trigger_2fa_push_notification():
                     print(
                         "(Could not trigger push notification — "
-                        "a code may still arrive via SMS or another path.)"
+                        "a code may still arrive via SMS or another path.)",
                     )
 
                 # fmt: off
