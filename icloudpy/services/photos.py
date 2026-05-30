@@ -274,6 +274,71 @@ class PhotosService(PhotoLibrary):
 
         return self._libraries
 
+class SharedPhotosService(PhotoLibrary):
+    """The 'Photos' iCloud service.
+
+    This also acts as the shared library if I am not the owner of the library.
+    """
+
+    def __init__(self, service_root, session, params):
+        self.session = session
+        self.params = dict(params)
+        self._service_root = service_root
+
+        self._libraries = None
+
+        self.params.update({"remapEnums": True, "getCurrentSyncToken": True})
+
+        self._service_endpoint = f"{self._service_root}/database/1/com.apple.photos.cloud/production/shared"
+
+        self._libraries = None
+
+        self._photo_assets = {}
+
+        try:
+            # url = f"{self._service_endpoint}/zones/list"
+            url = f"{self._service_root}/database/1/com.apple.photos.cloud/production/shared/zones/list"
+            request = self.session.post(
+                url,
+                data="{}",
+                headers={"Content-type": "text/plain"},
+            )
+            response = request.json()
+            zones = response["zones"]
+        except Exception as e:
+            LOGGER.error(f"library exception: {str(e)}")
+
+        # The call to `/records/query` requires the `ownerRecordName` to be provided, which is known only after obtaining it from the API.
+
+        if not zones:
+            return
+        super().__init__(service=self, zone_id=zones[0]["zoneID"])
+
+    @property
+    def libraries(self):
+        if not self._libraries:
+            try:
+                url = f"{self._service_endpoint}/zones/list"
+                request = self.session.post(
+                    url,
+                    data="{}",
+                    headers={"Content-type": "text/plain"},
+                )
+                response = request.json()
+                zones = response["zones"]
+            except Exception as e:
+                LOGGER.error(f"library exception: {str(e)}")
+
+            libraries = {}
+            for zone in zones:
+                if not zone.get("deleted"):
+                    zone_name = zone["zoneID"]["zoneName"]
+                    libraries[zone_name] = PhotoLibrary(self, zone_id=zone["zoneID"])
+                    # obj_type='CPLAssetByAssetDateWithoutHiddenOrDeleted',
+                    # list_type="CPLAssetAndMasterByAssetDateWithoutHiddenOrDeleted",
+                    # direction="ASCENDING", query_filter=None,
+                    # zone_id=zone['zoneID'])
+            return libraries
 
 class PhotoAlbum:
     """A photo album."""
