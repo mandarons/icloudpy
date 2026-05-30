@@ -966,7 +966,7 @@ def _photo_field(prefix, *, size=12345, url=None, file_type="public.heic", width
                 "size": size,
                 "downloadURL": url or f"https://example.invalid/{prefix}",
                 "fileChecksum": f"sum-{prefix}",
-            }
+            },
         },
     }
 
