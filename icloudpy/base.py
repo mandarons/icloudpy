@@ -578,10 +578,16 @@ class ICloudPyService:
             headers["X-Apple-ID-Session-Id"] = self.session_data.get("session_id")
 
         try:
-            self.session.put(
+            response = self.session.put(
                 f"{self.auth_endpoint}/verify/trusteddevice/securitycode",
                 headers=headers,
             )
+            if not (200 <= response.status_code < 300):
+                LOGGER.debug(
+                    "2FA push notification trigger returned status %s",
+                    response.status_code,
+                )
+                return False
             LOGGER.debug("2FA push notification triggered.")
             return True
         except Exception as error:  # network, SSL, or Apple API errors are all non-fatal here
