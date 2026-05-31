@@ -316,6 +316,43 @@ class PhotoAlbum:
     def __iter__(self):
         return self.photos
 
+    def iter_chunks(self, chunk_size=1000):
+        """Yield lists of PhotoAsset objects in fixed-size batches.
+
+        Equivalent to building a list from ``__iter__`` and slicing,
+        but the per-chunk list is yielded eagerly so callers can
+        process + release each chunk before the next is materialised.
+        Lets bulk-download callers bound peak memory by the chunk size
+        rather than ``len(self)`` -- relevant for 100K+ libraries where
+        ``list(album)`` would otherwise hold every PhotoAsset (and any
+        per-asset state callers attach) in memory at once.
+
+        The underlying ``photos`` property already paginates HTTP
+        responses (``page_size * 2`` records per request); this method
+        is a pure-Python wrapper that batches the yielded
+        ``PhotoAsset`` instances without changing the HTTP fetch
+        pattern.
+
+        Args:
+            chunk_size: Max number of PhotoAsset objects per yielded
+                list. Values <= 0 are coerced to the default (1000).
+
+        Yields:
+            List of up to ``chunk_size`` ``PhotoAsset`` instances. The
+            final chunk may be smaller. No empty list is yielded for
+            an empty album.
+        """
+        if chunk_size <= 0:
+            chunk_size = 1000
+        buffer = []
+        for photo in self:
+            buffer.append(photo)
+            if len(buffer) >= chunk_size:
+                yield buffer
+                buffer = []
+        if buffer:
+            yield buffer
+
     def __len__(self):
         if self._len is None:
             url = f"{self.service._service_endpoint}/internal/records/query/batch?{urlencode(self.service.params)}"
