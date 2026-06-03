@@ -4,5 +4,5 @@ keyrings.alt==5.0.2
 click==8.3.1
 srp==1.0.22
 tzlocal==5.2
-pytz==2024.2
+pytz==2026.2
 certifi==2025.11.12
