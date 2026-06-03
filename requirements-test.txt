@@ -2,7 +2,7 @@
 allure-pytest==2.15.3
 pytest==9.0.2
 coverage==7.13.1
-pytest-cov==7.0.0
+pytest-cov==7.1.0
 black==25.11.0
 ruff==0.14.10
 ipython==8.37.0
