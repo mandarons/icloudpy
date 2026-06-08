@@ -4,7 +4,7 @@ pytest==9.0.2
 coverage==7.13.1
 pytest-cov==7.1.0
 black==25.11.0
-ruff==0.14.10
+ruff==0.15.16
 ipython==8.37.0
 pre-commit==4.3.0
 setuptools==82.0.1
