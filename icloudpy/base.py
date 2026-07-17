@@ -688,7 +688,7 @@ class ICloudPyService:
     @property
     def shared_photos(self):
         """Gets the Shared 'Photo' service."""
-        if not self._photos:
+        if not self._shared_photos:
             service_root = self._get_webservice_url("ckdatabasews")
             self._shared_photos = SharedPhotosService(service_root, self.session, self.params)
         return self._shared_photos
