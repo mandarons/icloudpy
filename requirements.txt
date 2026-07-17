@@ -3,6 +3,6 @@ keyring==25.7.0
 keyrings.alt==5.0.2
 click==8.3.1
 srp==1.0.22
-tzlocal==5.2
+tzlocal==5.4.4
 pytz==2026.2
 certifi==2026.6.17
