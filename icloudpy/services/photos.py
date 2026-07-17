@@ -291,7 +291,6 @@ class SharedPhotosService(PhotoLibrary):
 
         self._service_endpoint = f"{self._service_root}/database/1/com.apple.photos.cloud/production/shared"
 
-        self._libraries = None
 
         self._photo_assets = {}
 
