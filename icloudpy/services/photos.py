@@ -275,9 +275,11 @@ class PhotosService(PhotoLibrary):
         return self._libraries
 
 class SharedPhotosService(PhotoLibrary):
-    """The 'Photos' iCloud service.
+    """The 'Shared Photos' iCloud service.
 
-    This also acts as the shared library if I am not the owner of the library.
+    Provides access to shared photo libraries, such as shared albums or libraries
+    that the user does not own. This is distinct from the regular PhotosService,
+    which provides access to the user's primary photo library.
     """
 
     def __init__(self, service_root, session, params):
