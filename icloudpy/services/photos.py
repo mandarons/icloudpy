@@ -295,7 +295,6 @@ class SharedPhotosService(PhotoLibrary):
         self._photo_assets = {}
 
         try:
-            # url = f"{self._service_endpoint}/zones/list"
             url = f"{self._service_root}/database/1/com.apple.photos.cloud/production/shared/zones/list"
             request = self.session.post(
                 url,
