@@ -158,6 +158,11 @@ class ICloudPySessionMock(base.ICloudPySession):
                 self.service.session_data["session_token"] = VALID_TOKEN
                 return ResponseMock("", status_code=204)
 
+            if "securitycode" in url and method == "PUT":
+                # PUT (no body) triggers Apple's push notification flow for 2FA.
+                # Added 2026+ via icloudpy fix/ios-26.4-auth.
+                return ResponseMock("", status_code=204)
+
             if "trust" in url and method == "GET":
                 return ResponseMock("", status_code=204)
 
