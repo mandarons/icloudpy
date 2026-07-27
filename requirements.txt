@@ -1,4 +1,4 @@
-requests==2.33.0
+requests==2.34.2
 keyring==25.7.0
 keyrings.alt==5.0.2
 click==8.3.1
