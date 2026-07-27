@@ -5,4 +5,4 @@ click==8.3.1
 srp==1.0.22
 tzlocal==5.4.4
 pytz==2026.3.post1
-certifi==2026.6.17
+certifi==2026.7.22
