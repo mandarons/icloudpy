@@ -1,7 +1,7 @@
 requests==2.34.2
 keyring==25.7.0
 keyrings.alt==5.0.2
-click==8.3.1
+click==8.4.2
 srp==1.0.22
 tzlocal==5.4.4
 pytz==2026.3.post1
