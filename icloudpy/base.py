@@ -181,6 +181,50 @@ class ICloudPySession(Session):
         return self._raise_error(code=code, reason=reason)
 
 
+# Apple serves its sign-in widget from here, so this is the origin a browser
+# reports when signing a challenge for it.
+SECURITY_KEY_ORIGIN = "https://idmsa.apple.com"
+
+# Apple answers an accepted security key assertion with 409, alongside the
+# ordinary success codes. 250 is its own "two-factor completed".
+SECURITY_KEY_ACCEPTED_STATUSES = frozenset({200, 204, 250, 409})
+
+
+def _b64_decode(value):
+    """Decode Apple's base64, which is unpadded and may use either alphabet."""
+    return base64.urlsafe_b64decode(value + "=" * (-len(value) % 4))
+
+
+def _b64_encode(value):
+    """Encode bytes the way Apple's own client does."""
+    return base64.b64encode(value).decode("ascii")
+
+
+def build_security_key_assertion(response, rp_id, request_id=None):
+    """Build the payload Apple expects from a WebAuthn assertion response.
+
+    ``response`` is a ``fido2`` ``AuthenticatorAssertionResponse`` or any
+    object exposing the same ``response`` and ``raw_id`` attributes.
+
+    The challenge is taken from ``clientData`` rather than passed in, which
+    keeps the value signed and the value declared in step.
+    """
+    client_data = bytes(response.response.client_data)
+    challenge = json.loads(client_data).get("challenge", "")
+    user_handle = response.response.user_handle
+
+    return {
+        "challenge": challenge.replace("-", "+").replace("_", "/"),
+        "clientData": _b64_encode(client_data),
+        "signatureData": _b64_encode(bytes(response.response.signature)),
+        "authenticatorData": _b64_encode(bytes(response.response.authenticator_data)),
+        "userHandle": _b64_encode(bytes(user_handle)).rstrip("=") if user_handle else "",
+        "credentialID": _b64_encode(bytes(response.raw_id)),
+        "rpId": rp_id,
+        "requestId": request_id or "",
+    }
+
+
 class ICloudPyService:
     """
     A base authentication class for the iCloud service. Handles the
@@ -623,6 +667,125 @@ class ICloudPyService:
 
         self.trust_session()
         return not self.requires_2sa
+
+    @property
+    def security_key_challenge(self):
+        """Apple's pending WebAuthn challenge, or None if it is not asking for one.
+
+        Returned when the account has security keys enrolled, in which case
+        Apple issues this instead of delivering a 6-digit code. The dict
+        carries ``challenge``, ``keyHandles`` and ``rpId``.
+        """
+        headers = self._get_auth_headers({"Accept": "application/json"})
+        if self.session_data.get("scnt"):
+            headers["scnt"] = self.session_data.get("scnt")
+        if self.session_data.get("session_id"):
+            headers["X-Apple-ID-Session-Id"] = self.session_data.get("session_id")
+
+        try:
+            response = self.session.get(self.auth_endpoint, headers=headers)
+            challenge = response.json().get("fsaChallenge")
+        except (ICloudPyAPIResponseException, ValueError) as error:
+            LOGGER.debug("Could not read security key challenge: %s", error)
+            return None
+
+        if not (challenge and challenge.get("challenge") and challenge.get("keyHandles")):
+            return None
+        return challenge
+
+    @property
+    def fido2_devices(self):
+        """Attached FIDO2 devices.
+
+        Empty when the optional ``fido2`` package is not installed.
+        """
+        try:
+            from fido2.hid import CtapHidDevice
+        except ImportError:
+            LOGGER.debug("fido2 is not installed; no local devices available.")
+            return []
+        return list(CtapHidDevice.list_devices())
+
+    def confirm_security_key(self, assertion=None, device=None):
+        """Complete two-factor authentication with a security key.
+
+        Signs the pending challenge with an attached FIDO2 device and
+        submits the result. Pass ``assertion`` to submit one that has
+        already been built -- by ``sign_security_key_challenge`` or by any
+        other means -- in which case no device is used.
+
+        Returns True when the session no longer requires a second factor.
+        """
+        if assertion is None:
+            challenge = self.security_key_challenge
+            if not challenge:
+                msg = "Apple is not requesting a security key."
+                raise ICloudPyFailedLoginException(msg)
+            if device is None:
+                devices = self.fido2_devices
+                if not devices:
+                    msg = "No FIDO2 device found."
+                    raise ICloudPyFailedLoginException(msg)
+                device = devices[0]
+            assertion = self.sign_security_key_challenge(challenge, device)
+
+        headers = self._get_auth_headers({"Accept": "application/json"})
+        if self.session_data.get("scnt"):
+            headers["scnt"] = self.session_data.get("scnt")
+        if self.session_data.get("session_id"):
+            headers["X-Apple-ID-Session-Id"] = self.session_data.get("session_id")
+
+        try:
+            response = self.session.post(
+                f"{self.auth_endpoint}/verify/security/key",
+                data=json.dumps(assertion),
+                headers=headers,
+            )
+            status = response.status_code
+        except ICloudPyAPIResponseException as error:
+            status = error.code
+
+        if status not in SECURITY_KEY_ACCEPTED_STATUSES:
+            LOGGER.error("Security key verification failed (%s).", status)
+            return False
+
+        LOGGER.debug("Security key verification successful.")
+        self.trust_session()
+        return not self.requires_2sa
+
+    def sign_security_key_challenge(self, challenge, device):
+        """Sign ``challenge`` with ``device`` and return the assertion payload.
+
+        Requires the ``fido2`` package and a physical touch on the key. The
+        result is accepted by ``confirm_security_key``.
+        """
+        from fido2.client import DefaultClientDataCollector, Fido2Client
+        from fido2.webauthn import (
+            PublicKeyCredentialDescriptor,
+            PublicKeyCredentialRequestOptions,
+            PublicKeyCredentialType,
+            UserVerificationRequirement,
+        )
+
+        rp_id = challenge.get("rpId") or "apple.com"
+        client = Fido2Client(
+            device,
+            client_data_collector=DefaultClientDataCollector(SECURITY_KEY_ORIGIN),
+        )
+        options = PublicKeyCredentialRequestOptions(
+            challenge=_b64_decode(challenge["challenge"]),
+            rp_id=rp_id,
+            allow_credentials=[
+                PublicKeyCredentialDescriptor(
+                    id=_b64_decode(handle),
+                    type=PublicKeyCredentialType("public-key"),
+                )
+                for handle in challenge["keyHandles"]
+            ],
+            user_verification=UserVerificationRequirement("discouraged"),
+        )
+        result = client.get_assertion(options).get_response(0)
+        return build_security_key_assertion(result, rp_id, challenge.get("requestId"))
 
     def trust_session(self):
         """Request session trust to avoid user log in going forward."""
