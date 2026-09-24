@@ -1,4 +1,4 @@
-#! /usr/bin/env python # noqa:EXE001
+#! /usr/bin/env python # noqa: EXE001
 """
 A Command Line Wrapper to allow easy use of iCloudPy for
 command line scripts, and related.
