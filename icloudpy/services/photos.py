@@ -274,6 +274,7 @@ class PhotosService(PhotoLibrary):
 
         return self._libraries
 
+
 class SharedPhotosService(PhotoLibrary):
     """The 'Shared Photos' iCloud service.
 
@@ -308,20 +309,21 @@ class SharedPhotosService(PhotoLibrary):
         except Exception as e:
             LOGGER.error(f"library exception: {str(e)}")
             raise ICloudPyServiceNotActivatedException(
-                "Unable to fetch shared photo zones: " + str(e), None
+                "Unable to fetch shared photo zones: " + str(e), None,
             )
 
         # The call to `/records/query` requires the `ownerRecordName` to be provided, which is known only after obtaining it from the API.
 
         if not zones:
             raise ICloudPyServiceNotActivatedException(
-                "No shared photo zones found for this account.", None
+                "No shared photo zones found for this account.", None,
             )
         super().__init__(service=self, zone_id=zones[0]["zoneID"])
 
     @property
     def libraries(self):
         if not self._libraries:
+            zones = []
             try:
                 url = f"{self._service_endpoint}/zones/list"
                 request = self.session.post(
@@ -339,11 +341,11 @@ class SharedPhotosService(PhotoLibrary):
                 if not zone.get("deleted"):
                     zone_name = zone["zoneID"]["zoneName"]
                     libraries[zone_name] = PhotoLibrary(self, zone_id=zone["zoneID"])
-                    # obj_type='CPLAssetByAssetDateWithoutHiddenOrDeleted',
-                    # list_type="CPLAssetAndMasterByAssetDateWithoutHiddenOrDeleted",
-                    # direction="ASCENDING", query_filter=None,
-                    # zone_id=zone['zoneID'])
-            return libraries
+
+            self._libraries = libraries
+
+        return self._libraries
+
 
 class PhotoAlbum:
     """A photo album."""

@@ -315,6 +315,7 @@ class ICloudPyService:
 
         self._drive = None
         self._photos = None
+        self._shared_photos = None
 
     def authenticate(self, force_refresh=False, service=None):
         """
