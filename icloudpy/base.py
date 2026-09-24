@@ -851,7 +851,12 @@ class ICloudPyService:
 
     @property
     def shared_photos(self):
-        """Gets the Shared 'Photo' service."""
+        """Gets the Shared 'Photo' service.
+
+        Shared-library queries require the ownerRecordName of the library owner
+        in the zone ID, so this service cannot be used exactly like `photos`.
+        See the README for usage details.
+        """
         if not self._shared_photos:
             service_root = self._get_webservice_url("ckdatabasews")
             self._shared_photos = SharedPhotosService(service_root, self.session, self.params)
