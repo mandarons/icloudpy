@@ -324,3 +324,23 @@ To download a specific version of the photo asset, pass the version to `download
 >>> with open(photo.versions['thumb']['filename'], 'wb') as thumb_file:
         thumb_file.write(download.raw.read())
 ```
+
+### Shared photo libraries
+
+Libraries that are shared with you (where you are not the owner) are served from a different
+iCloud endpoint and are exposed through the separate `shared_photos` property:
+
+```bash
+>>> shared = api.shared_photos
+>>> shared.libraries.keys()
+dict_keys(['SharedSync'])
+>>> shared.albums['All Photos']
+<PhotoAlbum: 'All Photos'>
+```
+
+Unlike `api.photos`, queries against a shared library require the `ownerRecordName` of the
+library owner in the zone ID. This is handled automatically: the zone IDs returned by
+`shared.libraries` already carry it. If a shared zone cannot be queried (for example, it is
+still indexing or the account has no shared libraries), an
+`ICloudPyServiceNotActivatedException` is raised rather than returning an empty result, so
+callers can tell a failure apart from an empty account.

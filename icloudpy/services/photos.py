@@ -8,9 +8,10 @@ from datetime import datetime
 # fmt: off
 from urllib.parse import urlencode  # pylint: disable=bad-option-value,relative-import
 
+# fmt: on
+import requests
 from pytz import UTC
 
-# fmt: on
 from icloudpy.exceptions import ICloudPyServiceNotActivatedException
 
 LOGGER = logging.getLogger(__name__)
@@ -269,6 +270,101 @@ class PhotosService(PhotoLibrary):
                     # list_type="CPLAssetAndMasterByAssetDateWithoutHiddenOrDeleted",
                     # direction="ASCENDING", query_filter=None,
                     # zone_id=zone['zoneID'])
+
+            self._libraries = libraries
+
+        return self._libraries
+
+
+class SharedPhotosService(PhotoLibrary):
+    """The 'Shared Photos' iCloud service.
+
+    Provides access to shared photo libraries, such as shared albums or libraries
+    that the user does not own. This is distinct from the regular PhotosService,
+    which provides access to the user's primary photo library.
+    """
+
+    def __init__(self, service_root, session, params):
+        self.session = session
+        self.params = dict(params)
+        self._service_root = service_root
+
+        self._libraries = None
+
+        self.params.update({"remapEnums": True, "getCurrentSyncToken": True})
+
+        self._service_endpoint = f"{self._service_root}/database/1/com.apple.photos.cloud/production/shared"
+
+
+        self._photo_assets = {}
+
+        try:
+            url = f"{self._service_endpoint}/zones/list"
+            request = self.session.post(
+                url,
+                data="{}",
+                headers={"Content-type": "text/plain"},
+            )
+            response = request.json()
+            zones = response["zones"]
+        except (requests.RequestException, ValueError, KeyError) as e:
+            raise ICloudPyServiceNotActivatedException(
+                "Unable to fetch shared photo zones: " + str(e), None,
+            ) from e
+
+        # The call to `/records/query` requires the `ownerRecordName` to be provided, which is known only after obtaining it from the API.
+
+        zones = [zone for zone in zones if not zone.get("deleted")]
+        if not zones:
+            raise ICloudPyServiceNotActivatedException(
+                "No shared photo zones found for this account.", None,
+            )
+        zone_id = zones[0].get("zoneID")
+        if not zone_id:
+            raise ICloudPyServiceNotActivatedException(
+                "Shared photo zone is missing its zoneID.",
+                None,
+            )
+        super().__init__(service=self, zone_id=zone_id)
+
+    @property
+    def libraries(self):
+        if self._libraries is None:
+            try:
+                url = f"{self._service_endpoint}/zones/list"
+                request = self.session.post(
+                    url,
+                    data="{}",
+                    headers={"Content-type": "text/plain"},
+                )
+                response = request.json()
+                zones = response["zones"]
+            except (requests.RequestException, ValueError, KeyError) as e:
+                # Raise instead of returning {} so a fetch failure is never
+                # mistaken for "no shared libraries"; nothing is cached here,
+                # so the next access retries.
+                raise ICloudPyServiceNotActivatedException(
+                    "Unable to fetch shared photo zones: " + str(e), None,
+                ) from e
+
+            libraries = {}
+            for zone in zones:
+                if zone.get("deleted"):
+                    continue
+                try:
+                    zone_id = zone["zoneID"]
+                    libraries[zone_id["zoneName"]] = PhotoLibrary(self, zone_id=zone_id)
+                except (
+                    ICloudPyServiceNotActivatedException,
+                    requests.RequestException,
+                    ValueError,
+                    KeyError,
+                    IndexError,
+                ) as e:
+                    # One unusable zone (e.g. still indexing or owned by
+                    # someone else) must not fail the whole property.
+                    LOGGER.error("skipping shared photo zone %s: %s", zone.get("zoneID"), str(e))
+                    continue
 
             self._libraries = libraries
 
