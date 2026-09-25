@@ -492,8 +492,9 @@ class DriveErrorPathTests(TestCase):
         assert seen["transfer"].get("timeout") == 30
         assert seen["transfer"].get("stream") is True
 
-    def test_get_file_without_timeout_passes_none_to_the_lookup(self):
-        """No timeout requested means the lookup keeps requests' default."""
+    def test_get_file_without_timeout_adds_nothing_to_the_lookup(self):
+        """No timeout requested means no timeout key is added, so the lookup
+        keeps requests' default exactly as before."""
         original_request = self.service.session.request
         seen = {}
 
