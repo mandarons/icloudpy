@@ -52,9 +52,15 @@ class DriveService:
         """Returns iCloud Drive file."""
         file_params = dict(self.params)
         file_params.update({"document_id": file_id})
+        # The lookup and the transfer are separate requests. A timeout given
+        # only to the transfer leaves the lookup free to stall its thread
+        # forever, so forward it here too. ``stream`` is deliberately not
+        # forwarded: the lookup is a small JSON reply read in full.
+        lookup_kwargs = {"timeout": kwargs["timeout"]} if "timeout" in kwargs else {}
         response = self.session.get(
             self._document_root + f"/ws/{zone}/download/by_id",
             params=file_params,
+            **lookup_kwargs,
         )
         if not response.ok:
             self.session.raise_error(response.status_code, response.reason)

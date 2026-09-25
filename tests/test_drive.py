@@ -466,6 +466,50 @@ class DriveErrorPathTests(TestCase):
         # Restore original
         self.service.session.request = original_request
 
+    def test_get_file_timeout_reaches_the_lookup_as_well_as_the_transfer(self):
+        """get_file makes two requests: the by_id lookup, then the transfer.
+        A timeout forwarded only to the transfer leaves the lookup able to
+        stall its thread forever. ``stream`` is not forwarded to the lookup --
+        it is a small JSON reply."""
+        original_request = self.service.session.request
+        seen = {}
+
+        def recording_request(method, url, **kwargs):
+            key = "lookup" if "download/by_id" in url else "transfer"
+            seen[key] = kwargs
+            if key == "lookup":
+                return ResponseMock({"data_token": {"url": "https://example.test/file"}})
+            return ResponseMock({})
+
+        self.service.session.request = recording_request
+        try:
+            self.drive.get_file("test_id", stream=True, timeout=30)
+        finally:
+            self.service.session.request = original_request
+
+        assert seen["lookup"].get("timeout") == 30
+        assert "stream" not in seen["lookup"]
+        assert seen["transfer"].get("timeout") == 30
+        assert seen["transfer"].get("stream") is True
+
+    def test_get_file_without_timeout_passes_none_to_the_lookup(self):
+        """No timeout requested means the lookup keeps requests' default."""
+        original_request = self.service.session.request
+        seen = {}
+
+        def recording_request(method, url, **kwargs):
+            if "download/by_id" in url:
+                seen["lookup"] = kwargs
+                return ResponseMock({"data_token": {"url": "https://example.test/file"}})
+            return ResponseMock({})
+
+        self.service.session.request = recording_request
+        try:
+            self.drive.get_file("test_id")
+        finally:
+            self.service.session.request = original_request
+        assert "timeout" not in seen["lookup"]
+
     def test_get_file_with_package_token(self):
         """Test file download using package_token instead of data_token."""
 
