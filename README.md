@@ -13,6 +13,8 @@ iCloudPy is a simple iCloud webservices wrapper library written in Python. It is
 
 iCloudPy connects to iCloud using your `username` and `password`, stores the session locally and then performs various queries to iCloud server.
 
+iCloudPy requires Python 3.10 or newer.
+
 ## Authentication
 
 Authentication without using a saved password is as simple as passing your username and password to the `ICloudPyService` class:

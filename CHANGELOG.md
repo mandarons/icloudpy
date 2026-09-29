@@ -19,7 +19,7 @@ release, including older ones, are on the
   - `ICloudPyService.fido2_devices` -- attached FIDO2 devices
   - `icloudpy.base.build_security_key_assertion(response, rp_id, request_id=None)`
     -- turn a WebAuthn `AuthenticatorAssertionResponse` into Apple's payload
-  - New optional extra: `pip install icloudpy[security-key]` installs `fido2`.
+  - New optional extra: `pip install "icloudpy[security-key]"` installs `fido2`.
     The dependency stays optional -- it is only imported when a challenge is
     signed locally.
 - README: new "Hardware security keys" section, and the 2SA/2FA example now
@@ -33,6 +33,14 @@ release, including older ones, are on the
 
 ### Changed
 
+- Minimum supported Python version is now 3.10, matching the CI runtime and the
+  README badge. `python_requires` previously declared `>=3.8`, but the pinned
+  runtime dependencies already required 3.10 (`requests` 2.34, `click` 8.5,
+  `tzlocal` 5.4), and pyupgrade now enforces `--py310-plus` instead of
+  `--py39-plus`.
+- CI now also runs on changes to `setup.py`, `MANIFEST.in`, `README.md` and
+  `CHANGELOG.md`; those paths were filtered out before, so packaging and
+  documentation changes shipped without a test run.
 - Documentation: `DriveNode.open()`'s `timeout` support is now documented; the
   README's 2SA/2FA sample was modernized to Python 3, and it now notes that the
   `icloud` CLI does not support security-key accounts yet.

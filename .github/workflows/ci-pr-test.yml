@@ -8,6 +8,10 @@ on:
       - 'tests/**'
       - 'pytest.ini'
       - 'requirements*.txt'
+      - 'setup.py'
+      - 'MANIFEST.in'
+      - 'README.md'
+      - 'CHANGELOG.md'
       - '.github/workflows/ci-pr-test.yml'
       - 'run-ci.sh'
   workflow_dispatch:
