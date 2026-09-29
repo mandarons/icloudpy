@@ -57,10 +57,18 @@ If you would like to delete a password stored in your system keyring, you can cl
 If you have enabled [two-factor authentications (2FA) or two-step authentication (2SA)](https://support.apple.com/en-us/HT204152) for the account you will have to do some extra work:
 
 ```python
+import sys
 
-    if api.requires_2fa:
-        print "Two-factor authentication required."
-        code = input("Enter the code you received of one of your approved devices: ")
+if api.requires_2fa:
+    if api.security_key_challenge:
+        # This Apple ID has hardware security keys enrolled, so Apple issues a
+        # WebAuthn challenge instead of a 6-digit code. See the next section.
+        if not api.confirm_security_key():
+            print("Security key verification failed")
+            sys.exit(1)
+    else:
+        print("Two-factor authentication required.")
+        code = input("Enter the code you received on one of your approved devices: ")
         result = api.validate_2fa_code(code)
         print("Code validation result: %s" % result)
 
@@ -75,26 +83,62 @@ If you have enabled [two-factor authentications (2FA) or two-step authentication
 
             if not result:
                 print("Failed to request trust. You will likely be prompted for the code again in the coming weeks")
-    elif api.requires_2sa:
-        import click
-        print "Two-step authentication required. Your trusted devices are:"
+elif api.requires_2sa:
+    import click
+    print("Two-step authentication required. Your trusted devices are:")
 
-        devices = api.trusted_devices
-        for i, device in enumerate(devices):
-            print "  %s: %s" % (i, device.get('deviceName',
-                "SMS to %s" % device.get('phoneNumber')))
+    devices = api.trusted_devices
+    for i, device in enumerate(devices):
+        print("  %s: %s" % (i, device.get("deviceName", "SMS to %s" % device.get("phoneNumber"))))
 
-        device = click.prompt('Which device would you like to use?', default=0)
-        device = devices[device]
-        if not api.send_verification_code(device):
-            print "Failed to send verification code"
-            sys.exit(1)
+    device = click.prompt("Which device would you like to use?", default=0)
+    device = devices[device]
+    if not api.send_verification_code(device):
+        print("Failed to send verification code")
+        sys.exit(1)
 
-        code = click.prompt('Please enter validation code')
-        if not api.validate_verification_code(device, code):
-            print "Failed to verify verification code"
-            sys.exit(1)
+    code = click.prompt("Please enter validation code")
+    if not api.validate_verification_code(device, code):
+        print("Failed to verify verification code")
+        sys.exit(1)
 ```
+
+## Hardware security keys
+
+If the Apple ID has [security keys enrolled](https://support.apple.com/en-us/HT213154), Apple stops sending 6-digit codes entirely and returns a WebAuthn challenge instead -- so `validate_2fa_code()` has nothing to validate. iCloudPy can sign that challenge with an attached FIDO2 security key (YubiKey and friends):
+
+```bash
+> pip install "icloudpy[security-key]"
+# which simply pulls in the optional dependency; equivalently:
+> pip install fido2
+```
+
+The `fido2` package is optional: it is only imported when a challenge is signed locally, so code that never handles security-key accounts does not need it.
+
+```python
+from icloudpy import ICloudPyService
+
+api = ICloudPyService("jappleseed@apple.com", "password")
+
+if api.requires_2fa:
+    if api.security_key_challenge:
+        if not api.confirm_security_key():  # touch the key when it flashes
+            print("Security key verification failed")
+            sys.exit(1)
+    else:
+        code = input("Enter the code you received on one of your approved devices: ")
+        api.validate_2fa_code(code)
+```
+
+API reference:
+
+- `api.security_key_challenge` -- the pending challenge as a dict carrying `challenge`, `keyHandles`, `rpId` (and `requestId`), or `None` when Apple is not asking for a key. Reading it never requires the `fido2` package.
+- `api.confirm_security_key(assertion=None, device=None)` -- fetches the challenge, signs it with `device` (or the first attached key) and submits it. Pass a pre-built `assertion` to submit one signed elsewhere -- then no device or `fido2` package is needed. Returns `True` once the session no longer requires a second factor; raises `ICloudPyFailedLoginException` if Apple is not requesting a key or no FIDO2 device is found.
+- `api.fido2_devices` -- attached FIDO2 devices; empty when the `fido2` package is not installed.
+- `api.sign_security_key_challenge(challenge, device)` -- signs without submitting, returning the assertion payload that `confirm_security_key()` accepts. Requires `fido2` and a physical touch on the key.
+- `icloudpy.base.build_security_key_assertion(response, rp_id, request_id=None)` -- converts a WebAuthn `AuthenticatorAssertionResponse` (e.g. one produced by a browser) into the payload Apple expects, for callers that sign the challenge outside of iCloudPy.
+
+Note: the `icloud` command-line tool does not support security-key accounts yet -- it only prompts for a 6-digit code. Use the library API above.
 
 ## Devices
 
@@ -237,6 +281,16 @@ The `open` method will return a response object from which you can read the file
 >>>     with open(drive_file.name, 'wb') as file_out:
 >>>         copyfileobj(response.raw, file_out)
 ```
+
+`open` forwards its keyword arguments to the underlying `requests` calls. In particular, pass `timeout` (in seconds, or a `(connect, read)` pair) to bound both requests a download makes -- the `by_id` metadata lookup and the data transfer -- so a stalled download cannot hang its thread forever:
+
+```bash
+>>> with drive_file.open(stream=True, timeout=30) as response:
+>>>     with open(drive_file.name, 'wb') as file_out:
+>>>         copyfileobj(response.raw, file_out)
+```
+
+`stream` applies to the transfer only: the lookup is a small JSON reply that is read in full.
 
 To interact with files and directions the `mkdir`, `rename` and `delete` functions are available
 for a file or folder:

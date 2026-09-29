@@ -27,6 +27,10 @@ setup(
     ],
     python_requires=">=3.8",
     install_requires=required,
+    extras_require={
+        # Optional: only needed to sign a security-key (WebAuthn) challenge locally.
+        "security-key": ["fido2"],
+    },
     entry_points="""
     [console_scripts]
     icloud=icloudpy.cmdline:main
