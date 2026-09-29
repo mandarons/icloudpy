@@ -3,7 +3,7 @@ from codecs import open
 from setuptools import find_packages, setup
 
 REPO_URL = "https://github.com/mandarons/icloudpy"
-VERSION = "0.9.0"
+VERSION = "0.10.0"
 
 with open("README.md") as fh:
     long_description = fh.read()
@@ -23,9 +23,14 @@ setup(
     packages=find_packages(exclude=["tests"]),
     classifiers=[
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: 3.10",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.8",
+    # 3.10 is the floor: the pinned runtime deps require it (requests 2.34,
+    # click 8.5 and tzlocal 5.4 all declare >=3.10), it matches the CI/badge,
+    # and pyupgrade enforces the same level.
+    python_requires=">=3.10",
     install_requires=required,
     extras_require={
         # Optional: only needed to sign a security-key (WebAuthn) challenge locally.
