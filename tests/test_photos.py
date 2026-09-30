@@ -3,9 +3,12 @@
 import unittest
 from unittest.mock import patch
 
-from icloudpy.exceptions import ICloudPyServiceNotActivatedException
+import requests
 
-from . import ICloudPyServiceMock
+from icloudpy.exceptions import ICloudPyServiceNotActivatedException
+from icloudpy.services.photos import PhotoLibrary, SharedPhotosService
+
+from . import ICloudPyServiceMock, ResponseMock
 from .const import AUTHENTICATED_USER, VALID_PASSWORD
 
 
@@ -1291,3 +1294,262 @@ class PhotoAlbumIterChunksTests(unittest.TestCase):
         flat = [x for chunk in chunks for x in chunk]
         assert flat == items
         assert len(chunks) == 1
+
+
+class SharedPhotosServiceInitializationTests(unittest.TestCase):
+    """Test SharedPhotosService and the ICloudPyService.shared_photos property."""
+
+    def setUp(self):
+        """Set up test."""
+        self.service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD)
+
+    def test_shared_photos_backing_attribute_initialized(self):
+        """``_shared_photos`` must exist and start as None (lazy init)."""
+        assert self.service._shared_photos is None
+
+    def test_shared_photos_property_returns_service(self):
+        """Property returns a SharedPhotosService instance."""
+        shared = self.service.shared_photos
+
+        assert isinstance(shared, SharedPhotosService)
+
+    def test_shared_photos_property_is_cached(self):
+        """Repeated access returns the same instance (no re-construction)."""
+        assert self.service.shared_photos is self.service.shared_photos
+
+    def test_shared_photos_does_not_affect_photos(self):
+        """Lazy init of shared_photos must not clobber the private service."""
+        shared = self.service.shared_photos
+        photos = self.service.photos
+
+        assert self.service.photos is photos
+        assert self.service.shared_photos is shared
+        assert photos is not shared
+
+    def test_shared_photos_endpoint_structure(self):
+        """Shared service targets the /shared endpoint, private stays /private."""
+        assert "/database/1/com.apple.photos.cloud/production/shared" in (
+            self.service.shared_photos._service_endpoint
+        )
+        assert "/database/1/com.apple.photos.cloud/production/private" in (
+            self.service.photos._service_endpoint
+        )
+
+    def test_shared_photos_zone_id_contains_owner_record_name(self):
+        """Shared zone IDs include the ownerRecordName of the sharer."""
+        assert self.service.shared_photos.zone_id == {
+            "zoneName": "SharedSync",
+            "ownerRecordName": "_shared_owner_record_name",
+            "zoneType": "REGULAR_CUSTOM_ZONE",
+        }
+
+    def test_shared_photos_params(self):
+        """Params match the conventions used by PhotosService."""
+        shared = self.service.shared_photos
+
+        assert shared.params["remapEnums"] is True
+        assert shared.params["getCurrentSyncToken"] is True
+
+    def test_shared_photos_session_set(self):
+        """Session and service root are wired up."""
+        shared = self.service.shared_photos
+
+        assert shared.session is not None
+        assert shared._service_root is not None
+
+    def test_init_raises_when_zone_fetch_fails(self):
+        """A failed zones/list call raises with the original error chained."""
+        service_root = self.service._get_webservice_url("ckdatabasews")
+
+        with patch.object(
+            self.service.session, "post", side_effect=requests.ConnectionError("boom"),
+        ):
+            with self.assertRaises(ICloudPyServiceNotActivatedException) as ctx:
+                SharedPhotosService(service_root, self.service.session, self.service.params)
+
+        assert isinstance(ctx.exception.__cause__, requests.ConnectionError)
+
+    def test_init_raises_when_no_shared_zones(self):
+        """An empty zones list raises a not-activated style exception."""
+        service_root = self.service._get_webservice_url("ckdatabasews")
+
+        with patch.object(self.service.session, "post", return_value=ResponseMock({"zones": []})):
+            with self.assertRaises(ICloudPyServiceNotActivatedException):
+                SharedPhotosService(service_root, self.service.session, self.service.params)
+
+    def test_init_raises_when_only_deleted_zones(self):
+        """Deleted zones are filtered out; if none remain, raise."""
+        service_root = self.service._get_webservice_url("ckdatabasews")
+        response = ResponseMock(
+            {
+                "zones": [
+                    {
+                        "zoneID": {
+                            "zoneName": "DeletedSync",
+                            "ownerRecordName": "_owner",
+                            "zoneType": "REGULAR_CUSTOM_ZONE",
+                        },
+                        "deleted": True,
+                    },
+                ],
+            },
+        )
+
+        with patch.object(self.service.session, "post", return_value=response):
+            with self.assertRaises(ICloudPyServiceNotActivatedException):
+                SharedPhotosService(service_root, self.service.session, self.service.params)
+
+    def test_init_raises_when_zone_missing_zone_id(self):
+        """A malformed zone entry raises instead of a raw KeyError."""
+        service_root = self.service._get_webservice_url("ckdatabasews")
+        response = ResponseMock({"zones": [{"syncToken": "t"}]})
+
+        with patch.object(self.service.session, "post", return_value=response):
+            with self.assertRaises(ICloudPyServiceNotActivatedException):
+                SharedPhotosService(service_root, self.service.session, self.service.params)
+
+    def test_init_ignores_unexpected_exception_types(self):
+        """Programming errors are not masked as 'not activated'."""
+        service_root = self.service._get_webservice_url("ckdatabasews")
+
+        with patch.object(self.service.session, "post", side_effect=TypeError("bug")):
+            with self.assertRaises(TypeError):
+                SharedPhotosService(service_root, self.service.session, self.service.params)
+
+
+class SharedPhotosServiceLibrariesTests(unittest.TestCase):
+    """Test the SharedPhotosService.libraries property."""
+
+    def setUp(self):
+        """Set up test."""
+        self.service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD)
+        self.shared = self.service.shared_photos
+
+    def test_libraries_not_fetched_on_init(self):
+        """Libraries are lazy: None until first access."""
+        assert self.shared._libraries is None
+
+    def test_libraries_returns_dict_of_shared_zones(self):
+        """libraries maps zone names to PhotoLibrary instances."""
+        libraries = self.shared.libraries
+
+        assert isinstance(libraries, dict)
+        assert "SharedSync" in libraries
+        assert isinstance(libraries["SharedSync"], PhotoLibrary)
+        assert libraries["SharedSync"].zone_id["ownerRecordName"] == "_shared_owner_record_name"
+
+    def test_libraries_caches_result(self):
+        """The result is stored on _libraries, so identity is stable."""
+        first = self.shared.libraries
+        second = self.shared.libraries
+
+        assert first is second
+        assert self.shared._libraries is first
+
+    def test_libraries_fetch_failure_raises(self):
+        """A failed zones/list call raises - not a silent empty dict - and is not cached."""
+        with patch.object(
+            self.shared.session, "post", side_effect=requests.ConnectionError("boom"),
+        ):
+            with self.assertRaises(ICloudPyServiceNotActivatedException) as ctx:
+                self.shared.libraries
+
+        assert isinstance(ctx.exception.__cause__, requests.ConnectionError)
+        assert self.shared._libraries is None  # nothing cached: next access retries
+
+    def test_libraries_empty_success_is_cached(self):
+        """A successful-but-empty result is cached (no refetch on every access)."""
+        response = ResponseMock({"zones": []})
+
+        with patch.object(self.shared.session, "post", return_value=response) as mocked:
+            first = self.shared.libraries
+            second = self.shared.libraries
+
+        assert first == {}
+        assert first is second
+        assert self.shared._libraries is first
+        assert mocked.call_count == 1  # second access did not hit the network
+
+    def test_libraries_skips_broken_zone(self):
+        """One unusable zone must not fail the whole libraries property."""
+        response = ResponseMock(
+            {
+                "zones": [
+                    {
+                        "zoneID": {
+                            "zoneName": "GoodSync",
+                            "ownerRecordName": "_owner",
+                            "zoneType": "REGULAR_CUSTOM_ZONE",
+                        },
+                    },
+                    {
+                        "zoneID": {
+                            "zoneName": "BadSync",
+                            "ownerRecordName": "_owner",
+                            "zoneType": "REGULAR_CUSTOM_ZONE",
+                        },
+                    },
+                ],
+            },
+        )
+        from icloudpy.services import photos as photos_module
+
+        real_photo_library = photos_module.PhotoLibrary
+
+        def fail_on_bad_zone(service, zone_id):
+            if zone_id["zoneName"] == "BadSync":
+                raise ICloudPyServiceNotActivatedException("indexing", None)
+            return real_photo_library(service, zone_id=zone_id)
+
+        original_post = self.shared.session.post
+
+        def zones_list_only(url, *args, **kwargs):
+            """Answer the zones/list call, pass everything else through."""
+            if "zones/list" in url:
+                return response
+            return original_post(url, *args, **kwargs)
+
+        with patch.object(self.shared.session, "post", side_effect=zones_list_only):
+            with patch.object(photos_module, "PhotoLibrary", side_effect=fail_on_bad_zone):
+                libraries = self.shared.libraries
+
+        assert "GoodSync" in libraries
+        assert "BadSync" not in libraries
+
+    def test_libraries_skips_deleted_zones(self):
+        """Deleted zones are excluded from the mapping."""
+        deleted_zone = {
+            "zoneID": {
+                "zoneName": "DeletedSync",
+                "ownerRecordName": "_owner",
+                "zoneType": "REGULAR_CUSTOM_ZONE",
+            },
+            "deleted": True,
+        }
+        response = ResponseMock(
+            {
+                "zones": [
+                    {
+                        "zoneID": {
+                            "zoneName": "SharedSync",
+                            "ownerRecordName": "_shared_owner_record_name",
+                            "zoneType": "REGULAR_CUSTOM_ZONE",
+                        },
+                    },
+                    deleted_zone,
+                ],
+            },
+        )
+        original_post = self.shared.session.post
+
+        def zones_list_only(url, *args, **kwargs):
+            """Answer the zones/list call, pass everything else through."""
+            if "zones/list" in url:
+                return response
+            return original_post(url, *args, **kwargs)
+
+        with patch.object(self.shared.session, "post", side_effect=zones_list_only):
+            libraries = self.shared.libraries
+
+        assert "SharedSync" in libraries
+        assert "DeletedSync" not in libraries
