@@ -11,9 +11,42 @@ from urllib.parse import urlencode  # pylint: disable=bad-option-value,relative-
 from pytz import UTC
 
 # fmt: on
-from icloudpy.exceptions import ICloudPyServiceNotActivatedException
+from icloudpy.exceptions import (
+    ICloudPyAPIResponseException,
+    ICloudPyLibraryUnavailableException,
+    ICloudPyServiceNotActivatedException,
+)
 
 LOGGER = logging.getLogger(__name__)
+
+# Apple rejects a zone it cannot index (or has dropped) with a definitive
+# error -- 400 "Index has invalid data", ZONE_NOT_FOUND. Those mean "this
+# library is unusable" and are safe to skip per library. Auth failures and
+# 5xx are account-wide or transient and must surface exactly as they always have.
+_DEFINITIVE_ZONE_ERRORS = frozenset({"BAD_REQUEST", "ZONE_NOT_FOUND"})
+
+
+def _zone_name(zone_id):
+    """Best-effort zone name for messages; zone_id is a dict or a bare name."""
+    return zone_id.get("zoneName") if isinstance(zone_id, dict) else zone_id
+
+
+def _zone_post(session, url, data, zone_name):
+    """POST a zone-scoped query, labelling definitive zone rejections.
+
+    Raises ICloudPyLibraryUnavailableException (carrying ``zone_name``) when
+    Apple definitively rejects the zone; every other error propagates untouched.
+    """
+    try:
+        return session.post(url, data=data, headers={"Content-type": "text/plain"})
+    except ICloudPyAPIResponseException as err:
+        if err.code in _DEFINITIVE_ZONE_ERRORS:
+            raise ICloudPyLibraryUnavailableException(
+                err.reason,
+                err.code,
+                zone_name=zone_name,
+            ) from err
+        raise
 
 
 class PhotoLibrary:
@@ -147,10 +180,11 @@ class PhotoLibrary:
             },
         )
 
-        request = self.service.session.post(
+        request = _zone_post(
+            self.service.session,
             url,
-            data=json_data,
-            headers={"Content-type": "text/plain"},
+            json_data,
+            _zone_name(self.zone_id),
         )
         response = request.json()
         indexing_state = response["records"][0]["fields"]["state"]["value"]
@@ -163,12 +197,16 @@ class PhotoLibrary:
     @property
     def albums(self):
         if not self._albums:
-            self._albums = {
+            # Fetch before caching anything: a failure must leave no partial
+            # state, so the next access retries instead of silently returning
+            # only the smart folders populated before the error.
+            folders = self._fetch_folders()
+            albums = {
                 name: PhotoAlbum(self.service, name, zone_id=self.zone_id, **props)
                 for (name, props) in self.SMART_FOLDERS.items()
             }
 
-            for folder in self._fetch_folders():
+            for folder in folders:
                 if folder["recordName"] in (
                     "----Root-Folder----",
                     "----Project-Root-Folder----",
@@ -198,7 +236,9 @@ class PhotoLibrary:
                     folder_id=folder_id,
                     zone_id=self.zone_id,
                 )
-                self._albums[folder_name] = album
+                albums[folder_name] = album
+
+            self._albums = albums
 
         return self._albums
 
@@ -211,14 +251,28 @@ class PhotoLibrary:
             },
         )
 
-        request = self.service.session.post(
+        request = _zone_post(
+            self.service.session,
             url,
-            data=json_data,
-            headers={"Content-type": "text/plain"},
+            json_data,
+            _zone_name(self.zone_id),
         )
         response = request.json()
 
         return response["records"]
+
+    def zone_readable(self):
+        """Probe whether the zone answers album queries.
+
+        Returns False only for a definitive rejection (the zone is unusable)
+        and True otherwise; transient errors propagate to the caller.
+        """
+        try:
+            self._fetch_folders()
+        except ICloudPyLibraryUnavailableException as err:
+            LOGGER.warning("photo library is unreadable and will be skipped: %s", err)
+            return False
+        return True
 
     @property
     def all(self):
@@ -248,27 +302,46 @@ class PhotosService(PhotoLibrary):
     @property
     def libraries(self):
         if not self._libraries:
-            try:
-                url = f"{self._service_endpoint}/zones/list"
-                request = self.session.post(
-                    url,
-                    data="{}",
-                    headers={"Content-type": "text/plain"},
-                )
-                response = request.json()
-                zones = response["zones"]
-            except Exception as e:
-                LOGGER.error(f"library exception: {str(e)}")
+            # A failed zones/list must raise the real error, not be logged and
+            # then crash iterating a variable that was never bound: no
+            # libraries and "some libraries" are different answers, and only
+            # the caller can decide what to do about the first.
+            url = f"{self._service_endpoint}/zones/list"
+            request = self.session.post(
+                url,
+                data="{}",
+                headers={"Content-type": "text/plain"},
+            )
+            zones = request.json()["zones"]
 
             libraries = {}
             for zone in zones:
-                if not zone.get("deleted"):
-                    zone_name = zone["zoneID"]["zoneName"]
-                    libraries[zone_name] = PhotoLibrary(self, zone_id=zone["zoneID"])
-                    # obj_type='CPLAssetByAssetDateWithoutHiddenOrDeleted',
-                    # list_type="CPLAssetAndMasterByAssetDateWithoutHiddenOrDeleted",
-                    # direction="ASCENDING", query_filter=None,
-                    # zone_id=zone['zoneID'])
+                if zone.get("deleted"):
+                    continue
+                zone_name = zone["zoneID"]["zoneName"]
+                if zone_name.startswith("CMM-"):
+                    # Cloud Moments containers, not photo libraries: they answer
+                    # album queries with 400 "Index has invalid data" (the same
+                    # failure class rclone filters as fix-icloud-photos-cmm-zones).
+                    LOGGER.debug("ignoring non-photo zone %s", zone_name)
+                    continue
+                try:
+                    library = PhotoLibrary(self, zone_id=zone["zoneID"])
+                except ICloudPyLibraryUnavailableException as err:
+                    LOGGER.warning("skipping unreadable photo library: %s", err)
+                    continue
+                try:
+                    usable = library.zone_readable()
+                except Exception as err:  # transient probe failure: keep the zone
+                    LOGGER.debug(
+                        "probe of %s failed transiently (%s); keeping it",
+                        zone_name,
+                        err,
+                    )
+                    usable = True
+                if not usable:
+                    continue
+                libraries[zone_name] = library
 
             self._libraries = libraries
 
@@ -356,31 +429,33 @@ class PhotoAlbum:
     def __len__(self):
         if self._len is None:
             url = f"{self.service._service_endpoint}/internal/records/query/batch?{urlencode(self.service.params)}"
-            request = self.service.session.post(
-                url,
-                data=json.dumps(
-                    {
-                        "batch": [
-                            {
-                                "resultsLimit": 1,
-                                "query": {
-                                    "filterBy": {
-                                        "fieldName": "indexCountID",
-                                        "fieldValue": {
-                                            "type": "STRING_LIST",
-                                            "value": [self.obj_type],
-                                        },
-                                        "comparator": "IN",
+            data = json.dumps(
+                {
+                    "batch": [
+                        {
+                            "resultsLimit": 1,
+                            "query": {
+                                "filterBy": {
+                                    "fieldName": "indexCountID",
+                                    "fieldValue": {
+                                        "type": "STRING_LIST",
+                                        "value": [self.obj_type],
                                     },
-                                    "recordType": "HyperionIndexCountLookup",
+                                    "comparator": "IN",
                                 },
-                                "zoneWide": True,
-                                "zoneID": {"zoneName": self._zone_id["zoneName"]},
+                                "recordType": "HyperionIndexCountLookup",
                             },
-                        ],
-                    },
-                ),
-                headers={"Content-type": "text/plain"},
+                            "zoneWide": True,
+                            "zoneID": {"zoneName": self._zone_id["zoneName"]},
+                        },
+                    ],
+                },
+            )
+            request = _zone_post(
+                self.service.session,
+                url,
+                data,
+                _zone_name(self._zone_id),
             )
             response = request.json()
 
@@ -415,10 +490,11 @@ class PhotoAlbum:
             self._zone_id["zoneName"],
         )
         json_data = query
-        request = self.service.session.post(
+        request = _zone_post(
+            self.service.session,
             url,
-            data=json_data,
-            headers={"Content-type": "text/plain"},
+            json_data,
+            _zone_name(self._zone_id),
         )
         response = request.json()
 
@@ -470,17 +546,19 @@ class PhotoAlbum:
             url = (f"{self.service._service_endpoint}/records/query?") + urlencode(
                 self.service.params,
             )
-            request = self.service.session.post(
-                url,
-                data=json.dumps(
-                    self._list_query_gen(
-                        offset,
-                        self.list_type,
-                        self.direction,
-                        self.query_filter,
-                    ),
+            data = json.dumps(
+                self._list_query_gen(
+                    offset,
+                    self.list_type,
+                    self.direction,
+                    self.query_filter,
                 ),
-                headers={"Content-type": "text/plain"},
+            )
+            request = _zone_post(
+                self.service.session,
+                url,
+                data,
+                _zone_name(self._zone_id),
             )
             response = request.json()
 
