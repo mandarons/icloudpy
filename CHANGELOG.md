@@ -4,6 +4,19 @@ All notable changes to iCloudPy are documented here. Release notes for every
 release, including older ones, are on the
 [GitHub Releases page](https://github.com/mandarons/icloudpy/releases).
 
+## [Unreleased]
+
+### Fixed
+
+- Photos: one broken library (CloudKit zone) no longer takes down the others.
+  Library enumeration now skips zones Apple rejects outright (`400 Index has
+  invalid data`, `ZONE_NOT_FOUND`) and non-photo `CMM-*` zones, logging a
+  warning instead of crashing the whole call. Any later zone-scoped failure
+  raises the new `ICloudPyLibraryUnavailableException` (a subclass of
+  `ICloudPyAPIResponseException`, naming the zone), so consumers can skip the
+  failing library and continue with the rest. A failed `zones/list` now
+  surfaces the original error instead of `UnboundLocalError` (#179).
+
 ## [0.10.0] - Unreleased
 
 ### Added
