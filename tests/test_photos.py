@@ -3,9 +3,13 @@
 import unittest
 from unittest.mock import patch
 
-from icloudpy.exceptions import ICloudPyServiceNotActivatedException
+from icloudpy.exceptions import (
+    ICloudPyAPIResponseException,
+    ICloudPyLibraryUnavailableException,
+    ICloudPyServiceNotActivatedException,
+)
 
-from . import ICloudPyServiceMock
+from . import ICloudPyServiceMock, ResponseMock
 from .const import AUTHENTICATED_USER, VALID_PASSWORD
 
 
@@ -1291,3 +1295,239 @@ class PhotoAlbumIterChunksTests(unittest.TestCase):
         flat = [x for chunk in chunks for x in chunk]
         assert flat == items
         assert len(chunks) == 1
+
+
+class UnusableZoneTests(unittest.TestCase):
+    """A zone Apple rejects must not break enumeration or the other libraries.
+
+    Regression tests for #179: a broken zone used to raise a raw
+    ``Index has invalid data`` (400) out of ``photos.libraries``/``albums``
+    and crash the sync for every library.
+    """
+
+    def setUp(self):
+        """Set up test."""
+        self.service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD)
+        self.photos = self.service.photos
+
+    @staticmethod
+    def _zones(*zone_names):
+        """Build a zones/list response for the given zone names."""
+        return ResponseMock(
+            {"zones": [{"zoneID": {"zoneName": name}} for name in zone_names]},
+        )
+
+    @staticmethod
+    def _indexing_ok(data):
+        """Answer for the CheckIndexingState query built by PhotoLibrary.__init__."""
+        if "CheckIndexingState" in data:
+            return ResponseMock(
+                {"records": [{"fields": {"state": {"value": "FINISHED"}}}]},
+            )
+        return None
+
+    def test_zone_name_handles_dict_and_bare_name(self):
+        """Zone labels come from dicts or fall back to bare names."""
+        from icloudpy.services import photos as photos_module
+
+        assert photos_module._zone_name({"zoneName": "PrimarySync"}) == "PrimarySync"
+        assert photos_module._zone_name("PrimarySync") == "PrimarySync"
+
+    def test_fetch_folders_fatal_error_raises_zone_labelled_exception(self):
+        """A definitive rejection names the zone and keeps the API type."""
+        fatal = ICloudPyAPIResponseException("Index has invalid data", "BAD_REQUEST")
+
+        with patch.object(self.photos.session, "post", side_effect=fatal):
+            with self.assertRaises(ICloudPyLibraryUnavailableException) as ctx:
+                self.photos._fetch_folders()
+
+        err = ctx.exception
+        assert err.zone_name == "PrimarySync"
+        assert "PrimarySync" in str(err)
+        assert "Index has invalid data" in str(err)
+        # Existing handlers catching the parent type must keep working.
+        assert isinstance(err, ICloudPyAPIResponseException)
+
+    def test_fetch_folders_transient_error_propagates_unchanged(self):
+        """5xx and other non-zone errors are never re-labelled."""
+        transient = ICloudPyAPIResponseException(
+            "Internal server error",
+            "SERVER_ERROR",
+        )
+
+        with patch.object(self.photos.session, "post", side_effect=transient):
+            with self.assertRaises(ICloudPyAPIResponseException) as ctx:
+                self.photos._fetch_folders()
+
+        assert not isinstance(ctx.exception, ICloudPyLibraryUnavailableException)
+
+    def test_libraries_skips_cmm_zone_without_querying_it(self):
+        """CMM (Cloud Moments) zones are filtered before any query."""
+        posted = []
+
+        def fake_post(url, data="{}", headers=None):
+            posted.append(str(data))
+            if "zones/list" in url:
+                return self._zones("PrimarySync", "CMM-11A44FA2-882C-4E5D-9F06")
+            indexing = self._indexing_ok(data)
+            if indexing is not None:
+                return indexing
+            return ResponseMock({"records": []})
+
+        with patch.object(self.photos.session, "post", side_effect=fake_post):
+            libraries = self.photos.libraries
+
+        assert set(libraries) == {"PrimarySync"}
+        assert not any("CMM-11A44FA2" in data for data in posted)
+
+    def test_libraries_skips_zone_rejected_at_construction(self):
+        """A zone failing the indexing query in __init__ is skipped with a warning."""
+
+        def fake_post(url, data="{}", headers=None):
+            if "zones/list" in url:
+                return self._zones("PrimarySync", "Sync-Gone")
+            if "Sync-Gone" in data and "CheckIndexingState" in data:
+                raise ICloudPyAPIResponseException("Zone not found", "ZONE_NOT_FOUND")
+            indexing = self._indexing_ok(data)
+            if indexing is not None:
+                return indexing
+            return ResponseMock({"records": []})
+
+        with patch.object(self.photos.session, "post", side_effect=fake_post):
+            with self.assertLogs("icloudpy.services.photos", level="WARNING") as logs:
+                libraries = self.photos.libraries
+
+        assert set(libraries) == {"PrimarySync"}
+        assert any("Sync-Gone" in line for line in logs.output)
+
+    def test_libraries_skips_zone_rejected_by_album_query(self):
+        """#179's failure: zones/list succeeds, the album query 400s."""
+
+        def fake_post(url, data="{}", headers=None):
+            if "zones/list" in url:
+                return self._zones("PrimarySync", "SharedSync-Broken")
+            indexing = self._indexing_ok(data)
+            if indexing is not None:
+                return indexing
+            if "SharedSync-Broken" in data:
+                raise ICloudPyAPIResponseException(
+                    "Index has invalid data",
+                    "BAD_REQUEST",
+                )
+            return ResponseMock({"records": []})
+
+        with patch.object(self.photos.session, "post", side_effect=fake_post):
+            with self.assertLogs("icloudpy.services.photos", level="WARNING") as logs:
+                libraries = self.photos.libraries
+
+        assert set(libraries) == {"PrimarySync"}
+        assert any("SharedSync-Broken" in line for line in logs.output)
+
+    def test_libraries_keeps_zone_on_transient_probe_failure(self):
+        """A network/5xx blip while probing must not exclude a live zone."""
+
+        def fake_post(url, data="{}", headers=None):
+            if "zones/list" in url:
+                return self._zones("PrimarySync", "SharedSync-Flaky")
+            indexing = self._indexing_ok(data)
+            if indexing is not None:
+                return indexing
+            if "SharedSync-Flaky" in data:
+                raise ICloudPyAPIResponseException(
+                    "Internal server error",
+                    "SERVER_ERROR",
+                )
+            return ResponseMock({"records": []})
+
+        with patch.object(self.photos.session, "post", side_effect=fake_post):
+            libraries = self.photos.libraries
+
+        assert set(libraries) == {"PrimarySync", "SharedSync-Flaky"}
+
+    def test_zones_list_failure_raises_original_error(self):
+        """A failed zones/list surfaces the real error, not UnboundLocalError."""
+        with patch.object(
+            self.photos.session,
+            "post",
+            side_effect=RuntimeError("zones list down"),
+        ):
+            with self.assertRaisesRegex(RuntimeError, "zones list down"):
+                self.photos.libraries
+
+    def test_albums_retries_after_fetch_failure(self):
+        """A failed folder fetch caches nothing; the next access retries.
+
+        Previously the smart folders were cached before the fetch, so a
+        survivor catching the error got a silently partial album list forever.
+        """
+        fatal = ICloudPyAPIResponseException("Index has invalid data", "BAD_REQUEST")
+
+        with patch.object(
+            self.photos.session,
+            "post",
+            side_effect=[fatal, ResponseMock({"records": []})],
+        ) as post:
+            with self.assertRaises(ICloudPyLibraryUnavailableException):
+                _ = self.photos.albums
+            albums = self.photos.albums
+
+        assert post.call_count == 2
+        assert "All Photos" in albums
+
+    def test_album_photos_fatal_error_is_labelled_with_zone(self):
+        """Photo iteration failures carry the zone too."""
+        from icloudpy.services.photos import PhotoAlbum
+
+        album = PhotoAlbum(
+            self.photos,
+            "Test",
+            list_type="CPLAssetAndMasterByAssetDate",
+            obj_type="CPLAssetAndMaster",
+            direction="ASCENDING",
+            zone_id={"zoneName": "SharedSync-Broken"},
+        )
+        fatal = ICloudPyAPIResponseException("Index has invalid data", "BAD_REQUEST")
+
+        with patch.object(self.photos.session, "post", side_effect=fatal):
+            with self.assertRaises(ICloudPyLibraryUnavailableException) as ctx:
+                next(album.photos)
+
+        assert ctx.exception.zone_name == "SharedSync-Broken"
+
+    def test_fetch_folders_unrecognised_bad_request_is_not_a_verdict(self):
+        """A 400 with an unrecognised reason propagates unconverted.
+
+        Only the known dead-zone reason text converts; any other
+        zone-scoped 400 (e.g. a bug in our own query template) must reach
+        the caller unchanged instead of silently dropping the library.
+        """
+        malformed = ICloudPyAPIResponseException("Malformed query", "BAD_REQUEST")
+
+        with patch.object(self.photos.session, "post", side_effect=malformed):
+            with self.assertRaises(ICloudPyAPIResponseException) as ctx:
+                self.photos._fetch_folders()
+
+        assert ctx.exception is malformed
+        assert not isinstance(ctx.exception, ICloudPyLibraryUnavailableException)
+
+    def test_libraries_keeps_zone_on_unrecognised_bad_request(self):
+        """An unrecognised 400 during the probe is no reason to exclude.
+
+        The zone survives enumeration (the consumer sees the same raise it
+        would have seen before this PR if it ever queries the library).
+        """
+
+        def fake_post(url, data="{}", headers=None):
+            if "zones/list" in url:
+                return self._zones("PrimarySync", "SharedSync-Unknown400")
+            indexing = self._indexing_ok(data)
+            if indexing is not None:
+                return indexing
+            if "SharedSync-Unknown400" in data:
+                raise ICloudPyAPIResponseException("Malformed query", "BAD_REQUEST")
+            return ResponseMock({"records": []})
+
+        with patch.object(self.photos.session, "post", side_effect=fake_post):
+            libraries = self.photos.libraries
+
+        assert set(libraries) == {"PrimarySync", "SharedSync-Unknown400"}
