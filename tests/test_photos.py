@@ -1537,3 +1537,41 @@ class UnusableZoneTests(unittest.TestCase):
                 next(album.photos)
 
         assert ctx.exception.zone_name == "SharedSync-Broken"
+
+    def test_fetch_folders_unrecognised_bad_request_is_not_a_verdict(self):
+        """A 400 with an unrecognised reason propagates unconverted.
+
+        Only the known dead-zone reason text converts; any other
+        zone-scoped 400 (e.g. a bug in our own query template) must reach
+        the caller unchanged instead of silently dropping the library.
+        """
+        malformed = ICloudPyAPIResponseException("Malformed query", "BAD_REQUEST")
+
+        with patch.object(self.photos.session, "post", side_effect=malformed):
+            with self.assertRaises(ICloudPyAPIResponseException) as ctx:
+                self.photos._fetch_folders()
+
+        assert ctx.exception is malformed
+        assert not isinstance(ctx.exception, ICloudPyLibraryUnavailableException)
+
+    def test_libraries_keeps_zone_on_unrecognised_bad_request(self):
+        """An unrecognised 400 during the probe is no reason to exclude.
+
+        The zone survives enumeration (the consumer sees the same raise it
+        would have seen before this PR if it ever queries the library).
+        """
+
+        def fake_post(url, data="{}", headers=None):
+            if "zones/list" in url:
+                return self._zones("PrimarySync", "SharedSync-Unknown400")
+            indexing = self._indexing_ok(data)
+            if indexing is not None:
+                return indexing
+            if "SharedSync-Unknown400" in data:
+                raise ICloudPyAPIResponseException("Malformed query", "BAD_REQUEST")
+            return ResponseMock({"records": []})
+
+        with patch.object(self.photos.session, "post", side_effect=fake_post):
+            libraries = self.photos.libraries
+
+        assert set(libraries) == {"PrimarySync", "SharedSync-Unknown400"}
