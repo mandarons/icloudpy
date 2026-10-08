@@ -26,6 +26,11 @@ release, including older ones, are on the
     `ICloudPyServiceNotActivatedException` from the first access, so one
     unfinished index still fails the whole `libraries` call (an unfinished
     index is an account-wide wait, unchanged from previous releases).
+- Photos: `PhotoAsset.delete()` now addresses the photo's own library. Every
+  asset was handed the `PhotosService`, whose zone is always `PrimarySync`, so
+  deleting a photo from any other library (a Shared Library, say) targeted a
+  record that does not exist there. Assets now carry their library's zone,
+  exposed as `PhotoAsset.zone_id`.
 
 ## [0.10.0] - Unreleased
 
