@@ -584,6 +584,7 @@ class PhotoAlbum:
                         self.service,
                         master_record,
                         asset_records[record_name],
+                        zone_id=self._zone_id,
                     )
             else:
                 break
@@ -730,10 +731,11 @@ class PhotoAlbum:
 class PhotoAsset:
     """A photo."""
 
-    def __init__(self, service, master_record, asset_record):
+    def __init__(self, service, master_record, asset_record, zone_id=None):
         self._service = service
         self._master_record = master_record
         self._asset_record = asset_record
+        self._zone_id = zone_id
 
         self._versions = None
 
@@ -941,6 +943,17 @@ class PhotoAsset:
             **kwargs,
         )
 
+    @property
+    def zone_id(self):
+        """The CloudKit zone of the library this photo belongs to.
+
+        ``service`` is always the ``PhotosService``, whose own zone is
+        ``PrimarySync``, so a photo from any other library (a Shared Library,
+        say) must not borrow it. Falls back to the service's zone only for a
+        ``PhotoAsset`` built without one.
+        """
+        return self._zone_id or self._service.zone_id
+
     def delete(self):
         """Deletes the photo."""
         json_data = json.dumps(
@@ -958,7 +971,7 @@ class PhotoAsset:
                         },
                     },
                 ],
-                "zoneID": self._service.zone_id,
+                "zoneID": self.zone_id,
             },
         )
 

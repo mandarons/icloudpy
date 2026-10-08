@@ -16,6 +16,11 @@ release, including older ones, are on the
   `ICloudPyAPIResponseException`, naming the zone), so consumers can skip the
   failing library and continue with the rest. A failed `zones/list` now
   surfaces the original error instead of `UnboundLocalError` (#179).
+- Photos: `PhotoAsset.delete()` now addresses the photo's own library. Every
+  asset was handed the `PhotosService`, whose zone is always `PrimarySync`, so
+  deleting a photo from any other library (a Shared Library, say) targeted a
+  record that does not exist there. Assets now carry their library's zone,
+  exposed as `PhotoAsset.zone_id`.
 
 ## [0.10.0] - Unreleased
 
