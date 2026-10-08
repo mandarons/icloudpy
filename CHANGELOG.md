@@ -27,6 +27,14 @@ release, including older ones, are on the
     unfinished index still fails the whole `libraries` call (an unfinished
     index is an account-wide wait, unchanged from previous releases).
 
+### Added
+
+- Photos: `ICloudPyService(..., photos_require_finished_index=False)` opens
+  Photos while Apple is still indexing a library, instead of raising
+  `ICloudPyServiceNotActivatedException`. Each library's `indexing_state`
+  says how far Apple got; until it reads `FINISHED`, a listing may be
+  incomplete. The default is unchanged.
+
 ## [0.10.0] - Unreleased
 
 ### Added

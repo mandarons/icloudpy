@@ -249,6 +249,7 @@ class ICloudPyService:
         home_endpoint="https://www.icloud.com",
         # For China, use "https://setup.icloud.com.cn/setup/ws/1"
         setup_endpoint="https://setup.icloud.com/setup/ws/1",
+        photos_require_finished_index=True,
     ):
         if password is None:
             password = get_password_from_keyring(apple_id)
@@ -261,6 +262,9 @@ class ICloudPyService:
         self.auth_endpoint = auth_endpoint
         self.home_endpoint = home_endpoint
         self.setup_endpoint = setup_endpoint
+        # False opens Photos while Apple is still indexing a library; see
+        # PhotoLibrary for what that means for its listings.
+        self.photos_require_finished_index = photos_require_finished_index
 
         self.password_filter = ICloudPyPasswordFilter(password)
         LOGGER.addFilter(self.password_filter)
@@ -844,7 +848,12 @@ class ICloudPyService:
         """Gets the 'Photo' service."""
         if not self._photos:
             service_root = self._get_webservice_url("ckdatabasews")
-            self._photos = PhotosService(service_root, self.session, self.params)
+            self._photos = PhotosService(
+                service_root,
+                self.session,
+                self.params,
+                require_finished_index=self.photos_require_finished_index,
+            )
         return self._photos
 
     @property

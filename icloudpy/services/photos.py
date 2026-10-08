@@ -176,7 +176,16 @@ class PhotoLibrary:
         },
     }
 
-    def __init__(self, service, zone_id):
+    def __init__(self, service, zone_id, require_finished_index=True):
+        """Open a library, checking Apple's indexing state for its zone.
+
+        Raises ``ICloudPyServiceNotActivatedException`` while Apple is still
+        indexing the library, unless ``require_finished_index`` is False.
+        Then it opens anyway and ``indexing_state`` says how far Apple got:
+        listings may be incomplete until it reads ``FINISHED``, so a photo
+        missing from one is not evidence it was deleted. ``indexing_state`` is
+        read once, here, and not refreshed.
+        """
         self.service = service
         self.zone_id = zone_id
 
@@ -197,8 +206,8 @@ class PhotoLibrary:
             _zone_name(self.zone_id),
         )
         response = request.json()
-        indexing_state = response["records"][0]["fields"]["state"]["value"]
-        if indexing_state != "FINISHED":
+        self.indexing_state = response["records"][0]["fields"]["state"]["value"]
+        if require_finished_index and self.indexing_state != "FINISHED":
             raise ICloudPyServiceNotActivatedException(
                 ("iCloud Photo Library not finished indexing.  Please try " "again in a few minutes"),
                 None,
@@ -295,7 +304,7 @@ class PhotosService(PhotoLibrary):
     This also acts as a way to access the user's primary library.
     """
 
-    def __init__(self, service_root, session, params):
+    def __init__(self, service_root, session, params, require_finished_index=True):
         self.session = session
         self.params = dict(params)
         self._service_root = service_root
@@ -306,8 +315,13 @@ class PhotosService(PhotoLibrary):
         self.params.update({"remapEnums": True, "getCurrentSyncToken": True})
 
         self._photo_assets = {}
+        self._require_finished_index = require_finished_index
 
-        super().__init__(service=self, zone_id={"zoneName": "PrimarySync"})
+        super().__init__(
+            service=self,
+            zone_id={"zoneName": "PrimarySync"},
+            require_finished_index=require_finished_index,
+        )
 
     @property
     def libraries(self):
@@ -336,7 +350,11 @@ class PhotosService(PhotoLibrary):
                     LOGGER.debug("ignoring non-photo zone %s", zone_name)
                     continue
                 try:
-                    library = PhotoLibrary(self, zone_id=zone["zoneID"])
+                    library = PhotoLibrary(
+                        self,
+                        zone_id=zone["zoneID"],
+                        require_finished_index=self._require_finished_index,
+                    )
                 except ICloudPyLibraryUnavailableException as err:
                     LOGGER.warning("skipping unreadable photo library: %s", err)
                     continue
