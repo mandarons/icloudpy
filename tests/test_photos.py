@@ -920,9 +920,15 @@ class PhotoAssetZoneTests(unittest.TestCase):
         self.service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD)
         self.photos = self.service.photos
 
-    def _first_photo_in(self, zone_id):
-        album = self.photos.albums["All Photos"]
-        album._zone_id = zone_id  # the same album, as another library's would be built
+    def _first_photo_in(self, zone_id=None):
+        album = PhotoAlbum(
+            self.photos,
+            "All Photos",
+            list_type="CPLAssetAndMasterByAddedDate",
+            obj_type="CPLAssetByAddedDate",
+            direction="ASCENDING",
+            zone_id=zone_id,
+        )
         return next(iter(album))
 
     def test_a_photo_carries_its_librarys_zone(self):
@@ -937,6 +943,11 @@ class PhotoAssetZoneTests(unittest.TestCase):
     def test_a_primary_library_photo_is_unchanged(self):
         photo = next(iter(self.photos.albums["All Photos"]))
         assert photo.zone_id == self.photos.zone_id
+
+    def test_an_album_built_without_a_zone_uses_the_primary_librarys(self):
+        """Its fallback was the bare name, which delete() would have sent as
+        the zone instead of the dict CloudKit expects."""
+        assert self._first_photo_in().zone_id == {"zoneName": "PrimarySync"}
 
     def test_an_asset_built_without_a_zone_falls_back_to_the_service(self):
         photo = self._first_photo_in(self.SHARED)
@@ -1016,7 +1027,7 @@ class PhotoAssetMissingFilenameTests(unittest.TestCase):
 
 import base64 as _b64
 
-from icloudpy.services.photos import PhotoAsset
+from icloudpy.services.photos import PhotoAlbum, PhotoAsset
 
 
 def _b64name(name):

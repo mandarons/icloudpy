@@ -385,7 +385,7 @@ class PhotoAlbum:
         if zone_id:
             self._zone_id = zone_id
         else:
-            self._zone_id = "PrimarySync"
+            self._zone_id = {"zoneName": "PrimarySync"}
 
         self._len = None
 
