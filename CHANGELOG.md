@@ -16,6 +16,16 @@ release, including older ones, are on the
   `ICloudPyAPIResponseException`, naming the zone), so consumers can skip the
   failing library and continue with the rest. A failed `zones/list` now
   surfaces the original error instead of `UnboundLocalError` (#179).
+  Two boundaries of that isolation are worth stating explicitly:
+  - `ZONE_NOT_FOUND` now raises `ICloudPyLibraryUnavailableException`
+    instead of `ICloudPyServiceNotActivatedException` -- including for the
+    primary library (`api.photos`). Handlers catching
+    `ICloudPyServiceNotActivatedException` specifically no longer see that
+    code; both types remain subclasses of `ICloudPyAPIResponseException`.
+  - A library that is still *indexing* is not covered: it keeps raising
+    `ICloudPyServiceNotActivatedException` from the first access, so one
+    unfinished index still fails the whole `libraries` call (an unfinished
+    index is an account-wide wait, unchanged from previous releases).
 
 ## [0.10.0] - Unreleased
 

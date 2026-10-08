@@ -25,6 +25,13 @@ LOGGER = logging.getLogger(__name__)
 # 5xx are account-wide or transient and must surface exactly as they always have.
 _DEFINITIVE_ZONE_ERRORS = frozenset({"BAD_REQUEST", "ZONE_NOT_FOUND"})
 
+# BAD_REQUEST alone is broad: every zone-scoped 400 carries it, including one
+# caused by a bug in our own query template rather than by a dead zone. Only
+# the known dead-zone reason text is a verdict on the zone; a 400 with any
+# other reason propagates unconverted (the consumer sees exactly the raise it
+# sees today) instead of silently dropping a possibly-healthy library.
+_DEFINITIVE_ZONE_REASONS = ("Index has invalid data",)
+
 
 def _zone_name(zone_id):
     """Best-effort zone name for messages; zone_id is a dict or a bare name."""
@@ -40,7 +47,10 @@ def _zone_post(session, url, data, zone_name):
     try:
         return session.post(url, data=data, headers={"Content-type": "text/plain"})
     except ICloudPyAPIResponseException as err:
-        if err.code in _DEFINITIVE_ZONE_ERRORS:
+        if err.code in _DEFINITIVE_ZONE_ERRORS and (
+            err.code == "ZONE_NOT_FOUND"
+            or any(text in (err.reason or "") for text in _DEFINITIVE_ZONE_REASONS)
+        ):
             raise ICloudPyLibraryUnavailableException(
                 err.reason,
                 err.code,
