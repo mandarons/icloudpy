@@ -1,5 +1,6 @@
 """Tests for Photos service."""
 
+import json
 import unittest
 from unittest.mock import patch
 
@@ -898,6 +899,49 @@ class PhotoAssetDeletionTests(unittest.TestCase):
         # - isDeleted field = 1
         result = self.photo.delete()
         assert result is not None
+
+
+class PhotoAssetZoneTests(unittest.TestCase):
+    """A photo acts in its own library's zone, not the service's.
+
+    Every asset is handed the ``PhotosService``, whose zone is always
+    ``PrimarySync``. Deleting a Shared Library photo through it would address
+    the record in the wrong zone, where it does not exist.
+    """
+
+    SHARED = {
+        "zoneName": "SharedSync-0000",
+        "ownerRecordName": "_owner",
+        "zoneType": "REGULAR_CUSTOM_ZONE",
+    }
+
+    def setUp(self):
+        """Set up test."""
+        self.service = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD)
+        self.photos = self.service.photos
+
+    def _first_photo_in(self, zone_id):
+        album = self.photos.albums["All Photos"]
+        album._zone_id = zone_id  # the same album, as another library's would be built
+        return next(iter(album))
+
+    def test_a_photo_carries_its_librarys_zone(self):
+        assert self._first_photo_in(self.SHARED).zone_id == self.SHARED
+
+    def test_delete_addresses_the_photos_own_zone(self):
+        photo = self._first_photo_in(self.SHARED)
+        with patch.object(self.photos.session, "post") as post:
+            photo.delete()
+        assert json.loads(post.call_args.kwargs["data"])["zoneID"] == self.SHARED
+
+    def test_a_primary_library_photo_is_unchanged(self):
+        photo = next(iter(self.photos.albums["All Photos"]))
+        assert photo.zone_id == self.photos.zone_id
+
+    def test_an_asset_built_without_a_zone_falls_back_to_the_service(self):
+        photo = self._first_photo_in(self.SHARED)
+        bare = PhotoAsset(self.photos, photo._master_record, photo._asset_record)
+        assert bare.zone_id == self.photos.zone_id
 
 
 class PhotoAssetMissingFilenameTests(unittest.TestCase):
