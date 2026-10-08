@@ -17,6 +17,14 @@ release, including older ones, are on the
   failing library and continue with the rest. A failed `zones/list` now
   surfaces the original error instead of `UnboundLocalError` (#179).
 
+### Added
+
+- Photos: `ICloudPyService(..., photos_require_finished_index=False)` opens
+  Photos while Apple is still indexing a library, instead of raising
+  `ICloudPyServiceNotActivatedException`. Each library's `indexing_state`
+  says how far Apple got; until it reads `FINISHED`, a listing may be
+  incomplete. The default is unchanged.
+
 ## [0.10.0] - Unreleased
 
 ### Added
