@@ -183,7 +183,8 @@ class PhotoLibrary:
         indexing the library, unless ``require_finished_index`` is False.
         Then it opens anyway and ``indexing_state`` says how far Apple got:
         listings may be incomplete until it reads ``FINISHED``, so a photo
-        missing from one is not evidence it was deleted.
+        missing from one is not evidence it was deleted. ``indexing_state`` is
+        read once, here, and not refreshed.
         """
         self.service = service
         self.zone_id = zone_id

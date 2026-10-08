@@ -393,4 +393,4 @@ Opening a library raises `ICloudPyServiceNotActivatedException` until Apple repo
 {'PrimarySync': 'RUNNING'}
 ```
 
-Until a library reads `FINISHED`, its listings may be incomplete. Don't treat a photo missing from one as deleted. The option is read when `api.photos` is first opened, so set it when you create the service.
+Until a library reads `FINISHED`, its listings may be incomplete. Don't treat a photo missing from one as deleted. The option is read when `api.photos` is first opened, so set it when you create the service. Each `indexing_state` is what Apple reported at that moment and isn't refreshed; create a new service to check again.
