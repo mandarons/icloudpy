@@ -11,6 +11,10 @@ on:
       - 'tests/**'
       - 'pytest.ini'
       - 'requirements*.txt'
+      - 'setup.py'
+      - 'MANIFEST.in'
+      - 'README.md'
+      - 'CHANGELOG.md'
       - '.github/workflows/ci-main-test-coverage.yml'
   workflow_dispatch:
 

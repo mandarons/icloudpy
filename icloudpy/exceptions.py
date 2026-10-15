@@ -25,6 +25,23 @@ class ICloudPyServiceNotActivatedException(ICloudPyAPIResponseException):
     """iCloud service not activated exception."""
 
 
+class ICloudPyLibraryUnavailableException(ICloudPyAPIResponseException):
+    """A single iCloud Photos library (CloudKit zone) is unusable.
+
+    Raised when Apple definitively rejects a zone-scoped query -- e.g.
+    ``400 Index has invalid data`` or ``ZONE_NOT_FOUND`` -- while the account
+    and the other libraries are fine. Subclassing ``ICloudPyAPIResponseException``
+    keeps existing handlers working; callers that want to skip one library and
+    carry on with the rest can catch this type on its own.
+    """
+
+    def __init__(self, reason, code=None, zone_name=None):
+        self.zone_name = zone_name
+        if zone_name:
+            reason = f"{reason} [{zone_name}]"
+        super().__init__(reason, code)
+
+
 # Login
 class ICloudPyFailedLoginException(ICloudPyException):
     """iCloud failed login exception."""
