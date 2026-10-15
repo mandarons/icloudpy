@@ -237,6 +237,24 @@ class ICloudPySessionMock(base.ICloudPySession):
         # Photos query endpoints
         if "com.apple.photos.cloud" in url:
             if "zones/list" in url and method == "POST":
+                if "/shared/zones/list" in url:
+                    # Shared libraries are served from the /shared endpoint and
+                    # their zone IDs carry the ownerRecordName of the sharer.
+                    return ResponseMock(
+                        {
+                            "zones": [
+                                {
+                                    "zoneID": {
+                                        "zoneName": "SharedSync",
+                                        "ownerRecordName": "_shared_owner_record_name",
+                                        "zoneType": "REGULAR_CUSTOM_ZONE",
+                                    },
+                                    "syncToken": "shared-sync-token",
+                                    "atomic": True,
+                                },
+                            ],
+                        },
+                    )
                 # Return zones list for photos
                 return ResponseMock(
                     {
