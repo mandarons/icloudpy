@@ -382,6 +382,7 @@ class ICloudPyServiceMock(base.ICloudPyService):
         verify=True,
         client_id=None,
         with_family=True,
+        **kwargs,
     ):
         """Init the object."""
         base.ICloudPySession = ICloudPySessionMock
@@ -393,4 +394,5 @@ class ICloudPyServiceMock(base.ICloudPyService):
             verify,
             client_id,
             with_family,
+            **kwargs,
         )

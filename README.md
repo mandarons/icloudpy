@@ -380,3 +380,17 @@ To download a specific version of the photo asset, pass the version to `download
 >>> with open(photo.versions['thumb']['filename'], 'wb') as thumb_file:
         thumb_file.write(download.raw.read())
 ```
+
+### While Apple is still indexing
+
+Opening a library raises `ICloudPyServiceNotActivatedException` until Apple reports it has finished indexing it. Apple can report a library as indexing for a long time while still listing it, so you can open it anyway and check how far the index got:
+
+```python
+>>> api = ICloudPyService('jappleseed@apple.com', 'password', photos_require_finished_index=False)
+>>> api.photos.indexing_state
+'RUNNING'
+>>> {name: library.indexing_state for name, library in api.photos.libraries.items()}
+{'PrimarySync': 'RUNNING'}
+```
+
+Until a library reads `FINISHED`, its listings may be incomplete. Don't treat a photo missing from one as deleted. The option is read when `api.photos` is first opened, so set it when you create the service. Each `indexing_state` is what Apple reported at that moment and isn't refreshed; create a new service to check again.
