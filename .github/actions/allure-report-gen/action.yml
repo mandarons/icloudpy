@@ -1,0 +1,172 @@
+name: "Allure Report with history"
+description: >-
+  Generates an Allure report with history directly on the runner.
+  Replaces simple-elf/allure-report-action, which builds a Docker image
+  FROM public.ecr.aws/amazoncorretto/amazoncorretto:8 on every job.
+  Anonymous pulls from public.ecr.aws are quota-limited per IP and the
+  shared GitHub-hosted runner IPs regularly exhaust them, so that action
+  fails with "429 Too Many Requests / toomanyrequests: Data limit
+  exceeded" after the tests have already passed. Here the Allure CLI is
+  downloaded from Maven Central once per job instead — no Docker, no
+  registry quota.
+
+inputs:
+  allure_results:
+    description: "Relative path to the Allure results directory."
+    required: true
+    default: "allure-results"
+  allure_report:
+    description: "Relative path to the generated report directory."
+    required: true
+    default: "allure-report"
+  gh_pages:
+    description: "Relative path to the checked-out gh-pages branch."
+    required: true
+    default: "gh-pages"
+  allure_history:
+    description: "Relative path to the history directory published to gh-pages."
+    required: true
+    default: "allure-history"
+  subfolder:
+    description: "Sub-path inside gh-pages for multi-project layouts."
+    required: false
+    default: ""
+  keep_reports:
+    description: "Keep the last N reports in history."
+    required: false
+    default: "20"
+  report_url:
+    description: "Override the URL embedded in the report."
+    required: false
+    default: ""
+  report_name:
+    description: "Title shown in the report header."
+    required: false
+    default: "Allure Report with history"
+
+runs:
+  using: "composite"
+  steps:
+    - shell: bash
+      env:
+        INPUT_ALLURE_RESULTS: ${{ inputs.allure_results }}
+        INPUT_ALLURE_REPORT: ${{ inputs.allure_report }}
+        INPUT_GH_PAGES: ${{ inputs.gh_pages }}
+        INPUT_ALLURE_HISTORY: ${{ inputs.allure_history }}
+        INPUT_SUBFOLDER: ${{ inputs.subfolder }}
+        INPUT_KEEP_REPORTS: ${{ inputs.keep_reports }}
+        INPUT_REPORT_URL: ${{ inputs.report_url }}
+        INPUT_REPORT_NAME: ${{ inputs.report_name }}
+        INPUT_GITHUB_REPO: ${{ github.repository }}
+        INPUT_GITHUB_REPO_OWNER: ${{ github.repository_owner }}
+        INPUT_GITHUB_RUN_NUM: ${{ github.run_number }}
+        INPUT_GITHUB_RUN_ID: ${{ github.run_id }}
+        INPUT_GITHUB_SERVER_URL: ${{ github.server_url }}
+        INPUT_GITHUB_TESTS_REPO: ${{ github.repository }}
+        ALLURE_VERSION: "2.44.0"
+      run: |
+        set -euo pipefail
+
+        ALLURE_RESULTS="${INPUT_ALLURE_RESULTS}"
+        ALLURE_REPORT="${INPUT_ALLURE_REPORT}"
+        ALLURE_HISTORY="${INPUT_ALLURE_HISTORY}"
+        GH_PAGES="${INPUT_GH_PAGES}"
+        KEEP_REPORTS="${INPUT_KEEP_REPORTS}"
+        RUN_NUM="${INPUT_GITHUB_RUN_NUM}"
+        REPOSITORY_NAME="${INPUT_GITHUB_REPO##*/}"
+
+        # The report is derived output: when the tests die before Allure
+        # writes any results, skip generation instead of failing the job
+        # with an infrastructure error that hides the real failure.
+        if [ ! -d "${ALLURE_RESULTS}" ] || [ -z "$(ls -A "${ALLURE_RESULTS}")" ]; then
+          echo "::warning::No Allure results in '${ALLURE_RESULTS}' — skipping report generation."
+          exit 0
+        fi
+
+        # ── Install the Allure CLI (pinned, no Docker image) ────────
+        if command -v allure >/dev/null 2>&1; then
+          echo "Allure already available: $(allure --version)"
+        else
+          echo "Installing allure-commandline ${ALLURE_VERSION} …"
+          curl -fsSL "https://repo.maven.apache.org/maven2/io/qameta/allure/allure-commandline/${ALLURE_VERSION}/allure-commandline-${ALLURE_VERSION}.tgz" \
+            | tar xz -C /tmp
+          echo "/tmp/allure-${ALLURE_VERSION}/bin" >> "${GITHUB_PATH}"
+          export PATH="/tmp/allure-${ALLURE_VERSION}/bin:${PATH}"
+          echo "Installed: $(allure --version)"
+        fi
+
+        # ── Locate history and gh-pages roots ──────────────────────
+        # In a multi-project layout the gh-pages content lives under
+        # <gh-pages>/<subfolder> and the collected history under
+        # <allure_history>/<subfolder>, matching the original action.
+        if [ -n "${INPUT_SUBFOLDER}" ]; then
+          ALLURE_HISTORY="${ALLURE_HISTORY}/${INPUT_SUBFOLDER}"
+          GH_PAGES="${GH_PAGES}/${INPUT_SUBFOLDER}"
+        fi
+        mkdir -p "${GH_PAGES}" "${ALLURE_HISTORY}"
+
+        # ── Report URL ─────────────────────────────────────────────
+        if [ -n "${INPUT_REPORT_URL}" ]; then
+          PAGES_URL="${INPUT_REPORT_URL}"
+        else
+          PAGES_URL="https://${INPUT_GITHUB_REPO_OWNER}.github.io/${REPOSITORY_NAME}"
+          if [ -n "${INPUT_SUBFOLDER}" ]; then
+            PAGES_URL="${PAGES_URL}/${INPUT_SUBFOLDER}"
+          fi
+        fi
+        echo "Report URL: ${PAGES_URL}"
+
+        # ── Carry existing history over from gh-pages ──────────────
+        cp -r "${GH_PAGES}/." "${ALLURE_HISTORY}/" 2>/dev/null || true
+
+        # ── Prune old reports so history keeps N entries ───────────
+        mapfile -t RUN_DIRS < <(
+          find "${ALLURE_HISTORY}" -mindepth 1 -maxdepth 1 -type d -name '[0-9]*' -printf '%f\n' | sort -n
+        )
+        EXCESS=$(( ${#RUN_DIRS[@]} - KEEP_REPORTS + 1 ))
+        if [ "${EXCESS}" -gt 0 ]; then
+          echo "Pruning ${EXCESS} oldest report(s), keeping ${KEEP_REPORTS} …"
+          for OLD in "${RUN_DIRS[@]:0:${EXCESS}}"; do
+            rm -rf "${ALLURE_HISTORY:?}/${OLD}"
+          done
+        fi
+
+        # ── executor.json (build metadata shown in the report) ─────
+        REPORT_NAME="${INPUT_REPORT_NAME:-Allure Report with history}"
+        cat > executor.json <<JSON
+        {
+          "name": "GitHub Actions",
+          "type": "github",
+          "reportName": "${REPORT_NAME}",
+          "url": "${PAGES_URL}",
+          "reportUrl": "${PAGES_URL}/${RUN_NUM}",
+          "buildUrl": "${INPUT_GITHUB_SERVER_URL}/${INPUT_GITHUB_TESTS_REPO}/actions/runs/${INPUT_GITHUB_RUN_ID}",
+          "buildName": "GitHub Actions Run #${INPUT_GITHUB_RUN_ID}",
+          "buildOrder": "${RUN_NUM}"
+        }
+        JSON
+        sed -i 's/^[[:space:]]*//' executor.json
+        mv executor.json "${ALLURE_RESULTS}/"
+
+        # ── Seed the trend with the previous run's history ─────────
+        mkdir -p "${ALLURE_RESULTS}/history"
+        cp -r "${GH_PAGES}/last-history/." "${ALLURE_RESULTS}/history/" 2>/dev/null || true
+
+        # ── Generate ───────────────────────────────────────────────
+        echo "Generating report from ${ALLURE_RESULTS} → ${ALLURE_REPORT}"
+        allure generate --clean "${ALLURE_RESULTS}" -o "${ALLURE_REPORT}"
+
+        # ── Store the report in history ────────────────────────────
+        # Re-runs reuse the same run number, so replace instead of merge.
+        rm -rf "${ALLURE_HISTORY}/${RUN_NUM}"
+        cp -r "${ALLURE_REPORT}/." "${ALLURE_HISTORY}/${RUN_NUM}/"
+        rm -rf "${ALLURE_HISTORY}/last-history"
+        cp -r "${ALLURE_REPORT}/history/." "${ALLURE_HISTORY}/last-history/"
+
+        # ── index.html redirects to the latest run ─────────────────
+        cat > "${ALLURE_HISTORY}/index.html" <<HTML
+        <!DOCTYPE html><meta charset="utf-8"><meta http-equiv="refresh" content="0; URL=${PAGES_URL}/${RUN_NUM}/index.html">
+        <meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+        HTML
+
+        echo "Allure report generated: ${ALLURE_HISTORY}/${RUN_NUM}"
