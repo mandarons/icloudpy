@@ -4,7 +4,7 @@ All notable changes to iCloudPy are documented here. Release notes for every
 release, including older ones, are on the
 [GitHub Releases page](https://github.com/mandarons/icloudpy/releases).
 
-## [Unreleased]
+## [0.11.0] - 2026-10-17
 
 ### Added
 
