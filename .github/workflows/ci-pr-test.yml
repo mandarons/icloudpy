@@ -12,7 +12,7 @@ on:
       - 'MANIFEST.in'
       - 'README.md'
       - 'CHANGELOG.md'
-      - '.github/workflows/ci-pr-test.yml'
+      - '.github/**'
       - 'run-ci.sh'
   workflow_dispatch:
 
@@ -68,7 +68,7 @@ jobs:
         run: |
           ruff check && pytest
       - name: Generate Allure Report
-        uses: simple-elf/allure-report-action@master
+        uses: ./.github/actions/allure-report-gen
         if: always()
         with:
           allure_results: allure-results

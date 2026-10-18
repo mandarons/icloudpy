@@ -15,7 +15,7 @@ on:
       - 'MANIFEST.in'
       - 'README.md'
       - 'CHANGELOG.md'
-      - '.github/workflows/ci-main-test-coverage.yml'
+      - '.github/**'
   workflow_dispatch:
 
 permissions:
@@ -81,7 +81,7 @@ jobs:
           ref: gh-pages
           path: gh-pages
       - name: Generate Allure Report
-        uses: simple-elf/allure-report-action@master
+        uses: ./.github/actions/allure-report-gen
         if: always()
         with:
           allure_results: allure-results
