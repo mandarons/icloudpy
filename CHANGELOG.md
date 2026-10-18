@@ -6,6 +6,42 @@ release, including older ones, are on the
 
 ## [Unreleased]
 
+### Added
+
+- Photos: `ICloudPyService(..., photos_require_finished_index=False)` opens
+  Photos while Apple is still indexing a library, instead of raising
+  `ICloudPyServiceNotActivatedException`. Apple can report a library as
+  indexing for weeks while listing it in full, and until now a consumer could
+  not open it at all and backed up nothing meanwhile. The option covers the
+  primary library and every library from `libraries`; each exposes
+  `indexing_state` (`RUNNING`, `FINISHED`, ...) so a consumer can keep
+  downloading while treating the listing as possibly incomplete. The default
+  is unchanged (`True`), and `indexing_state` is a snapshot taken when the
+  library is opened, not refreshed (#202).
+- Photos: `PhotoAsset.zone_id` -- the CloudKit zone an asset belongs to, so a
+  consumer re-fetching an asset's records can address the right library. An
+  asset built without one falls back to the service's zone, as before (#201).
+
+### Changed
+
+- `ZONE_NOT_FOUND` now raises `ICloudPyLibraryUnavailableException` instead of
+  `ICloudPyServiceNotActivatedException` -- including for the primary library
+  (`api.photos`). Handlers catching `ICloudPyServiceNotActivatedException`
+  specifically no longer see that code; both types remain subclasses of
+  `ICloudPyAPIResponseException`, so broad handlers are unaffected. See the
+  isolation entry under Fixed (#192).
+- CI: Allure report generation no longer builds a Docker image from
+  `public.ecr.aws` on every job. Anonymous pulls there are quota-limited per
+  IP, and GitHub's shared runner IPs exhausted that quota, failing the report
+  step after the tests had already passed. A local composite action downloads
+  the same pinned Allure CLI (2.44.0) from Maven Central and reproduces the
+  output contract; when the tests died before writing results, report
+  generation is skipped with a warning instead of masking the failure with an
+  infrastructure error (#203).
+- Runtime dependency bump: `pytz` 2026.5.
+- Development tooling bumps: `ruff` 0.17.0, `black` 26.10.1, `coverage` 7.16.2,
+  `allure-pytest` 2.16.2.
+
 ### Fixed
 
 - Photos: one broken library (CloudKit zone) no longer takes down the others.
@@ -16,31 +52,21 @@ release, including older ones, are on the
   `ICloudPyAPIResponseException`, naming the zone), so consumers can skip the
   failing library and continue with the rest. A failed `zones/list` now
   surfaces the original error instead of `UnboundLocalError` (#179).
-  Two boundaries of that isolation are worth stating explicitly:
-  - `ZONE_NOT_FOUND` now raises `ICloudPyLibraryUnavailableException`
-    instead of `ICloudPyServiceNotActivatedException` -- including for the
-    primary library (`api.photos`). Handlers catching
-    `ICloudPyServiceNotActivatedException` specifically no longer see that
-    code; both types remain subclasses of `ICloudPyAPIResponseException`.
+  One boundary of that isolation is worth stating explicitly:
   - A library that is still *indexing* is not covered: it keeps raising
     `ICloudPyServiceNotActivatedException` from the first access, so one
     unfinished index still fails the whole `libraries` call (an unfinished
-    index is an account-wide wait, unchanged from previous releases).
+    index is an account-wide wait, unchanged from previous releases). Pass
+    `photos_require_finished_index=False` to open it anyway.
 - Photos: `PhotoAsset.delete()` now addresses the photo's own library. Every
   asset was handed the `PhotosService`, whose zone is always `PrimarySync`, so
   deleting a photo from any other library (a Shared Library, say) targeted a
-  record that does not exist there. Assets now carry their library's zone,
-  exposed as `PhotoAsset.zone_id`.
+  record that does not exist there (#201).
+- Photos: an album with no zone now falls back to `{"zoneName": "PrimarySync"}`
+  rather than the bare string `"PrimarySync"`, the shape its zone lookups and
+  `delete()` expect (#201).
 
-### Added
-
-- Photos: `ICloudPyService(..., photos_require_finished_index=False)` opens
-  Photos while Apple is still indexing a library, instead of raising
-  `ICloudPyServiceNotActivatedException`. Each library's `indexing_state`
-  says how far Apple got; until it reads `FINISHED`, a listing may be
-  incomplete. The default is unchanged.
-
-## [0.10.0] - Unreleased
+## [0.10.0] - 2026-09-29
 
 ### Added
 

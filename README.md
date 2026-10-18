@@ -381,6 +381,49 @@ To download a specific version of the photo asset, pass the version to `download
         thumb_file.write(download.raw.read())
 ```
 
+### Libraries
+
+`api.photos` is the primary library. Every photo library the account owns -- the primary library and any shared library it created -- is available through the `libraries` property, keyed by zone name. Libraries shared *with* you live in CloudKit's shared database rather than the private one this enumerates, so they are not listed yet ([#115](https://github.com/mandarons/icloudpy/issues/115)).
+
+```bash
+>>> sorted(api.photos.libraries)
+['PrimarySync']
+>>> api.photos.libraries['PrimarySync'].all
+<PhotoAlbum: 'All Photos'>
+```
+
+`libraries` is built on first access and cached on the service. Enumeration skips zones Apple rejects outright (`400 Index has invalid data`, `ZONE_NOT_FOUND`) and non-photo `CMM-*` zones, logging a warning rather than failing the call; a failed `zones/list` raises instead of returning an empty dict. `library.zone_readable()` probes a single zone: `False` only when Apple definitively rejects it, `True` otherwise, with transient errors propagating rather than being read as "unusable".
+
+### One library that cannot be read
+
+A library Apple rejects cannot be listed by anyone, and without isolation it would fail every other library's sync too. `libraries` leaves those zones out, so a consumer that iterates it simply never sees them. When a zone-scoped query is rejected outright, it raises `ICloudPyLibraryUnavailableException` -- a subclass of `ICloudPyAPIResponseException` carrying `zone_name` -- so a caller can skip that library and carry on:
+
+```python
+from icloudpy.exceptions import ICloudPyLibraryUnavailableException
+
+for name, library in api.photos.libraries.items():
+    try:
+        for photo in library.all:
+            ...
+    except ICloudPyLibraryUnavailableException as err:
+        # Apple rejected this zone mid-walk; skip it, keep the others.
+        print(f"skipping {err.zone_name or name}: {err}")
+```
+
+Both types remain subclasses of `ICloudPyAPIResponseException`, so existing handlers keep working. Note that `ZONE_NOT_FOUND` now raises `ICloudPyLibraryUnavailableException` rather than `ICloudPyServiceNotActivatedException` -- including for the primary library (`api.photos`) -- so a handler catching the older type specifically no longer sees it.
+
+This is not the same thing as a library that is still indexing: an unfinished index raises `ICloudPyServiceNotActivatedException`, and by default one unfinished library still fails the whole `libraries` call. Pass `photos_require_finished_index=False` (see below) to open it anyway.
+
+### Deleting a photo
+
+`PhotoAsset.delete()` addresses the asset's own library's zone, exposed as `zone_id`, so an asset from a shared library is deleted there rather than in the primary library:
+
+```bash
+>>> photo.zone_id
+{'zoneName': 'PrimarySync'}
+>>> photo.delete()
+```
+
 ### While Apple is still indexing
 
 Opening a library raises `ICloudPyServiceNotActivatedException` until Apple reports it has finished indexing it. Apple can report a library as indexing for a long time while still listing it, so you can open it anyway and check how far the index got:
