@@ -32,6 +32,14 @@ release, including older ones, are on the
   record that does not exist there. Assets now carry their library's zone,
   exposed as `PhotoAsset.zone_id`.
 
+### Added
+
+- Photos: `ICloudPyService(..., photos_require_finished_index=False)` opens
+  Photos while Apple is still indexing a library, instead of raising
+  `ICloudPyServiceNotActivatedException`. Each library's `indexing_state`
+  says how far Apple got; until it reads `FINISHED`, a listing may be
+  incomplete. The default is unchanged.
+
 ## [0.10.0] - Unreleased
 
 ### Added

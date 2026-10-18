@@ -1,5 +1,6 @@
 """Tests for Photos service."""
 
+import copy
 import json
 import unittest
 from unittest.mock import patch
@@ -156,6 +157,60 @@ class PhotoLibraryInitializationTests(unittest.TestCase):
             const_photos.DATA["query?remapEnums=True&getCurrentSyncToken=True"][0][
                 "response"
             ] = original_data
+
+
+class UnfinishedIndexTests(unittest.TestCase):
+    """Opening Photos while Apple reports a library still indexing.
+
+    Apple can report a library as indexing for weeks while listing it in
+    full, and a consumer that refuses to open it backs up nothing in the
+    meantime. ``photos_require_finished_index=False`` opens it anyway and
+    says how far the index got, so the consumer can keep downloading while
+    treating the listing as possibly incomplete.
+    """
+
+    KEY = "query?remapEnums=True&getCurrentSyncToken=True"
+
+    def setUp(self):
+        """Report every library as still indexing for the test's duration."""
+        from . import const_photos
+
+        entry = const_photos.DATA[self.KEY][0]
+        original = entry["response"]
+        indexing = copy.deepcopy(original)
+        indexing["records"][0]["fields"]["state"]["value"] = "RUNNING"
+        entry["response"] = indexing
+        self.addCleanup(entry.__setitem__, "response", original)
+
+    def _service(self, require_finished_index):
+        return ICloudPyServiceMock(
+            AUTHENTICATED_USER,
+            VALID_PASSWORD,
+            photos_require_finished_index=require_finished_index,
+        )
+
+    def test_the_default_still_refuses(self):
+        with self.assertRaises(ICloudPyServiceNotActivatedException):
+            _ = self._service(True).photos
+
+    def test_opting_out_opens_the_primary_library(self):
+        photos = self._service(False).photos
+        assert photos.indexing_state == "RUNNING"
+
+    def test_opting_out_opens_every_library(self):
+        libraries = self._service(False).photos.libraries
+        assert libraries
+        assert {library.indexing_state for library in libraries.values()} == {"RUNNING"}
+
+    def test_the_default_is_to_require_a_finished_index(self):
+        with self.assertRaises(ICloudPyServiceNotActivatedException):
+            _ = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD).photos
+
+
+class FinishedIndexStateTests(unittest.TestCase):
+    def test_a_finished_library_says_so(self):
+        photos = ICloudPyServiceMock(AUTHENTICATED_USER, VALID_PASSWORD).photos
+        assert photos.indexing_state == "FINISHED"
 
 
 class AlbumsPropertyTests(unittest.TestCase):
