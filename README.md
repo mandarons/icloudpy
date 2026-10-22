@@ -373,6 +373,16 @@ Information about each version can be accessed through the `versions` property:
 [u'medium', u'original', u'thumb']
 ```
 
+Edited photos also expose Apple's rendered edit (crop, filters, portrait
+effects, ...) as the `full` version. It is a JPEG rendition of the current
+view, not the untouched original, so it appears only for photos that have
+been edited:
+
+```bash
+>>> photo.versions['full']['type']
+u'public.jpeg'
+```
+
 To download a specific version of the photo asset, pass the version to `download()`:
 
 ```bash

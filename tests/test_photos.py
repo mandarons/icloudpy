@@ -884,6 +884,176 @@ class PhotoAssetVersionsTests(unittest.TestCase):
         assert isinstance(str_repr, str)
 
 
+class TestEditedPhotoVersions(unittest.TestCase):
+    """Edited photos expose Apple's edited render as the ``full`` version.
+
+    iCloud keeps the edited rendition (``resJPEGFull*``) on the CPLAsset
+    record and the originals/alternates on CPLMaster, so these fixtures mirror
+    records captured from a real account (the same shapes as icloudpd's
+    ``listing_photos_two_sizes.yml`` cassette): an edited asset carries
+    ``resJPEGFull*`` and the edited ``resJPEGThumb*``; an unedited one carries
+    no ``res*`` fields at all.
+    """
+
+    @staticmethod
+    def _master_with_versions():
+        return _make_master(
+            "IMG_1234.HEIC",
+            "public.heic",
+            _photo_field(
+                "resOriginal",
+                size=2_400_000,
+                url="https://example.invalid/original.heic",
+            ),
+            _photo_field(
+                "resJPEGMed",
+                size=300_000,
+                url="https://example.invalid/medium.jpeg",
+                file_type="public.jpeg",
+            ),
+            _photo_field(
+                "resJPEGThumb",
+                size=30_000,
+                url="https://example.invalid/master-thumb.jpeg",
+                file_type="public.jpeg",
+            ),
+        )
+
+    @staticmethod
+    def _edited_asset_record():
+        fields = {}
+        fields.update(
+            _photo_field(
+                "resJPEGFull",
+                size=233_944,
+                url="https://example.invalid/edited.jpeg",
+                file_type="public.jpeg",
+                width=4032,
+                height=3024,
+            ),
+        )
+        fields.update(
+            _photo_field(
+                "resJPEGThumb",
+                size=24_000,
+                url="https://example.invalid/edited-thumb.jpeg",
+                file_type="public.jpeg",
+            ),
+        )
+        fields["adjustmentType"] = {"value": "ScreenshotServices"}
+        return {"recordName": "asset-record", "fields": fields}
+
+    def test_edited_photo_exposes_full_version(self):
+        asset = PhotoAsset(
+            service=None,
+            master_record=self._master_with_versions(),
+            asset_record=self._edited_asset_record(),
+        )
+
+        full = asset.versions["full"]
+
+        assert full["size"] == 233_944
+        assert full["url"] == "https://example.invalid/edited.jpeg"
+        assert full["type"] == "public.jpeg"
+        assert full["filename"] == "IMG_1234.HEIC"
+        assert full["width"] == 4032
+        assert full["height"] == 3024
+
+    def test_edited_photo_keeps_master_versions(self):
+        asset = PhotoAsset(
+            service=None,
+            master_record=self._master_with_versions(),
+            asset_record=self._edited_asset_record(),
+        )
+
+        assert asset.versions["original"]["url"] == "https://example.invalid/original.heic"
+        assert asset.versions["original"]["size"] == 2_400_000
+        assert asset.versions["medium"]["size"] == 300_000
+
+    def test_asset_record_wins_over_master(self):
+        """The edited thumbnail on the asset record describes the edit."""
+        asset = PhotoAsset(
+            service=None,
+            master_record=self._master_with_versions(),
+            asset_record=self._edited_asset_record(),
+        )
+
+        assert asset.versions["thumb"]["url"] == "https://example.invalid/edited-thumb.jpeg"
+        assert asset.versions["thumb"]["size"] == 24_000
+
+    def test_unedited_photo_has_no_full_version(self):
+        asset = PhotoAsset(
+            service=None,
+            master_record=self._master_with_versions(),
+            asset_record=_make_asset_record(),
+        )
+
+        assert "full" not in asset.versions
+        assert "original" in asset.versions
+
+    def test_missing_asset_record_falls_back_to_master(self):
+        asset = PhotoAsset(
+            service=None,
+            master_record=self._master_with_versions(),
+            asset_record=None,
+        )
+
+        assert "full" not in asset.versions
+        assert asset.versions["original"]["size"] == 2_400_000
+
+    def test_asset_record_without_fields_falls_back_to_master(self):
+        asset = PhotoAsset(
+            service=None,
+            master_record=self._master_with_versions(),
+            asset_record={},
+        )
+
+        assert asset.versions["original"]["size"] == 2_400_000
+        assert "full" not in asset.versions
+
+    def test_edited_live_photo_keeps_live_video_versions(self):
+        """An edit must not hide the Live Photo movie, which lives on the master."""
+        master = _make_master(
+            "IMG_5678.HEIC",
+            "public.heic",
+            _photo_field("resOriginal", size=2_400_000),
+            _photo_field(
+                "resOriginalVidCompl",
+                size=1_800_000,
+                url="https://example.invalid/live.mov",
+                file_type="com.apple.quicktime-movie",
+            ),
+        )
+        asset = PhotoAsset(
+            service=None,
+            master_record=master,
+            asset_record=self._edited_asset_record(),
+        )
+
+        assert asset.versions["full"]["size"] == 233_944
+        assert asset.versions["live_video_original"]["type"] == "com.apple.quicktime-movie"
+
+    def test_movie_does_not_expose_photo_edit_version(self):
+        """Movies use the video lookup, so a stray resJPEGFull* is not a version."""
+        master = _make_master(
+            "clip.MOV",
+            "com.apple.quicktime-movie",
+            _photo_field(
+                "resOriginal",
+                size=10_000_000,
+                file_type="com.apple.quicktime-movie",
+            ),
+        )
+        asset = PhotoAsset(
+            service=None,
+            master_record=master,
+            asset_record=self._edited_asset_record(),
+        )
+
+        assert asset.item_type == "movie"
+        assert "full" not in asset.versions
+
+
 class PhotoAssetDownloadTests(unittest.TestCase):
     """Test photo download functionality."""
 
