@@ -4,6 +4,20 @@ All notable changes to iCloudPy are documented here. Release notes for every
 release, including older ones, are on the
 [GitHub Releases page](https://github.com/mandarons/icloudpy/releases).
 
+## [Unreleased]
+
+### Fixed
+
+- Photos: `PhotoAsset.versions` now reads each version from the `CPLAsset`
+  record first and falls back to `CPLMaster` per version. Apple stores the
+  edited rendition (`resJPEGFull*`) on the asset record and the
+  originals/alternates on the master record, so consulting only the master hid
+  every edit: an edited photo reported `original`/`medium`/`thumb` and no
+  `full` version, and consumers could not download the edit at all
+  ([icloud-docker#292](https://github.com/mandarons/icloud-docker/issues/292)).
+  Unedited photos are unchanged (no `full` version), and the edited thumbnail
+  now comes from the asset record as well, since it describes the edit.
+
 ## [0.11.0] - 2026-10-17
 
 ### Added

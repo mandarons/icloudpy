@@ -917,6 +917,15 @@ class PhotoAsset:
         were previously inaccessible — earlier icloudpy versions misclassified
         Live Photos as movies (via the ``resVidSmallRes`` presence heuristic)
         and dropped the still image entirely.
+
+        Apple splits the resource fields across the asset's two CloudKit
+        records: the ``CPLAsset`` record carries the edited rendition
+        (``resJPEGFull*``), while the ``CPLMaster`` record carries the
+        original and alternate renditions (``resOriginal*``). Each version is
+        therefore read from the asset record first, falling back to the master
+        record per version. That makes an edited photo's ``full`` version
+        available (Apple's rendered edit, including portraits) instead of only
+        the untouched original.
         """
         if not self._versions:
             self._versions = {}
@@ -925,9 +934,12 @@ class PhotoAsset:
             else:
                 typed_version_lookup = self.PHOTO_VERSION_LOOKUP
 
+            asset_fields = (self._asset_record or {}).get("fields", {})
+            master_fields = self._master_record["fields"]
+
             for key, prefix in typed_version_lookup.items():
-                if f"{prefix}Res" in self._master_record["fields"]:
-                    fields = self._master_record["fields"]
+                fields = asset_fields if f"{prefix}Res" in asset_fields else master_fields
+                if f"{prefix}Res" in fields:
                     version = {"filename": self.filename}
 
                     width_entry = fields.get(f"{prefix}Width")
