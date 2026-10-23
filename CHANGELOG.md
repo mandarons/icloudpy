@@ -15,8 +15,11 @@ release, including older ones, are on the
   every edit: an edited photo reported `original`/`medium`/`thumb` and no
   `full` version, and consumers could not download the edit at all
   ([icloud-docker#292](https://github.com/mandarons/icloud-docker/issues/292)).
-  Unedited photos are unchanged (no `full` version), and the edited thumbnail
-  now comes from the asset record as well, since it describes the edit.
+  Unedited photos are unchanged (no `full` version). Because the lookup is per
+  version key, an edited asset's `medium`, `thumb` and Live Photo
+  `live_video_*` renditions also come from the asset record and therefore
+  describe the edit; edited movies expose the edited video as the video
+  `full`.
 
 ## [0.11.0] - 2026-10-17
 
