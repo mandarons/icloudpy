@@ -10,8 +10,9 @@ release, including older ones, are on the
 
 - Drive: `api.drive.get_recent_docs()` lists the recently opened iCloud Drive
   documents, newest first, as `DriveNode` objects, so `name`, `size`, the date
-  properties and `open()` work as they do for any other drive node. Apple caps
-  the listing and reports `MORE_AVAILABLE` when it does; the returned
+  properties and `open()` work as they do for any other drive node. It lists the
+  main Drive zone by default; pass `zone="_all_"` to ask for every zone. Apple
+  caps the listing and reports `MORE_AVAILABLE` when it does; the returned
   `RecentDocs` list exposes `status`, `more_available` and a `next_page` cursor,
   and `get_recent_docs(next_page=...)` continues from it
   ([#135](https://github.com/mandarons/icloudpy/issues/135)).
