@@ -1,4 +1,5 @@
 """Drive service tests."""
+
 import http.cookiejar as cookielib
 import io
 from unittest import TestCase
@@ -521,12 +522,14 @@ class DriveErrorPathTests(TestCase):
         def mock_request_package_token(method, url, **kwargs):
             if "download/by_id" in url:
                 # Return response with package_token but no data_token
-                return ResponseMock({
-                    "document_id": "test",
-                    "package_token": {
-                        "url": "https://icloud-content.com/test.band",
-                    },
-                })
+                return ResponseMock(
+                    {
+                        "document_id": "test",
+                        "package_token": {
+                            "url": "https://icloud-content.com/test.band",
+                        },
+                    }
+                )
             if "icloud-content.com" in url:
                 return ResponseMock({}, raw=io.BytesIO(b"test content"))
             return original_request(method, url, **kwargs)
@@ -824,7 +827,11 @@ class DriveRecentDocsTests(TestCase):
     def setUp(self):
         """Set up test."""
         self.service = ICloudPyServiceMock(
-            AUTHENTICATED_USER, VALID_PASSWORD, None, True, CLIENT_ID,
+            AUTHENTICATED_USER,
+            VALID_PASSWORD,
+            None,
+            True,
+            CLIENT_ID,
         )
         self.drive = self.service.drive
 

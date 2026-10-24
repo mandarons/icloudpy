@@ -132,9 +132,8 @@ class ICloudPySessionMock(base.ICloudPySession):
 
             if "validate" in url and method == "POST":
                 # Either a valid cookie in headers or a valid session token is sufficient for login
-                if (
-                    (headers and headers.get("X-APPLE-WEBAUTH-TOKEN") == VALID_COOKIE)
-                    or (self.service.session_data.get("session_token") in [VALID_TOKEN, REQUIRES_2FA_TOKEN])
+                if (headers and headers.get("X-APPLE-WEBAUTH-TOKEN") == VALID_COOKIE) or (
+                    self.service.session_data.get("session_token") in [VALID_TOKEN, REQUIRES_2FA_TOKEN]
                 ):
                     return ResponseMock(LOGIN_WORKING)
                 self._raise_error(None, "Session expired")
@@ -219,15 +218,17 @@ class ICloudPySessionMock(base.ICloudPySession):
             return ResponseMock(UPLOAD_URL_RESPONSE)
         if "/ws/upload/file" in url and method == "POST":
             # Mock the actual file upload endpoint
-            return ResponseMock({
-                "singleFile": {
-                    "fileChecksum": "test_checksum",
-                    "wrappingKey": "test_wrapping_key",
-                    "referenceChecksum": "test_ref_checksum",
-                    "size": 123,
-                    "receipt": "test_receipt",
-                },
-            })
+            return ResponseMock(
+                {
+                    "singleFile": {
+                        "fileChecksum": "test_checksum",
+                        "wrappingKey": "test_wrapping_key",
+                        "referenceChecksum": "test_ref_checksum",
+                        "size": 123,
+                        "receipt": "test_receipt",
+                    },
+                }
+            )
         if "/update/documents" in url and method == "POST":
             return ResponseMock(UPDATE_CONTENTWS_RESPONSE)
         # Drive rename/delete operations

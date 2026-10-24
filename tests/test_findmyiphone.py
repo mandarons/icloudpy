@@ -1,4 +1,5 @@
 """Find My iPhone service tests."""
+
 from unittest import TestCase
 
 from . import ICloudPyServiceMock

@@ -25,7 +25,7 @@ pytest tests/test_auth.py
 
 ## Verification order
 
-`ruff check` → `pytest` → build. The `run-ci.sh` script does exactly this.
+`ruff check` → `ruff format --check` → `pytest` → build. The `run-ci.sh` script does exactly this.
 
 ## Key config
 
