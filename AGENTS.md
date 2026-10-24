@@ -29,12 +29,12 @@ pytest tests/test_auth.py
 
 ## Key config
 
-| Tool | Config | Notes |
-|------|--------|-------|
-| ruff | `.ruff.toml` | Lint + format, line length 120 |
-| pylint | `pylintrc` | Runs via `run-in-env.sh pylint -j 0` on `icloudpy/` only |
-| pytest | `pytest.ini` | Coverage minimum 78%, `--cov-fail-under=78` |
-| bandit | `tests/bandit.yaml` | Security checks via pre-commit |
+| Tool   | Config              | Notes                                                    |
+| ------ | ------------------- | -------------------------------------------------------- |
+| ruff   | `.ruff.toml`        | Lint + format, line length 120                           |
+| pylint | `pylintrc`          | Runs via `run-in-env.sh pylint -j 0` on `icloudpy/` only |
+| pytest | `pytest.ini`        | Coverage minimum 78%, `--cov-fail-under=78`              |
+| bandit | `tests/bandit.yaml` | Security checks via pre-commit                           |
 
 ## Pre-commit hooks
 

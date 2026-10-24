@@ -4,16 +4,16 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'icloudpy/**'
-      - 'tests/**'
-      - 'pytest.ini'
-      - 'requirements*.txt'
-      - 'setup.py'
-      - 'MANIFEST.in'
-      - 'README.md'
-      - 'CHANGELOG.md'
-      - '.github/**'
-      - 'run-ci.sh'
+      - "icloudpy/**"
+      - "tests/**"
+      - "pytest.ini"
+      - "requirements*.txt"
+      - "setup.py"
+      - "MANIFEST.in"
+      - "README.md"
+      - "CHANGELOG.md"
+      - ".github/**"
+      - "run-ci.sh"
   workflow_dispatch:
 
 permissions:

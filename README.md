@@ -435,7 +435,7 @@ To download a specific version of the photo asset, pass the version to `download
 
 ### Libraries
 
-`api.photos` is the primary library. Every photo library the account owns -- the primary library and any shared library it created -- is available through the `libraries` property, keyed by zone name. Libraries shared *with* you live in CloudKit's shared database rather than the private one this enumerates, so they are not listed yet ([#115](https://github.com/mandarons/icloudpy/issues/115)).
+`api.photos` is the primary library. Every photo library the account owns -- the primary library and any shared library it created -- is available through the `libraries` property, keyed by zone name. Libraries shared _with_ you live in CloudKit's shared database rather than the private one this enumerates, so they are not listed yet ([#115](https://github.com/mandarons/icloudpy/issues/115)).
 
 ```bash
 >>> sorted(api.photos.libraries)
