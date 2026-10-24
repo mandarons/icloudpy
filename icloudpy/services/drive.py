@@ -92,10 +92,9 @@ class DriveService:
 
         :param limit: maximum documents to return (Apple caps this itself)
         :param next_page: ``next_page`` from a previous result, or ``None``
-        :param zone: the Drive zone to list. The default is the main Drive
-            zone, which is what the iCloud web app's Recent view shows.
-            ``_all_`` asks for every zone, but Apple does not serve that for
-            every account, so it is opt-in.
+        :param zone: the Drive zone to list, defaulting to the main Drive
+            zone. ``_all_`` asks for every zone, but Apple does not serve
+            that for every account, so it is opt-in.
         :returns: :class:`RecentDocs`
         """
         params = dict(self.params)
