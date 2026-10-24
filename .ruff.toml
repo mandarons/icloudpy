@@ -86,7 +86,9 @@ select = ["F", "E", "W",
 # "FURB",
 # "RUF"
 ]
-ignore = ["E501"]
+# COM812 conflicts with Black: when Black explodes an argument list it omits
+# the trailing comma, which COM812 then flags. The formatter wins.
+ignore = ["E501", "COM812"]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]

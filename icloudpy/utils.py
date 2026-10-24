@@ -1,4 +1,5 @@
 """Utils."""
+
 import getpass
 from sys import stdout
 

@@ -3,7 +3,7 @@
 [![CI - Main](https://github.com/mandarons/icloudpy/actions/workflows/ci-main-test-coverage.yml/badge.svg)](https://github.com/mandarons/icloudpy/actions/workflows/ci-main-test-coverage.yml)
 [![Tests](https://mandarons.github.io/icloudpy/badges/tests.svg)](https://mandarons.github.io/icloudpy/test-results/)
 [![Coverage](https://mandarons.github.io/icloudpy/badges/coverage.svg)](https://mandarons.github.io/icloudpy/test-coverage/index.html)
-![Python Version](https://img.shields.io/badge/python-3.10-blue)
+![Python Version](https://img.shields.io/badge/python-3.14-blue)
 [![Discord](https://img.shields.io/discord/871555550444408883?style=for-the-badge)](https://discord.gg/BnNpJUQ2)
 <a href="https://www.buymeacoffee.com/mandarons" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 30px !important;width: 150px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
 
@@ -13,7 +13,7 @@ iCloudPy is a simple iCloud webservices wrapper library written in Python. It is
 
 iCloudPy connects to iCloud using your `username` and `password`, stores the session locally and then performs various queries to iCloud server.
 
-iCloudPy requires Python 3.10 or newer.
+iCloudPy requires Python 3.14 or newer.
 
 ## Authentication
 
@@ -21,9 +21,15 @@ Authentication without using a saved password is as simple as passing your usern
 
 ```python
 from icloudpy import ICloudPyService
-api = ICloudPyService('jappleseed@apple.com', 'password')
+
+api = ICloudPyService("jappleseed@apple.com", "password")
 # For China region
-api = ICloudPyService('jappleseed@apple.com', 'password', home_endpoint="https://www.icloud.com.cn",setup_endpoint="https://setup.icloud.com.cn/setup/ws/1",)
+api = ICloudPyService(
+    "jappleseed@apple.com",
+    "password",
+    home_endpoint="https://www.icloud.com.cn",
+    setup_endpoint="https://setup.icloud.com.cn/setup/ws/1",
+)
 ```
 
 In the event that the username/password combination is invalid, a `ICloudPyFailedLoginException` exception is thrown.
@@ -43,7 +49,7 @@ Save password in keyring? (y/N)
 If you have stored a password in the keyring, you will not be required to provide a password when interacting with the command-line tool or instantiating the `ICloudPyService` class for the username you stored the password for.
 
 ```python
-api = ICloudPyService('jappleseed@apple.com')
+api = ICloudPyService("jappleseed@apple.com")
 ```
 
 If you would like to delete a password stored in your system keyring, you can clear a stored password using the `--delete-from-keyring` command-line option:
@@ -87,6 +93,7 @@ if api.requires_2fa:
                 print("Failed to request trust. You will likely be prompted for the code again in the coming weeks")
 elif api.requires_2sa:
     import click
+
     print("Two-step authentication required. Your trusted devices are:")
 
     devices = api.trusted_devices
@@ -428,7 +435,7 @@ To download a specific version of the photo asset, pass the version to `download
 
 ### Libraries
 
-`api.photos` is the primary library. Every photo library the account owns -- the primary library and any shared library it created -- is available through the `libraries` property, keyed by zone name. Libraries shared *with* you live in CloudKit's shared database rather than the private one this enumerates, so they are not listed yet ([#115](https://github.com/mandarons/icloudpy/issues/115)).
+`api.photos` is the primary library. Every photo library the account owns -- the primary library and any shared library it created -- is available through the `libraries` property, keyed by zone name. Libraries shared _with_ you live in CloudKit's shared database rather than the private one this enumerates, so they are not listed yet ([#115](https://github.com/mandarons/icloudpy/issues/115)).
 
 ```bash
 >>> sorted(api.photos.libraries)

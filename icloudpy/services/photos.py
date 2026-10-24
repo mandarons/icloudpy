@@ -3,14 +3,9 @@
 import base64
 import json
 import logging
-from datetime import datetime
-
-# fmt: off
+from datetime import UTC, datetime
 from urllib.parse import urlencode  # pylint: disable=bad-option-value,relative-import
 
-from pytz import UTC
-
-# fmt: on
 from icloudpy.exceptions import (
     ICloudPyAPIResponseException,
     ICloudPyLibraryUnavailableException,
@@ -48,8 +43,7 @@ def _zone_post(session, url, data, zone_name):
         return session.post(url, data=data, headers={"Content-type": "text/plain"})
     except ICloudPyAPIResponseException as err:
         if err.code in _DEFINITIVE_ZONE_ERRORS and (
-            err.code == "ZONE_NOT_FOUND"
-            or any(text in (err.reason or "") for text in _DEFINITIVE_ZONE_REASONS)
+            err.code == "ZONE_NOT_FOUND" or any(text in (err.reason or "") for text in _DEFINITIVE_ZONE_REASONS)
         ):
             raise ICloudPyLibraryUnavailableException(
                 err.reason,
@@ -209,7 +203,7 @@ class PhotoLibrary:
         self.indexing_state = response["records"][0]["fields"]["state"]["value"]
         if require_finished_index and self.indexing_state != "FINISHED":
             raise ICloudPyServiceNotActivatedException(
-                ("iCloud Photo Library not finished indexing.  Please try " "again in a few minutes"),
+                ("iCloud Photo Library not finished indexing.  Please try again in a few minutes"),
                 None,
             )
 

@@ -17,6 +17,7 @@ deleteFile coverage.xml
 
 echo "Ruffing ..." &&
     ruff check --fix &&
+    ruff format &&
     echo "Testing ..." &&
     pytest &&
     echo "Reporting ..." &&

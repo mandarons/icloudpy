@@ -1,6 +1,5 @@
 """Drive test constants."""
 
-
 # Data
 DRIVE_ROOT_WORKING = [
     {

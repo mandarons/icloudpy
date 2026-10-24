@@ -1,4 +1,5 @@
 """Account service."""
+
 from collections import OrderedDict
 
 from icloudpy.utils import underscore_to_camelcase
@@ -19,9 +20,7 @@ class AccountService:
         self._acc_endpoint = f"{self._service_root}/setup/web"
         self._acc_devices_url = f"{self._acc_endpoint}/device/getDevices"
         self._acc_family_details_url = f"{self._acc_endpoint}/family/getFamilyDetails"
-        self._acc_family_member_photo_url = (
-            f"{self._acc_endpoint}/family/getMemberPhoto"
-        )
+        self._acc_family_member_photo_url = f"{self._acc_endpoint}/family/getMemberPhoto"
 
         self._acc_storage_url = "https://setup.icloud.com/setup/ws/1/storageUsageInfo"
 
@@ -188,7 +187,9 @@ class FamilyMember:
         params_photo = dict(self._params)
         params_photo.update({"memberId": self.dsid})
         return self._session.get(
-            self._acc_family_member_photo_url, params=params_photo, stream=True,
+            self._acc_family_member_photo_url,
+            params=params_photo,
+            stream=True,
         )
 
     def __getitem__(self, key):
@@ -197,9 +198,7 @@ class FamilyMember:
         return getattr(self, key)
 
     def __unicode__(self):
-        return (
-            f"{{name: {self.full_name}, age_classification: {self.age_classification}}}"
-        )
+        return f"{{name: {self.full_name}, age_classification: {self.age_classification}}}"
 
     def __str__(self):
         return self.__unicode__()
@@ -275,7 +274,8 @@ class AccountStorageUsage:
     def available_storage_in_percent(self):
         """Gets the available storage in percent."""
         return round(
-            self.available_storage_in_bytes * 100 / self.total_storage_in_bytes, 2,
+            self.available_storage_in_bytes * 100 / self.total_storage_in_bytes,
+            2,
         )
 
     @property
@@ -323,7 +323,8 @@ class AccountStorage:
 
     def __init__(self, storage_data):
         self.usage = AccountStorageUsage(
-            storage_data.get("storageUsageInfo"), storage_data.get("quotaStatus"),
+            storage_data.get("storageUsageInfo"),
+            storage_data.get("quotaStatus"),
         )
         self.usages_by_media = OrderedDict()
 
