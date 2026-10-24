@@ -202,7 +202,7 @@ class ICloudPySessionMock(base.ICloudPySession):
         if "retrieveAppLibraries" in url and method == "GET":
             return ResponseMock({"items": []})
         # Drive recent documents
-        if "/ws/_all_/list/enumerate/recentDocs" in url and method == "GET":
+        if "/list/enumerate/recentDocs" in url and method == "GET":
             if self.recent_docs_error:
                 return ResponseMock(
                     {"errorCode": "BAD_REQUEST", "errorMessage": "Invalid limit"},

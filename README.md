@@ -308,6 +308,11 @@ datetime.datetime(2020, 5, 3, 7, 24, 25) # NB this is UTC
 
 The result is a plain list of drive nodes, so everything above applies to it, including `open`.
 
+The listing covers the main Drive zone (`com.apple.CloudDocs`), which is what the iCloud web app's
+Recent view shows. Pass `zone` to list a different one: `get_recent_docs(zone="_all_")` asks for every
+Drive zone, though Apple does not serve that for every account. Pass the same `zone` on each page
+request.
+
 Apple caps the listing. When more documents exist the result says so, and the cursor it returns
 continues the listing:
 

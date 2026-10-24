@@ -934,6 +934,33 @@ class DriveRecentDocsTests(TestCase):
         assert "nextPage" not in captured
         assert captured["limit"] == 20
 
+    def _capture_url(self, **call_kwargs):
+        """Run get_recent_docs and return the URL it requested."""
+        captured = {}
+        original_request = self.service.session.request
+
+        def capture(method, url, **kwargs):
+            if "recentDocs" in url:
+                captured["url"] = url
+            return original_request(method, url, **kwargs)
+
+        self.service.session.request = capture
+        try:
+            self.drive.get_recent_docs(**call_kwargs)
+        finally:
+            self.service.session.request = original_request
+        return captured["url"]
+
+    def test_default_zone_appears_in_the_url(self):
+        """The main Drive zone is the path segment by default."""
+        url = self._capture_url()
+        assert url.endswith("/ws/com.apple.CloudDocs/list/enumerate/recentDocs")
+
+    def test_zone_argument_appears_in_the_url(self):
+        """Another zone replaces the path segment, so _all_ stays reachable."""
+        url = self._capture_url(zone="_all_")
+        assert url.endswith("/ws/_all_/list/enumerate/recentDocs")
+
     def test_empty_documents(self):
         """An empty listing is an empty RecentDocs, not an error."""
         original_request = self.service.session.request

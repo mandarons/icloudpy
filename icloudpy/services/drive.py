@@ -10,10 +10,6 @@ from re import search
 
 from requests import Response
 
-# Recent documents live on the docws host, and _all_ lists every Drive zone
-# rather than one named zone.
-_RECENT_DOCS_PATH = "/ws/_all_/list/enumerate/recentDocs"
-
 
 class DriveService:
     """The 'Drive' iCloud service."""
@@ -77,7 +73,7 @@ class DriveService:
         else:
             raise KeyError("'data_token' nor 'package_token' found in response.")
 
-    def get_recent_docs(self, limit=20, next_page=None):
+    def get_recent_docs(self, limit=20, next_page=None, zone="com.apple.CloudDocs"):
         """Returns the recently opened iCloud Drive documents, newest first.
 
         Apple returns at most ``limit`` documents. When more exist the result's
@@ -90,11 +86,16 @@ class DriveService:
 
         Each page is returned as its own list; pages are not merged or
         de-duplicated, so pass the cursor back rather than re-requesting the
-        first page. The ordering is Apple's: the documents come back newest
-        first, but which timestamp orders them is not documented.
+        first page. Pass the same ``zone`` on every page. The ordering is
+        Apple's: the documents come back newest first, but which timestamp
+        orders them is not documented.
 
         :param limit: maximum documents to return (Apple caps this itself)
         :param next_page: ``next_page`` from a previous result, or ``None``
+        :param zone: the Drive zone to list. The default is the main Drive
+            zone, which is what the iCloud web app's Recent view shows.
+            ``_all_`` asks for every zone, but Apple does not serve that for
+            every account, so it is opt-in.
         :returns: :class:`RecentDocs`
         """
         params = dict(self.params)
@@ -102,7 +103,7 @@ class DriveService:
         if next_page:
             params["nextPage"] = next_page
         request = self.session.get(
-            self._document_root + _RECENT_DOCS_PATH,
+            self._document_root + f"/ws/{zone}/list/enumerate/recentDocs",
             params=params,
         )
         if not request.ok:
