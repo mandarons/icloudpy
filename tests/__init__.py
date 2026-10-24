@@ -30,6 +30,10 @@ from .const_auth import (
 from .const_drive import (
     DRIVE_FILE_DOWNLOAD_WORKING,
     DRIVE_FOLDER_WORKING,
+    DRIVE_RECENT_DOC_FILE_ID,
+    DRIVE_RECENT_DOCS_MORE_AVAILABLE,
+    DRIVE_RECENT_DOCS_SECOND_PAGE,
+    DRIVE_RECENT_DOCS_WORKING,
     DRIVE_ROOT_INVALID,
     DRIVE_ROOT_WORKING,
     DRIVE_SUBFOLDER_WORKING,
@@ -74,6 +78,7 @@ class ICloudPySessionMock(base.ICloudPySession):
         self.upload_count = 0
         self.rename_count = 0
         self.photo_query_count = {}  # Track queries per album to prevent infinite loops
+        self.recent_docs_error = False
 
     def _get_query_offset(self, data):
         """Extract offset value from query data for pagination tracking.
@@ -196,6 +201,18 @@ class ICloudPySessionMock(base.ICloudPySession):
         # Drive app library
         if "retrieveAppLibraries" in url and method == "GET":
             return ResponseMock({"items": []})
+        # Drive recent documents
+        if "/ws/_all_/list/enumerate/recentDocs" in url and method == "GET":
+            if self.recent_docs_error:
+                return ResponseMock(
+                    {"errorCode": "BAD_REQUEST", "errorMessage": "Invalid limit"},
+                    status_code=400,
+                )
+            if params and params.get("nextPage"):
+                return ResponseMock(DRIVE_RECENT_DOCS_SECOND_PAGE)
+            if params and params.get("limit") == 1:
+                return ResponseMock(DRIVE_RECENT_DOCS_MORE_AVAILABLE)
+            return ResponseMock(DRIVE_RECENT_DOCS_WORKING)
         # Drive upload endpoints
         if "/upload/web" in url and method == "POST":
             self.upload_count += 1
@@ -221,7 +238,10 @@ class ICloudPySessionMock(base.ICloudPySession):
             return ResponseMock(TRASH_ITEMS_RESPONSE)
         # Drive download
         if "com.apple.CloudDocs/download/by_id" in url and method == "GET":
-            if params.get("document_id") == "516C896C-6AA5-4A30-B30E-5502C2333DAE":
+            if params.get("document_id") in (
+                "516C896C-6AA5-4A30-B30E-5502C2333DAE",
+                DRIVE_RECENT_DOC_FILE_ID,
+            ):
                 return ResponseMock(DRIVE_FILE_DOWNLOAD_WORKING)
         if "icloud-content.com" in url and method == "GET":
             if "Scanned+document+1.pdf" in url:

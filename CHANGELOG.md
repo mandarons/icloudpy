@@ -6,6 +6,16 @@ release, including older ones, are on the
 
 ## [Unreleased]
 
+### Added
+
+- Drive: `api.drive.get_recent_docs()` lists the recently opened iCloud Drive
+  documents, newest first, as `DriveNode` objects, so `name`, `size`, the date
+  properties and `open()` work as they do for any other drive node. Apple caps
+  the listing and reports `MORE_AVAILABLE` when it does; the returned
+  `RecentDocs` list exposes `status`, `more_available` and a `next_page` cursor,
+  and `get_recent_docs(next_page=...)` continues from it
+  ([#135](https://github.com/mandarons/icloudpy/issues/135)).
+
 ### Fixed
 
 - Photos: `PhotoAsset.versions` now reads each version from the `CPLAsset`

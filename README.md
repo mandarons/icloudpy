@@ -294,6 +294,37 @@ The `open` method will return a response object from which you can read the file
 
 `stream` applies to the transfer only: the lookup is a small JSON reply that is read in full.
 
+### Recently Opened Documents
+
+`get_recent_docs` lists the documents Apple shows under Recent in iCloud Drive, newest first:
+
+```bash
+>>> recent = api.drive.get_recent_docs()
+>>> [doc.name for doc in recent]
+['Quarterly summary.pdf', 'Budget draft.numbers']
+>>> recent[0].date_last_open
+datetime.datetime(2020, 5, 3, 7, 24, 25) # NB this is UTC
+```
+
+The result is a plain list of drive nodes, so everything above applies to it, including `open`.
+
+Apple caps the listing. When more documents exist the result says so, and the cursor it returns
+continues the listing:
+
+```bash
+>>> recent = api.drive.get_recent_docs(limit=10)
+>>> recent.more_available
+True
+>>> while recent.more_available and recent.next_page:
+>>>     recent = api.drive.get_recent_docs(limit=10, next_page=recent.next_page)
+>>>     print([doc.name for doc in recent])
+```
+
+`status` carries Apple's raw value (`CONSISTENT` or `MORE_AVAILABLE`) if you would rather react to the
+truncation yourself. Each call returns one page; pages are not merged or de-duplicated. The loop
+above checks `next_page` as well as the status so a truncated page without a cursor cannot re-request
+the first page forever.
+
 To interact with files and directions the `mkdir`, `rename` and `delete` functions are available
 for a file or folder:
 
