@@ -740,3 +740,98 @@ DRIVE_FILE_DOWNLOAD_WORKING = {
     },
     "double_etag": "32::2x",
 }
+
+
+# Recent documents. The field names and status values mirror a live
+# enumerate/recentDocs response; every id, name, marker and size here is
+# synthetic. "urls" is an opaque dict the library does not read, so its
+# contents are left empty rather than invented.
+DRIVE_RECENT_DOC_FILE_ID = "3f1c9b6e-5a41-4c8d-9e27-8b6d4a1f0c31"
+
+DRIVE_RECENT_DOCS_WORKING = {
+    "status": "CONSISTENT",
+    "continuationMarker": "dGVzdC1tYXJrZXItMDE=",
+    "documents": [
+        {
+            "drivewsid": "FILE::com.apple.CloudDocs::3f1c9b6e-5a41-4c8d-9e27-8b6d4a1f0c31",
+            "docwsid": "3f1c9b6e-5a41-4c8d-9e27-8b6d4a1f0c31",
+            "zone": "com.apple.CloudDocs",
+            "name": "Quarterly summary",
+            "extension": "pdf",
+            "type": "FILE",
+            "size": 1548321,
+            "etag": "31",
+            "parentId": "FOLDER::com.apple.CloudDocs::0f1e2d3c-4b5a-4968-8776-655443322110",
+            "dateModified": "2020-05-03T00:15:17-07:00",
+            "dateChanged": "2020-05-03T00:16:17-07:00",
+            "lastOpenTime": "2020-05-03T00:24:25-07:00",
+            "isChainedToParent": False,
+            "item_id": "3f1c9b6e-5a41-4c8d-9e27-8b6d4a1f0c31",
+            "shortGUID": "0abcdef",
+            "urls": {},
+        },
+        {
+            "drivewsid": "FILE::com.apple.CloudDocs::8c2e4d71-9b3a-4f56-a1d8-6e2f7c9b0a45",
+            "docwsid": "8c2e4d71-9b3a-4f56-a1d8-6e2f7c9b0a45",
+            "zone": "com.apple.CloudDocs",
+            "name": "Budget draft",
+            "extension": "numbers",
+            "type": "FILE",
+            "size": 48213,
+            "etag": "12",
+            "parentId": "FOLDER::com.apple.CloudDocs::0f1e2d3c-4b5a-4968-8776-655443322110",
+            "dateModified": "2020-05-02T20:01:00-07:00",
+            "dateChanged": "2020-05-02T20:01:10-07:00",
+            "lastOpenTime": "2020-05-03T00:20:00-07:00",
+            "isChainedToParent": True,
+            "item_id": "8c2e4d71-9b3a-4f56-a1d8-6e2f7c9b0a45",
+            "urls": {},
+        },
+        {
+            "drivewsid": "FILE::com.apple.CloudDocs::b6a0d4c2-7e19-4a3b-8f52-1c9d8e7b6a23",
+            "docwsid": "b6a0d4c2-7e19-4a3b-8f52-1c9d8e7b6a23",
+            "zone": "com.apple.CloudDocs",
+            "name": "Team notes.pages",
+            "type": "FILE",
+            "size": 0,
+            "etag": "7",
+            "parentId": "FOLDER::com.apple.CloudDocs::root",
+            "dateModified": "2020-05-01T09:00:00-07:00",
+            "dateChanged": "2020-05-01T09:00:00-07:00",
+            "lastOpenTime": "2020-05-02T18:00:00-07:00",
+            "isChainedToParent": False,
+            "item_id": "b6a0d4c2-7e19-4a3b-8f52-1c9d8e7b6a23",
+            "urls": {},
+        },
+    ],
+}
+
+DRIVE_RECENT_DOCS_MORE_AVAILABLE = {
+    "status": "MORE_AVAILABLE",
+    "continuationMarker": "dGVzdC1tYXJrZXItMDI=",
+    "documents": [DRIVE_RECENT_DOCS_WORKING["documents"][0]],
+}
+
+DRIVE_RECENT_DOCS_SECOND_PAGE = {
+    "status": "CONSISTENT",
+    "continuationMarker": "dGVzdC1tYXJrZXItMDM=",
+    "documents": [
+        {
+            "drivewsid": "FILE::com.apple.CloudDocs::c4d7e9a1-2b3c-4d5e-8f60-718293a4b5c6",
+            "docwsid": "c4d7e9a1-2b3c-4d5e-8f60-718293a4b5c6",
+            "zone": "com.apple.CloudDocs",
+            "name": "Archived scan",
+            "extension": "jpg",
+            "type": "FILE",
+            "size": 1200,
+            "etag": "3",
+            "parentId": "FOLDER::com.apple.CloudDocs::root",
+            "dateModified": "2020-04-30T07:00:00-07:00",
+            "dateChanged": "2020-04-30T07:00:00-07:00",
+            "lastOpenTime": "2020-04-30T07:30:00-07:00",
+            "isChainedToParent": False,
+            "item_id": "c4d7e9a1-2b3c-4d5e-8f60-718293a4b5c6",
+            "urls": {},
+        },
+    ],
+}

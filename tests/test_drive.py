@@ -6,6 +6,7 @@ from unittest import TestCase
 import pytest
 
 from icloudpy.exceptions import ICloudPyAPIResponseException
+from icloudpy.services.drive import DriveNode, RecentDocs
 
 from . import ICloudPyServiceMock, ResponseMock
 from .const import AUTHENTICATED_USER, CLIENT_ID, VALID_PASSWORD
@@ -815,3 +816,175 @@ class DriveHTTPErrorTests(TestCase):
 
         # Restore original
         self.service.session.request = original_request
+
+
+class DriveRecentDocsTests(TestCase):
+    """Test the recent documents listing."""
+
+    def setUp(self):
+        """Set up test."""
+        self.service = ICloudPyServiceMock(
+            AUTHENTICATED_USER, VALID_PASSWORD, None, True, CLIENT_ID,
+        )
+        self.drive = self.service.drive
+
+    def _capture_params(self, **call_kwargs):
+        """Run get_recent_docs and return the query params it sent."""
+        captured = {}
+        original_request = self.service.session.request
+
+        def capture(method, url, **kwargs):
+            if "recentDocs" in url:
+                captured.update(kwargs.get("params") or {})
+            return original_request(method, url, **kwargs)
+
+        self.service.session.request = capture
+        try:
+            result = self.drive.get_recent_docs(**call_kwargs)
+        finally:
+            self.service.session.request = original_request
+        return result, captured
+
+    def test_returns_a_plain_list_of_nodes(self):
+        """The result is a list, so existing list code keeps working."""
+        docs = self.drive.get_recent_docs()
+        assert isinstance(docs, RecentDocs)
+        assert isinstance(docs, list)
+        assert len(docs) == 3
+        assert all(isinstance(doc, DriveNode) for doc in docs)
+
+    def test_preserves_apple_order(self):
+        """Documents come back in the order Apple returned them."""
+        assert [doc.name for doc in self.drive.get_recent_docs()] == [
+            "Quarterly summary.pdf",
+            "Budget draft.numbers",
+            "Team notes.pages",
+        ]
+
+    def test_name_without_an_extension_field(self):
+        """A document with no ``extension`` field keeps its own name."""
+        doc = self.drive.get_recent_docs()[2]
+        assert "extension" not in doc.data
+        assert doc.name == "Team notes.pages"
+
+    def test_document_metadata(self):
+        """Size and dates decode like any other drive node."""
+        doc = self.drive.get_recent_docs()[0]
+        assert doc.type == "file"
+        assert doc.size == 1548321
+        assert str(doc.date_modified) == "2020-05-03 07:15:17"
+        assert str(doc.date_last_open) == "2020-05-03 07:24:25"
+
+    def test_date_created_is_absent(self):
+        """Apple omits dateCreated, so date_created is None instead of raising."""
+        assert self.drive.get_recent_docs()[0].date_created is None
+
+    def test_document_can_be_opened(self):
+        """A recent document downloads through DriveNode.open."""
+        with self.drive.get_recent_docs()[0].open(stream=True) as response:
+            assert response.raw
+
+    def test_zero_byte_document_opens_empty(self):
+        """The 0-byte guard in DriveNode.open still applies here."""
+        response = self.drive.get_recent_docs()[2].open(stream=True)
+        assert response.raw.read() == b""
+
+    def test_complete_listing_reports_consistent(self):
+        """A complete listing carries Apple's status and the marker."""
+        docs = self.drive.get_recent_docs()
+        assert docs.status == "CONSISTENT"
+        assert docs.more_available is False
+        assert docs.next_page == "dGVzdC1tYXJrZXItMDE="
+
+    def test_truncated_listing_reports_more_available(self):
+        """MORE_AVAILABLE is surfaced instead of silently dropping documents."""
+        docs = self.drive.get_recent_docs(limit=1)
+        assert len(docs) == 1
+        assert docs.status == "MORE_AVAILABLE"
+        assert docs.more_available is True
+        assert docs.next_page == "dGVzdC1tYXJrZXItMDI="
+
+    def test_next_page_continues_the_listing(self):
+        """Passing the cursor back returns the next page."""
+        first = self.drive.get_recent_docs(limit=1)
+        second = self.drive.get_recent_docs(next_page=first.next_page)
+        assert [doc.name for doc in second] == ["Archived scan.jpg"]
+        assert second.status == "CONSISTENT"
+        assert second.more_available is False
+
+    def test_pages_do_not_repeat_documents(self):
+        """The cursor moves forward instead of re-serving the first page."""
+        first = self.drive.get_recent_docs(limit=1)
+        second = self.drive.get_recent_docs(next_page=first.next_page)
+        assert {doc.data["docwsid"] for doc in first}.isdisjoint(
+            {doc.data["docwsid"] for doc in second},
+        )
+
+    def test_request_parameters(self):
+        """unified_format, limit and the cursor are all sent."""
+        _, captured = self._capture_params(limit=7, next_page="cursor-1")
+        assert captured["unified_format"] == "true"
+        assert captured["limit"] == 7
+        assert captured["nextPage"] == "cursor-1"
+        assert captured["clientId"] == CLIENT_ID
+
+    def test_first_request_sends_no_cursor(self):
+        """The first page is requested without nextPage."""
+        _, captured = self._capture_params()
+        assert "nextPage" not in captured
+        assert captured["limit"] == 20
+
+    def test_empty_documents(self):
+        """An empty listing is an empty RecentDocs, not an error."""
+        original_request = self.service.session.request
+
+        def empty(method, url, **kwargs):
+            if "recentDocs" in url:
+                return ResponseMock({"status": "CONSISTENT", "documents": []})
+            return original_request(method, url, **kwargs)
+
+        self.service.session.request = empty
+        try:
+            docs = self.drive.get_recent_docs()
+        finally:
+            self.service.session.request = original_request
+        assert len(docs) == 0
+        assert docs.status == "CONSISTENT"
+
+    def test_missing_documents_key(self):
+        """A response without ``documents`` yields an empty listing."""
+        original_request = self.service.session.request
+
+        def no_documents(method, url, **kwargs):
+            if "recentDocs" in url:
+                return ResponseMock({"status": "CONSISTENT"})
+            return original_request(method, url, **kwargs)
+
+        self.service.session.request = no_documents
+        try:
+            docs = self.drive.get_recent_docs()
+        finally:
+            self.service.session.request = original_request
+        assert len(docs) == 0
+
+    def test_error_status_raises(self):
+        """A rejected request raises instead of returning an empty list."""
+        self.service.session.recent_docs_error = True
+        with pytest.raises(ICloudPyAPIResponseException):
+            self.drive.get_recent_docs()
+
+    def test_unexpected_payload_raises(self):
+        """A non-object payload is not silently treated as an empty listing."""
+        original_request = self.service.session.request
+
+        def wrong_shape(method, url, **kwargs):
+            if "recentDocs" in url:
+                return ResponseMock([])
+            return original_request(method, url, **kwargs)
+
+        self.service.session.request = wrong_shape
+        try:
+            with pytest.raises(KeyError, match="recent documents"):
+                self.drive.get_recent_docs()
+        finally:
+            self.service.session.request = original_request

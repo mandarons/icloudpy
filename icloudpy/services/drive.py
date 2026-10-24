@@ -10,6 +10,10 @@ from re import search
 
 from requests import Response
 
+# Recent documents live on the docws host, and _all_ lists every Drive zone
+# rather than one named zone.
+_RECENT_DOCS_PATH = "/ws/_all_/list/enumerate/recentDocs"
+
 
 class DriveService:
     """The 'Drive' iCloud service."""
@@ -72,6 +76,51 @@ class DriveService:
             return self.session.get(package_token["url"], params=self.params, **kwargs)
         else:
             raise KeyError("'data_token' nor 'package_token' found in response.")
+
+    def get_recent_docs(self, limit=20, next_page=None):
+        """Returns the recently opened iCloud Drive documents, newest first.
+
+        Apple returns at most ``limit`` documents. When more exist the result's
+        ``status`` is ``MORE_AVAILABLE`` and its ``next_page`` cursor continues
+        the listing::
+
+            page = drive.get_recent_docs()
+            while page.more_available and page.next_page:
+                page = drive.get_recent_docs(next_page=page.next_page)
+
+        Each page is returned as its own list; pages are not merged or
+        de-duplicated, so pass the cursor back rather than re-requesting the
+        first page. The ordering is Apple's: the documents come back newest
+        first, but which timestamp orders them is not documented.
+
+        :param limit: maximum documents to return (Apple caps this itself)
+        :param next_page: ``next_page`` from a previous result, or ``None``
+        :returns: :class:`RecentDocs`
+        """
+        params = dict(self.params)
+        params.update({"unified_format": "true", "limit": limit})
+        if next_page:
+            params["nextPage"] = next_page
+        request = self.session.get(
+            self._document_root + _RECENT_DOCS_PATH,
+            params=params,
+        )
+        if not request.ok:
+            self.session.raise_error(request.status_code, request.reason)
+        payload = request.json()
+        if not isinstance(payload, dict):
+            raise KeyError("Unexpected 'recent documents' response.")
+        raw_documents = payload.get("documents")
+        documents = [
+            DriveNode(self, item)
+            for item in (raw_documents if isinstance(raw_documents, list) else [])
+            if isinstance(item, dict)
+        ]
+        return RecentDocs(
+            documents,
+            status=payload.get("status"),
+            next_page=payload.get("continuationMarker"),
+        )
 
     def get_app_data(self):
         """Returns the app library."""
@@ -257,6 +306,27 @@ class DriveService:
 
     def __getitem__(self, key):
         return self.root[key]
+
+
+class RecentDocs(list):
+    """Recently opened iCloud Drive documents, plus Apple's paging state.
+
+    A plain list of :class:`DriveNode` objects, so iteration, indexing and
+    slicing behave as usual. ``status`` is Apple's list status —
+    ``"CONSISTENT"`` when the list is complete, ``"MORE_AVAILABLE"`` when more
+    documents exist beyond the requested limit — and ``next_page`` is the
+    cursor to pass back to :meth:`DriveService.get_recent_docs`.
+    """
+
+    def __init__(self, documents, status=None, next_page=None):
+        super().__init__(documents)
+        self.status = status
+        self.next_page = next_page
+
+    @property
+    def more_available(self):
+        """True when Apple reported more documents than were returned."""
+        return self.status == "MORE_AVAILABLE"
 
 
 class DriveNode:
