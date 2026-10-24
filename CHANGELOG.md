@@ -98,7 +98,7 @@ release, including older ones, are on the
   failing library and continue with the rest. A failed `zones/list` now
   surfaces the original error instead of `UnboundLocalError` (#179).
   One boundary of that isolation is worth stating explicitly:
-  - A library that is still *indexing* is not covered: it keeps raising
+  - A library that is still _indexing_ is not covered: it keeps raising
     `ICloudPyServiceNotActivatedException` from the first access, so one
     unfinished index still fails the whole `libraries` call (an unfinished
     index is an account-wide wait, unchanged from previous releases). Pass

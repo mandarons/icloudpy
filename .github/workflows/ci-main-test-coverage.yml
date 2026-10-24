@@ -7,15 +7,15 @@ on:
   push:
     branches: [main]
     paths:
-      - 'icloudpy/**'
-      - 'tests/**'
-      - 'pytest.ini'
-      - 'requirements*.txt'
-      - 'setup.py'
-      - 'MANIFEST.in'
-      - 'README.md'
-      - 'CHANGELOG.md'
-      - '.github/**'
+      - "icloudpy/**"
+      - "tests/**"
+      - "pytest.ini"
+      - "requirements*.txt"
+      - "setup.py"
+      - "MANIFEST.in"
+      - "README.md"
+      - "CHANGELOG.md"
+      - ".github/**"
   workflow_dispatch:
 
 permissions:
