@@ -40,10 +40,7 @@ class PhotosServiceInitializationTests(unittest.TestCase):
     def test_photos_service_endpoint_structure(self):
         """Test service endpoint follows correct pattern."""
         photos = self.service.photos
-        assert (
-            "/database/1/com.apple.photos.cloud/production/private"
-            in photos._service_endpoint
-        )
+        assert "/database/1/com.apple.photos.cloud/production/private" in photos._service_endpoint
 
     def test_photos_service_session_and_params(self):
         """Test that session and params are properly set."""
@@ -137,12 +134,8 @@ class PhotoLibraryInitializationTests(unittest.TestCase):
         # Simpler approach: patch the const_photos DATA to return IN_PROGRESS
         from . import const_photos
 
-        original_data = const_photos.DATA[
-            "query?remapEnums=True&getCurrentSyncToken=True"
-        ][0]["response"]
-        const_photos.DATA["query?remapEnums=True&getCurrentSyncToken=True"][0][
-            "response"
-        ] = in_progress_response
+        original_data = const_photos.DATA["query?remapEnums=True&getCurrentSyncToken=True"][0]["response"]
+        const_photos.DATA["query?remapEnums=True&getCurrentSyncToken=True"][0]["response"] = in_progress_response
 
         try:
             # This should raise ICloudPyServiceNotActivatedException
@@ -154,9 +147,7 @@ class PhotoLibraryInitializationTests(unittest.TestCase):
             self.assertIn("not finished indexing", str(context.exception))
         finally:
             # Restore original data
-            const_photos.DATA["query?remapEnums=True&getCurrentSyncToken=True"][0][
-                "response"
-            ] = original_data
+            const_photos.DATA["query?remapEnums=True&getCurrentSyncToken=True"][0]["response"] = original_data
 
 
 class UnfinishedIndexTests(unittest.TestCase):
@@ -322,14 +313,12 @@ class AlbumsPropertyTests(unittest.TestCase):
         }
 
         # Store original albums data
-        original_records = const_photos.DATA[
-            "query?remapEnums=True&getCurrentSyncToken=True"
-        ][1]["response"]["records"]
+        original_records = const_photos.DATA["query?remapEnums=True&getCurrentSyncToken=True"][1]["response"]["records"]
 
         # Add deleted album to fixtures
-        const_photos.DATA["query?remapEnums=True&getCurrentSyncToken=True"][1][
-            "response"
-        ]["records"] = original_records + [deleted_album]
+        const_photos.DATA["query?remapEnums=True&getCurrentSyncToken=True"][1]["response"]["records"] = (
+            original_records + [deleted_album]
+        )
 
         try:
             # Create a new service to pick up the modified fixture
@@ -346,9 +335,9 @@ class AlbumsPropertyTests(unittest.TestCase):
             assert len(albums) > 0
         finally:
             # Restore original data
-            const_photos.DATA["query?remapEnums=True&getCurrentSyncToken=True"][1][
-                "response"
-            ]["records"] = original_records
+            const_photos.DATA["query?remapEnums=True&getCurrentSyncToken=True"][1]["response"]["records"] = (
+                original_records
+            )
 
     def test_albums_decode_folder_names(self):
         """Test base64 decoding of albumNameEnc."""
@@ -1191,18 +1180,12 @@ class PhotoAssetMissingFilenameTests(unittest.TestCase):
 
         # Find the GoPro video without filename in the album
         self.gopro_video = next(
-            (
-                photo
-                for photo in self.album.photos
-                if photo.id == "GOPRO-NO-FILENAME-TEST-MASTER"
-            ),
+            (photo for photo in self.album.photos if photo.id == "GOPRO-NO-FILENAME-TEST-MASTER"),
             None,
         )
 
         # Ensure we found the test photo
-        assert (
-            self.gopro_video is not None
-        ), "Test fixture GOPRO-NO-FILENAME-TEST-MASTER not found"
+        assert self.gopro_video is not None, "Test fixture GOPRO-NO-FILENAME-TEST-MASTER not found"
 
     def test_photo_asset_filename_missing_returns_none(self):
         """Test filename property returns None when filenameEnc is missing."""
@@ -1260,7 +1243,13 @@ def _b64name(name):
 
 
 def _photo_field(
-    prefix, *, size=12345, url=None, file_type="public.heic", width=4032, height=3024,
+    prefix,
+    *,
+    size=12345,
+    url=None,
+    file_type="public.heic",
+    width=4032,
+    height=3024,
 ):
     """Build the CloudKit master_record fields for one asset version prefix."""
     return {
@@ -1301,7 +1290,9 @@ class TestItemTypeDetection(unittest.TestCase):
     def test_heic_uti_returns_image(self):
         master = _make_master("photo.heic", "public.heic", _photo_field("resOriginal"))
         asset = PhotoAsset(
-            service=None, master_record=master, asset_record=_make_asset_record(),
+            service=None,
+            master_record=master,
+            asset_record=_make_asset_record(),
         )
         assert asset.item_type == "image"
 
@@ -1312,7 +1303,9 @@ class TestItemTypeDetection(unittest.TestCase):
             _photo_field("resOriginal", file_type="public.jpeg"),
         )
         asset = PhotoAsset(
-            service=None, master_record=master, asset_record=_make_asset_record(),
+            service=None,
+            master_record=master,
+            asset_record=_make_asset_record(),
         )
         assert asset.item_type == "image"
 
@@ -1323,47 +1316,63 @@ class TestItemTypeDetection(unittest.TestCase):
             _photo_field("resOriginal", file_type="com.apple.quicktime-movie"),
         )
         asset = PhotoAsset(
-            service=None, master_record=master, asset_record=_make_asset_record(),
+            service=None,
+            master_record=master,
+            asset_record=_make_asset_record(),
         )
         assert asset.item_type == "movie"
 
     def test_canon_raw_uti_returns_image(self):
         master = _make_master(
-            "raw.cr3", "com.canon.cr3-raw-image", _photo_field("resOriginal"),
+            "raw.cr3",
+            "com.canon.cr3-raw-image",
+            _photo_field("resOriginal"),
         )
         asset = PhotoAsset(
-            service=None, master_record=master, asset_record=_make_asset_record(),
+            service=None,
+            master_record=master,
+            asset_record=_make_asset_record(),
         )
         assert asset.item_type == "image"
 
     def test_missing_uti_with_heic_extension_returns_image(self):
         master = _make_master("photo.HEIC", None, _photo_field("resOriginal"))
         asset = PhotoAsset(
-            service=None, master_record=master, asset_record=_make_asset_record(),
+            service=None,
+            master_record=master,
+            asset_record=_make_asset_record(),
         )
         assert asset.item_type == "image"
 
     def test_missing_uti_with_mov_extension_returns_movie(self):
         master = _make_master("clip.MOV", None, _photo_field("resOriginal"))
         asset = PhotoAsset(
-            service=None, master_record=master, asset_record=_make_asset_record(),
+            service=None,
+            master_record=master,
+            asset_record=_make_asset_record(),
         )
         assert asset.item_type == "movie"
 
     def test_no_uti_no_filename_returns_none(self):
         master = {"recordName": "r", "fields": _photo_field("resOriginal")}
         asset = PhotoAsset(
-            service=None, master_record=master, asset_record=_make_asset_record(),
+            service=None,
+            master_record=master,
+            asset_record=_make_asset_record(),
         )
         # filename property raises KeyError → returns None; item_type sees None and falls through
         assert asset.item_type is None
 
     def test_unknown_uti_with_jpg_extension_returns_image(self):
         master = _make_master(
-            "photo.jpg", "public.fake-format", _photo_field("resOriginal"),
+            "photo.jpg",
+            "public.fake-format",
+            _photo_field("resOriginal"),
         )
         asset = PhotoAsset(
-            service=None, master_record=master, asset_record=_make_asset_record(),
+            service=None,
+            master_record=master,
+            asset_record=_make_asset_record(),
         )
         assert asset.item_type == "image"
 
@@ -1377,7 +1386,9 @@ class TestLivePhotoVersions(unittest.TestCase):
             "IMG_1234.HEIC",
             "public.heic",
             _photo_field(
-                "resOriginal", size=2_400_000, url="https://example.invalid/heic",
+                "resOriginal",
+                size=2_400_000,
+                url="https://example.invalid/heic",
             ),
             _photo_field(
                 "resJPEGMed",
@@ -1430,13 +1441,8 @@ class TestLivePhotoVersions(unittest.TestCase):
             asset_record=_make_asset_record(),
         )
         assert "live_video_original" in asset.versions
-        assert (
-            asset.versions["live_video_original"]["url"]
-            == "https://example.invalid/live.mov"
-        )
-        assert (
-            asset.versions["live_video_original"]["type"] == "com.apple.quicktime-movie"
-        )
+        assert asset.versions["live_video_original"]["url"] == "https://example.invalid/live.mov"
+        assert asset.versions["live_video_original"]["type"] == "com.apple.quicktime-movie"
         assert "live_video_medium" in asset.versions
         assert "live_video_thumb" in asset.versions
 
@@ -1444,7 +1450,9 @@ class TestLivePhotoVersions(unittest.TestCase):
         """A still photo with no Live Photo .mov in CloudKit must not surface live_video_* keys."""
         master = _make_master("plain.heic", "public.heic", _photo_field("resOriginal"))
         asset = PhotoAsset(
-            service=None, master_record=master, asset_record=_make_asset_record(),
+            service=None,
+            master_record=master,
+            asset_record=_make_asset_record(),
         )
         assert "original" in asset.versions
         assert "live_video_original" not in asset.versions
@@ -1476,7 +1484,9 @@ class TestLivePhotoVersions(unittest.TestCase):
             ),
         )
         asset = PhotoAsset(
-            service=None, master_record=master, asset_record=_make_asset_record(),
+            service=None,
+            master_record=master,
+            asset_record=_make_asset_record(),
         )
         assert asset.item_type == "movie"
         # video lookup keys are 'medium' / 'thumb' / 'original', NOT 'live_video_*'

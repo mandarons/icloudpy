@@ -49,7 +49,7 @@ def main(args=None):
         action="store",
         dest="password",
         default="",
-        help=("Apple ID Password to Use; if unspecified, password will be " "fetched from the system keyring."),
+        help=("Apple ID Password to Use; if unspecified, password will be fetched from the system keyring."),
     )
     parser.add_argument(
         "-n",
@@ -237,8 +237,7 @@ def main(args=None):
                 # prompted but no code is ever delivered.
                 if not api.trigger_2fa_push_notification():
                     print(
-                        "(Could not trigger push notification — "
-                        "a code may still arrive via SMS or another path.)",
+                        "(Could not trigger push notification — a code may still arrive via SMS or another path.)",
                     )
 
                 # fmt: off
@@ -266,7 +265,7 @@ def main(args=None):
                 devices = api.trusted_devices
                 for i, device in enumerate(devices):
                     print(
-                        f'    {i}: {device.get("deviceName", "SMS to " + device.get("phoneNumber"))}',
+                        f"    {i}: {device.get('deviceName', 'SMS to ' + device.get('phoneNumber'))}",
                     )
 
                 print("\nWhich device would you like to use?")

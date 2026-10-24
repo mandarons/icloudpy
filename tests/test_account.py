@@ -1,4 +1,5 @@
 """Account service tests."""
+
 from unittest import TestCase
 
 from . import ICloudPyServiceMock

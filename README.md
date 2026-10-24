@@ -21,9 +21,15 @@ Authentication without using a saved password is as simple as passing your usern
 
 ```python
 from icloudpy import ICloudPyService
-api = ICloudPyService('jappleseed@apple.com', 'password')
+
+api = ICloudPyService("jappleseed@apple.com", "password")
 # For China region
-api = ICloudPyService('jappleseed@apple.com', 'password', home_endpoint="https://www.icloud.com.cn",setup_endpoint="https://setup.icloud.com.cn/setup/ws/1",)
+api = ICloudPyService(
+    "jappleseed@apple.com",
+    "password",
+    home_endpoint="https://www.icloud.com.cn",
+    setup_endpoint="https://setup.icloud.com.cn/setup/ws/1",
+)
 ```
 
 In the event that the username/password combination is invalid, a `ICloudPyFailedLoginException` exception is thrown.
@@ -43,7 +49,7 @@ Save password in keyring? (y/N)
 If you have stored a password in the keyring, you will not be required to provide a password when interacting with the command-line tool or instantiating the `ICloudPyService` class for the username you stored the password for.
 
 ```python
-api = ICloudPyService('jappleseed@apple.com')
+api = ICloudPyService("jappleseed@apple.com")
 ```
 
 If you would like to delete a password stored in your system keyring, you can clear a stored password using the `--delete-from-keyring` command-line option:
@@ -87,6 +93,7 @@ if api.requires_2fa:
                 print("Failed to request trust. You will likely be prompted for the code again in the coming weeks")
 elif api.requires_2sa:
     import click
+
     print("Two-step authentication required. Your trusted devices are:")
 
     devices = api.trusted_devices
