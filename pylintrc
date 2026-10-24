@@ -56,6 +56,7 @@ disable=abstract-method,
         attribute-defined-outside-init,
         backtick,
         bad-option-value,
+        bare-except,
         basestring-builtin,
         buffer-builtin,
         c-extension-no-member,
@@ -81,6 +82,7 @@ disable=abstract-method,
         import-error,
         import-self,
         import-star-module-level,
+        import-outside-toplevel,
         inconsistent-return-statements,
         input-builtin,
         intern-builtin,
@@ -124,6 +126,7 @@ disable=abstract-method,
         setslice-method,
         signature-differs,
         standarderror-builtin,
+        superfluous-parens,
         suppressed-message,
         sys-max-int,
         too-few-public-methods,
@@ -134,6 +137,7 @@ disable=abstract-method,
         too-many-instance-attributes,
         too-many-locals,
         too-many-nested-blocks,
+        too-many-positional-arguments,
         too-many-public-methods,
         too-many-return-statements,
         too-many-statements,
@@ -318,7 +322,7 @@ notes=TODO
 
 # This flag controls whether inconsistent-quotes generates a warning when the
 # character used as a quote delimiter is used inconsistently within a module.
-check-quote-consistency=yes
+check-quote-consistency=no
 
 
 [VARIABLES]

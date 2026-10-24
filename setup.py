@@ -24,13 +24,13 @@ setup(
     classifiers=[
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.14",
         "Operating System :: OS Independent",
     ],
-    # 3.10 is the floor: the pinned runtime deps require it (requests 2.34,
-    # click 8.5 and tzlocal 5.4 all declare >=3.10), it matches the CI/badge,
-    # and pyupgrade enforces the same level.
-    python_requires=">=3.10",
+    # 3.14 is the floor: it matches the CI runtime, the devcontainer image and
+    # the pyupgrade target. The runtime deps themselves declare >=3.10, so this
+    # is a project support decision, not a dependency constraint.
+    python_requires=">=3.14",
     install_requires=required,
     extras_require={
         # Optional: only needed to sign a security-key (WebAuthn) challenge locally.
