@@ -17,6 +17,22 @@ release, including older ones, are on the
   and `get_recent_docs(next_page=...)` continues from it
   ([#135](https://github.com/mandarons/icloudpy/issues/135)).
 
+### Changed
+
+- Python 3.14 is now the minimum supported version (3.10 reached end of life
+  on 2026-10-01). CI, the devcontainer image, the README badge and the
+  pyupgrade target all move to 3.14 together with `python_requires`.
+- Refreshed the pinned runtime and test dependencies to their latest releases,
+  bumped the GitHub Actions and pre-commit hooks, and pinned the flake8 hook's
+  plugins so a hook run is reproducible.
+- Dependabot now also tracks the `github-actions` and `devcontainers`
+  ecosystems, not just `pip`.
+- Consolidated the Python toolchain on Ruff: linting, import sorting,
+  pyupgrade-style rewrites and formatting now run through Ruff, replacing
+  Black, isort, autoflake, pyupgrade and flake8. Removed the unused `pytz`
+  and `certifi` pins (the latter is a `requests` dependency), plus `IPython`
+  and the explicit `coverage` pin that `pytest-cov` already provides.
+
 ### Fixed
 
 - Photos: `PhotoAsset.versions` now reads each version from the `CPLAsset`
@@ -73,9 +89,10 @@ release, including older ones, are on the
 ### Fixed
 
 - Photos: one broken library (CloudKit zone) no longer takes down the others.
-  Library enumeration now skips zones Apple rejects outright (`400 Index has
-  invalid data`, `ZONE_NOT_FOUND`) and non-photo `CMM-*` zones, logging a
-  warning instead of crashing the whole call. Any later zone-scoped failure
+  Library enumeration now skips zones Apple rejects outright with
+  `400 Index has invalid data` or `ZONE_NOT_FOUND`, and non-photo `CMM-*`
+  zones, logging a warning instead of crashing the whole call. Any later
+  zone-scoped failure
   raises the new `ICloudPyLibraryUnavailableException` (a subclass of
   `ICloudPyAPIResponseException`, naming the zone), so consumers can skip the
   failing library and continue with the rest. A failed `zones/list` now

@@ -3,14 +3,9 @@
 import base64
 import json
 import logging
-from datetime import datetime
-
-# fmt: off
+from datetime import UTC, datetime
 from urllib.parse import urlencode  # pylint: disable=bad-option-value,relative-import
 
-from pytz import UTC
-
-# fmt: on
 from icloudpy.exceptions import (
     ICloudPyAPIResponseException,
     ICloudPyLibraryUnavailableException,
