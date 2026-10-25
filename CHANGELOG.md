@@ -19,9 +19,11 @@ release, including older ones, are on the
 
 ### Changed
 
-- Python 3.14 is now the minimum supported version (3.10 reached end of life
-  on 2026-10-01). CI, the devcontainer image, the README badge and the
-  pyupgrade target all move to 3.14 together with `python_requires`.
+- Python 3.14 is now the minimum supported version. 3.10 reached end of life
+  on 2026-10-01, and the floor also moves past the still-supported 3.11-3.13
+  deliberately: 3.14 is what CI and the devcontainer image run, so the
+  supported range matches what is tested. `python_requires`, the classifiers,
+  the README badge and the Ruff target all move together.
 - Refreshed the pinned runtime and test dependencies to their latest releases,
   bumped the GitHub Actions and pre-commit hooks, and pinned the flake8 hook's
   plugins so a hook run is reproducible.
