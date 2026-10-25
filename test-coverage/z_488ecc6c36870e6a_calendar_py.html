@@ -5,7 +5,7 @@
     <title>Coverage for icloudpy/services/calendar.py: 39%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_c827f16f.png">
     <link rel="stylesheet" href="style_cb_4667309f.css" type="text/css">
-    <script src="coverage_html_cb_15cffcd0.js" defer></script>
+    <script src="coverage_html_cb_54cfdca1.js" defer></script>
 </head>
 <body class="pyfile">
 <header>
@@ -64,8 +64,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_488ecc6c36870e6a_contacts_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.16.2">coverage.py v7.16.2</a>,
-            created at 2026-10-24 07:18 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.17.0">coverage.py v7.17.0</a>,
+            created at 2026-10-25 19:33 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -97,10 +97,10 @@
     <p class="run"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">session</span> <span class="op">=</span> <span class="nam">session</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t16" href="#t16">16</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">params</span> <span class="op">=</span> <span class="nam">params</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">_service_root</span> <span class="op">=</span> <span class="nam">service_root</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">_calendar_endpoint</span> <span class="op">=</span> <span class="str">f&quot;{self._service_root}/ca&quot;</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">_calendar_refresh_url</span> <span class="op">=</span> <span class="str">f&quot;{self._calendar_endpoint}/events&quot;</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">_calendar_event_detail_url</span> <span class="op">=</span> <span class="str">f&quot;{self._calendar_endpoint}/eventdetail&quot;</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">_calendars</span> <span class="op">=</span> <span class="str">f&quot;{self._calendar_endpoint}/startup&quot;</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">_calendar_endpoint</span> <span class="op">=</span> <span class="fst">f&quot;</span><span class="op">{</span><span class="nam">self</span><span class="op">.</span><span class="nam">_service_root</span><span class="op">}</span><span class="fst">/ca</span><span class="fst">&quot;</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">_calendar_refresh_url</span> <span class="op">=</span> <span class="fst">f&quot;</span><span class="op">{</span><span class="nam">self</span><span class="op">.</span><span class="nam">_calendar_endpoint</span><span class="op">}</span><span class="fst">/events</span><span class="fst">&quot;</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">_calendar_event_detail_url</span> <span class="op">=</span> <span class="fst">f&quot;</span><span class="op">{</span><span class="nam">self</span><span class="op">.</span><span class="nam">_calendar_endpoint</span><span class="op">}</span><span class="fst">/eventdetail</span><span class="fst">&quot;</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">_calendars</span> <span class="op">=</span> <span class="fst">f&quot;</span><span class="op">{</span><span class="nam">self</span><span class="op">.</span><span class="nam">_calendar_endpoint</span><span class="op">}</span><span class="fst">/startup</span><span class="fst">&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">response</span> <span class="op">=</span> <span class="op">{</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t24" href="#t24">24</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -117,7 +117,7 @@
     <p class="mis mis2 show_mis"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t">                <span class="str">&quot;dsid&quot;</span><span class="op">:</span> <span class="nam">self</span><span class="op">.</span><span class="nam">session</span><span class="op">.</span><span class="nam">service</span><span class="op">.</span><span class="nam">data</span><span class="op">[</span><span class="str">&quot;dsInfo&quot;</span><span class="op">]</span><span class="op">[</span><span class="str">&quot;dsid&quot;</span><span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t">            <span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t">        <span class="nam">url</span> <span class="op">=</span> <span class="str">f&quot;{self._calendar_event_detail_url}/{pguid}/{guid}&quot;</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t">        <span class="nam">url</span> <span class="op">=</span> <span class="fst">f&quot;</span><span class="op">{</span><span class="nam">self</span><span class="op">.</span><span class="nam">_calendar_event_detail_url</span><span class="op">}</span><span class="fst">/</span><span class="op">{</span><span class="nam">pguid</span><span class="op">}</span><span class="fst">/</span><span class="op">{</span><span class="nam">guid</span><span class="op">}</span><span class="fst">&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t">        <span class="nam">req</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">session</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">url</span><span class="op">,</span> <span class="nam">params</span><span class="op">=</span><span class="nam">params</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">response</span> <span class="op">=</span> <span class="nam">req</span><span class="op">.</span><span class="nam">json</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t41" href="#t41">41</a></span><span class="t">        <span class="key">return</span> <span class="nam">self</span><span class="op">.</span><span class="nam">response</span><span class="op">[</span><span class="str">&quot;Event&quot;</span><span class="op">]</span><span class="op">[</span><span class="num">0</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
@@ -183,8 +183,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_488ecc6c36870e6a_contacts_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.16.2">coverage.py v7.16.2</a>,
-            created at 2026-10-24 07:18 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.17.0">coverage.py v7.17.0</a>,
+            created at 2026-10-25 19:33 +0000
         </p>
     </div>
 </footer>
