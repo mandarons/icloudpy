@@ -70,11 +70,25 @@ class AccountServiceTest(TestCase):
 
     def test_storage(self):
         """Tests storage."""
-        assert self.service.storage
-        # fmt: off
-        # pylint: disable=C0301
-        assert repr(self.service.storage) == "<AccountStorage: {usage: 43.75% used of 5368709120 bytes, usages_by_media: OrderedDict({'photos': <AccountStorageUsageForMedia: {key: photos, usage: 0 bytes}>, 'backup': <AccountStorageUsageForMedia: {key: backup, usage: 799008186 bytes}>, 'docs': <AccountStorageUsageForMedia: {key: docs, usage: 449092146 bytes}>, 'mail': <AccountStorageUsageForMedia: {key: mail, usage: 1101522944 bytes}>})}>"  # noqa: E501
-        # fmt: on
+        storage = self.service.storage
+        assert storage
+        assert storage.usage.used_storage_in_percent == 43.75
+        assert storage.usage.total_storage_in_bytes == 5368709120
+        assert list(storage.usages_by_media) == ["photos", "backup", "docs", "mail"]
+        assert {key: usage.usage_in_bytes for key, usage in storage.usages_by_media.items()} == {
+            "photos": 0,
+            "backup": 799008186,
+            "docs": 449092146,
+            "mail": 1101522944,
+        }
+        for key, usage in storage.usages_by_media.items():
+            assert usage.key == key
+            assert repr(usage) == (
+                f"<AccountStorageUsageForMedia: {{key: {key}, usage: {usage.usage_in_bytes} bytes}}>"
+            )
+        # The container repr changed in Python 3.14 (OrderedDict([...]) became
+        # OrderedDict({...})), so assert only the version-independent prefix.
+        assert repr(storage).startswith("<AccountStorage: {usage: 43.75% used of 5368709120 bytes, usages_by_media: ")
 
     def test_storage_usage(self):
         """Tests storage usage."""

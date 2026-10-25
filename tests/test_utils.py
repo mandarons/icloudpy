@@ -10,7 +10,7 @@ class TestGetLocalzoneStringConversion:
         """Test that str() works with objects having .zone attribute."""
 
         class MockTimezoneWithZone:
-            """Mock timezone object with .zone attribute (old pytz style)."""
+            """Mock timezone object with a .zone attribute (legacy tzinfo style)."""
 
             def __init__(self, zone_name):
                 self.zone = zone_name
