@@ -3,7 +3,7 @@ from codecs import open
 from setuptools import find_packages, setup
 
 REPO_URL = "https://github.com/mandarons/icloudpy"
-VERSION = "0.11.0"
+VERSION = "0.12.0"
 
 with open("README.md") as fh:
     long_description = fh.read()
@@ -28,7 +28,7 @@ setup(
         "Operating System :: OS Independent",
     ],
     # 3.14 is the floor: it matches the CI runtime, the devcontainer image and
-    # the pyupgrade target. The runtime deps themselves declare >=3.10, so this
+    # the Ruff target. The runtime deps themselves declare >=3.10, so this
     # is a project support decision, not a dependency constraint.
     python_requires=">=3.14",
     install_requires=required,
