@@ -15,7 +15,8 @@ release, including older ones, are on the
   caps the listing and reports `MORE_AVAILABLE` when it does; the returned
   `RecentDocs` list exposes `status`, `more_available` and a `next_page` cursor,
   and `get_recent_docs(next_page=...)` continues from it
-  ([#135](https://github.com/mandarons/icloudpy/issues/135)).
+  ([#135](https://github.com/mandarons/icloudpy/issues/135),
+  [#209](https://github.com/mandarons/icloudpy/pull/209)).
 
 ### Changed
 
@@ -25,8 +26,7 @@ release, including older ones, are on the
   supported range matches what is tested. `python_requires`, the classifiers,
   the README badge and the Ruff target all move together.
 - Refreshed the pinned runtime and test dependencies to their latest releases,
-  bumped the GitHub Actions and pre-commit hooks, and pinned the flake8 hook's
-  plugins so a hook run is reproducible.
+  and bumped the GitHub Actions, Allure CLI and pre-commit hook revisions.
 - Dependabot now also tracks the `github-actions` and `devcontainers`
   ecosystems, not just `pip`.
 - Consolidated the Python toolchain on Ruff: linting, import sorting,
@@ -48,7 +48,7 @@ release, including older ones, are on the
   version key, an edited asset's `medium`, `thumb` and Live Photo
   `live_video_*` renditions also come from the asset record and therefore
   describe the edit; edited movies expose the edited video as the video
-  `full`.
+  `full` ([#206](https://github.com/mandarons/icloudpy/pull/206)).
 
 ## [0.11.0] - 2026-10-17
 

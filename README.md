@@ -303,7 +303,7 @@ The `open` method will return a response object from which you can read the file
 
 ### Recently Opened Documents
 
-`get_recent_docs` lists the documents Apple shows under Recent in iCloud Drive, newest first:
+`get_recent_docs` lists the documents Apple shows under Recent in iCloud Drive, newest first (20 per page by default):
 
 ```bash
 >>> recent = api.drive.get_recent_docs()
