@@ -1,11 +1,15 @@
 """Atomic, merge-on-write persistence for session data and cookies.
 
-Two processes write these files in practice: the sync loop and the web UI of
-``icloud-docker``, which runs as a daemon thread and builds its own service
-instances against the same cookie directory. Both used to rewrite the whole
-file from their own memory on every request, so a cookie another instance had
-just obtained could be erased by a stale one, and a crash mid-write could
-leave a truncated jar behind.
+Two kinds of writer share these files in practice. In ``icloudpy-docker`` the
+sync loop and the web UI write them from one process -- the web UI is a daemon
+*thread* that builds its own service instances against the same cookie
+directory, so :data:`LOCK` serialises it. A second *process* is also ordinary:
+the ``icloud`` CLI (``icloudpy/cmdline.py``) points at the same directory, and
+the lock cannot serialise that one at all.
+
+Each writer used to rewrite the whole file from its own memory on every
+request, so a cookie another had just obtained could be erased by a stale copy,
+and a crash mid-write could leave a truncated jar behind.
 
 Everything here is written to a temporary file in the same directory and moved
 into place with :func:`os.replace`, so a reader never observes a partial file.
@@ -98,16 +102,28 @@ def _merge_cookies_from_disk(service, path: str) -> None:
 
 
 def save_cookies(service) -> None:
-    """Persist the cookie jar atomically, merging what another writer added."""
+    """Persist the cookie jar atomically, merging what another writer added.
+
+    The temporary file gets a unique name rather than a fixed ``<path>.tmp``:
+    the lock only serialises threads, and a second *process* (the ``icloud``
+    CLI) writing its own save must not collide with this one.
+    """
     jar = service.session.cookies
     path = getattr(jar, "filename", None) or service.cookiejar_path
     if not path:
         return
     with LOCK:
         _merge_cookies_from_disk(service, path)
-        temp_path = f"{path}.tmp"
-        jar.save(temp_path, ignore_discard=True, ignore_expires=True)
-        os.replace(temp_path, path)
+        directory = os.path.dirname(path) or "."
+        handle, temp_path = tempfile.mkstemp(prefix=".cookies-", dir=directory)
+        os.close(handle)
+        try:
+            jar.save(temp_path, ignore_discard=True, ignore_expires=True)
+            os.replace(temp_path, path)
+        except BaseException:
+            with contextlib.suppress(OSError):
+                os.unlink(temp_path)
+            raise
         with contextlib.suppress(OSError):
             os.chmod(path, FILE_MODE)
         if not getattr(jar, "filename", None):

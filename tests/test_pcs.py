@@ -612,3 +612,46 @@ class PCSServiceFacadeTest(TestCase):
         self.service.data = []
         assert self.service.terms_update_needed is False
         assert self.service.repair_needed is False
+
+
+class PCSDeadlineTest(PCSTestBase):
+    """The timeout is one budget for the whole call, not one per phase."""
+
+    def test_consent_and_cookie_polls_share_one_deadline(self):
+        clock = {"t": 0.0}
+
+        def fake_sleep(seconds):
+            clock["t"] += seconds
+
+        # Consent arrives on the very last poll the timeout allows for.
+        self.backend.push(200, web_state(consented=False))
+        self.backend.push(200, {"isDeviceConsentNotificationSent": True})
+        for _ in range(19):
+            self.backend.push(200, web_state(consented=False))
+        self.backend.push(200, web_state(consented=True))
+
+        with patch.object(pcs, "_sleep", fake_sleep), patch.object(pcs.time, "monotonic", lambda: clock["t"]):
+            with pytest.raises(ICloudPyPCSTimeoutException):
+                pcs.ensure_pcs(self.api, "photos", timeout=100, interval=5)
+
+        # One deadline: the cookie poll must not get a second 100 s budget.
+        assert clock["t"] == 100.0
+        assert pcs.REQUEST_PCS not in self.backend.paths()
+
+    def test_explicit_attempts_still_respect_the_deadline(self):
+        clock = {"t": 0.0}
+
+        def fake_sleep(seconds):
+            clock["t"] += seconds
+
+        self.backend.push(200, web_state(consented=False))
+        self.backend.push(200, {"isDeviceConsentNotificationSent": True})
+        for _ in range(4):
+            self.backend.push(200, web_state(consented=False))
+
+        with patch.object(pcs, "_sleep", fake_sleep), patch.object(pcs.time, "monotonic", lambda: clock["t"]):
+            with pytest.raises(ICloudPyPCSTimeoutException):
+                pcs.ensure_pcs(self.api, "photos", timeout=10, interval=5, max_attempts=10)
+
+        # max_attempts would allow 50 s of polling, but the deadline stops it at 10.
+        assert clock["t"] == 10.0
