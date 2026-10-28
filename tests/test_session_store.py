@@ -299,3 +299,34 @@ class RequestPersistenceTest(TestCase):
             returned = self.service.session.request("POST", "https://setup.example.invalid/validate")
 
         assert returned is response
+
+
+class CookieTempFileTest(TestCase):
+    """Cookie saves use a unique temp name and clean it up on failure."""
+
+    def setUp(self):
+        self.directory = tempfile.mkdtemp()
+        self.service = FakeService(self.directory)
+
+    def test_a_foreign_temp_file_is_left_alone(self):
+        stale = f"{self.service.cookiejar_path}.tmp"
+        with open(stale, "w", encoding="utf-8") as handle:
+            handle.write("another writer's data")
+        add_cookie(self.service, "X-APPLE-WEBAUTH-PCS-Documents")
+
+        session_store.save_cookies(self.service)
+
+        assert open(stale, encoding="utf-8").read() == "another writer's data"
+        assert "X-APPLE-WEBAUTH-PCS-Documents" in read_jar(self.service.cookiejar_path)
+
+    def test_failed_save_cleans_up_its_temp_file(self):
+        add_cookie(self.service, "X-APPLE-WEBAUTH-PCS-Documents")
+
+        with patch("icloudpy.session_store.os.replace", side_effect=OSError("boom")):
+            with pytest.raises(OSError):
+                session_store.save_cookies(self.service)
+
+        leftovers = [
+            name for name in os.listdir(self.directory) if name.startswith(".cookies-") or name.endswith(".tmp")
+        ]
+        assert leftovers == []

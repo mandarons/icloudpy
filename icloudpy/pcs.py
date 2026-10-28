@@ -318,6 +318,11 @@ def _attempts(timeout: float, interval: float, max_attempts: int | None) -> int:
     return max(1, int(timeout // interval))
 
 
+def _past_deadline(deadline: float | None) -> bool:
+    """Whether an overall deadline has passed. ``None`` means unbounded."""
+    return deadline is not None and time.monotonic() >= deadline
+
+
 def _once(callback: Callable[[], None] | None) -> Callable[[], None]:
     """Wrap ``callback`` so it fires at most once."""
     fired = False
@@ -480,6 +485,10 @@ def ensure_pcs(
 
     waiting = _once(on_waiting)
     budget = _attempts(timeout, interval, max_attempts)
+    # One deadline for the whole call. ``budget`` bounds each phase's polls,
+    # but the consent wait and the cookie poll are sequential, so without a
+    # shared deadline a caller asking for 100 s could be made to wait ~200 s.
+    deadline = time.monotonic() + timeout if timeout > 0 else None
 
     consented = state.is_device_consented
     if consented is None:
@@ -510,6 +519,7 @@ def ensure_pcs(
                 app_name=target.app_name,
                 web_access=state,
             )
+        approved = False
         for _ in range(budget):
             if _interrupted(interrupt):
                 return PCSResult(
@@ -519,11 +529,14 @@ def ensure_pcs(
                     cookies_missing=missing,
                     adp=state.adp,
                 )
+            if _past_deadline(deadline):
+                break
             _sleep(interval)
             state = web_access_state(api, target.key)
             if state.is_device_consented:
+                approved = True
                 break
-        else:
+        if not approved:
             raise ICloudPyPCSTimeoutException(
                 "The device approval was not given in time.",
                 attempts=budget,
@@ -541,6 +554,8 @@ def ensure_pcs(
                 cookies_missing=missing,
                 adp=state.adp,
             )
+        if _past_deadline(deadline):
+            break
         status, payload = _request_pcs(api, target, derived=attempt == 0)
         outcome = _classify(status, payload)
         if outcome == _ACQUIRED:
