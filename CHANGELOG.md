@@ -4,6 +4,39 @@ All notable changes to iCloudPy are documented here. Release notes for every
 release, including older ones, are on the
 [GitHub Releases page](https://github.com/mandarons/icloudpy/releases).
 
+## [Unreleased]
+
+### Added
+
+- Advanced Data Protection (ADP) support. An ADP account keeps its iCloud
+  data end-to-end encrypted, so a web session cannot read it until Apple
+  releases per-service encryption (PCS) cookies to that session — and Apple
+  does that only after the user approves a prompt on a trusted device.
+  `api.pcs_required_for(service)` reports, without a request, whether a
+  service advertises `pcsRequired`; `api.ensure_pcs(service, on_waiting=…,
+  timeout=…)` runs Apple's three-step flow and returns a `PCSResult`.
+  `on_waiting` fires once, just before the first blocking poll, so a caller
+  can tell its user to approve the prompt; `interrupt` keeps a daemon
+  responsive. Failures raise `ICloudPyPCSRequiredException` subclasses that
+  name the cause (web access off, session cannot request access, timeout,
+  wrong `appName`). This is **not** unattended support: approval recurs
+  whenever the cookies expire
+  ([#20](https://github.com/mandarons/icloudpy/issues/20)).
+- `api.terms_update_needed` and `api.repair_needed` surface Apple's
+  `termsUpdateNeeded` / `isRepairNeeded` flags, which otherwise show up only
+  as an unexplained data-access failure.
+
+### Fixed
+
+- The session file and the cookie jar are written atomically, with a
+  merge-on-write for cookies. Two instances share one cookie directory in a
+  container (the sync loop and the web UI), and each used to rewrite the whole
+  jar from its own memory, so a cookie one of them had just obtained could be
+  erased by a stale copy of the other.
+- Both files are now created owner-readable only (`0600`). The `.session`
+  file, which holds the session and trust tokens, was previously created with
+  the process umask (`0644` in a default container).
+
 ## [0.12.0] - 2026-10-25
 
 ### Added
