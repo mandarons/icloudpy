@@ -13,6 +13,7 @@ from unittest.mock import patch
 import pytest
 
 from icloudpy import session_store
+from icloudpy.base import ICloudPyPasswordFilter, ICloudPySession
 
 
 class FakeSession:
@@ -226,3 +227,75 @@ class AtomicWriteFailureTest(TestCase):
         session_store.save_cookies(self.service)
 
         assert self.service.session.cookies.filename == self.service.cookiejar_path
+
+
+class _FakeResponse:
+    """Minimal requests.Response stand-in."""
+
+    def __init__(self, payload, headers=None, status_code=200):
+        self._payload = payload
+        self.headers = headers or {"Content-Type": "application/json"}
+        self.status_code = status_code
+        self.ok = status_code < 400
+        self.reason = "OK"
+
+    def json(self):
+        return self._payload
+
+
+class _BadJsonResponse(_FakeResponse):
+    def json(self):
+        raise ValueError("no json")
+
+
+class _SessionService:
+    """The attributes ICloudPySession.request reads, and nothing else."""
+
+    def __init__(self, directory):
+        self.user = {"accountName": "user@example.com", "password": "synthetic"}
+        self.session_data = {}
+        self.password_filter = ICloudPyPasswordFilter("synthetic")
+        self.session_path = os.path.join(directory, "account.session")
+        self.cookiejar_path = os.path.join(directory, "account")
+        self.session = ICloudPySession(self)
+        self.session.cookies = cookielib.LWPCookieJar(filename=self.cookiejar_path)
+
+
+class RequestPersistenceTest(TestCase):
+    """The real session request path writes both files (not the test mock)."""
+
+    def setUp(self):
+        self.directory = tempfile.mkdtemp()
+        self.service = _SessionService(self.directory)
+
+    def test_request_persists_session_data_and_cookies(self):
+        response = _FakeResponse(
+            {"ok": True},
+            headers={"Content-Type": "application/json", "X-Apple-Session-Token": "synthetic-token"},
+        )
+
+        with patch("requests.sessions.Session.request", return_value=response):
+            self.service.session.request("POST", "https://setup.example.invalid/validate")
+
+        assert self.service.session_data["session_token"] == "synthetic-token"
+        saved = json.loads(open(self.service.session_path, encoding="utf-8").read())
+        assert saved["session_token"] == "synthetic-token"
+        assert stat.S_IMODE(os.stat(self.service.session_path).st_mode) == 0o600
+        assert os.path.exists(self.service.cookiejar_path)
+        assert stat.S_IMODE(os.stat(self.service.cookiejar_path).st_mode) == 0o600
+
+    def test_non_json_response_is_returned_untouched(self):
+        response = _FakeResponse({}, headers={"Content-Type": "text/plain"})
+
+        with patch("requests.sessions.Session.request", return_value=response):
+            returned = self.service.session.request("POST", "https://setup.example.invalid/validate")
+
+        assert returned is response
+
+    def test_unparseable_json_is_returned_untouched(self):
+        response = _BadJsonResponse({}, headers={"Content-Type": "application/json"})
+
+        with patch("requests.sessions.Session.request", return_value=response):
+            returned = self.service.session.request("POST", "https://setup.example.invalid/validate")
+
+        assert returned is response
