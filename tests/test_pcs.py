@@ -6,6 +6,7 @@ implementation -- the scenarios follow the documented request/response contract.
 """
 
 import http.cookiejar as cookielib
+import json
 import os
 import tempfile
 import time
@@ -93,18 +94,26 @@ class Backend:
     def push(self, status, payload, cookies=()):
         self.responses.append((status, payload, cookies))
 
-    def __call__(self, api, path, body=None):
-        self.calls.append((path, body))
+    def __call__(self, api, path, body=None, **kwargs):
+        self.calls.append((path, body, kwargs))
+        if path == pcs.GENERATE_SESSION_ID_TOKEN:
+            # Minted best-effort between consent and the cookie request; not
+            # what these cases script, so it answers itself. Ordering and the
+            # request itself are asserted in PCSWireShapeTest.
+            return 200, {}
         status, payload, cookies = self.responses.pop(0)
         for name in cookies:
             add_cookie(api, name)
         return status, payload
 
     def paths(self):
-        return [path for path, _ in self.calls]
+        return [path for path, _, _ in self.calls]
 
     def bodies(self):
-        return [body for _, body in self.calls]
+        return [body for _, body, _ in self.calls]
+
+    def kwargs(self):
+        return [kwargs for _, _, kwargs in self.calls]
 
 
 def web_state(*, allowed: bool | None = True, consented: bool | None = True, drs_disabled: bool | None = True):
@@ -407,7 +416,7 @@ class PCSTransportTest(TestCase):
             cookies=(WEB_AUTH,),
         )
 
-    def test_post_does_not_retry_and_preserves_body(self):
+    def test_post_sends_the_web_client_envelope_and_does_not_retry(self):
         calls = []
 
         class FakeResponse:
@@ -425,22 +434,37 @@ class PCSTransportTest(TestCase):
                 return FakeResponse()
 
         with patch.object(pcs.requests, "Session", FakeRequestsSession):
-            status, payload = pcs._post(self.api, pcs.REQUEST_PCS, {"appName": "iclouddrive"})
+            status, payload = pcs._post(self.api, pcs.REQUEST_PCS, pcs._pcs_body(pcs._target("drive"), True))
 
         assert status == 500
         assert payload["message"] == "Missing X-APPLE-WEBAUTH-TOKEN cookie"
         assert len(calls) == 1
-        assert calls[0][1]["params"]["dsid"] == "synthetic-dsid"
-        assert calls[0][1]["json"] == {"appName": "iclouddrive"}
+        kwargs = calls[0][1]
+        sent = json.loads(kwargs["data"])
+        assert sent["appName"] == "iclouddrive"
+        assert sent["derivedFromUserAction"] is True
+        assert sent["isFinalAttempt"] is False
+        assert sent["workflowUuid"] == sent["workflowUuid"].upper()
+        assert len(sent["workflowUuid"]) == 36
+        assert kwargs["headers"]["Content-Type"] == "text/plain;charset=UTF-8"
+        assert "json" not in kwargs
+        assert kwargs["params"]["clientBuildNumber"] == pcs.CLIENT_BUILD_NUMBER
+        assert kwargs["params"]["clientMasteringNumber"] == pcs.CLIENT_MASTERING_NUMBER
+        assert kwargs["params"]["dsid"] == "synthetic-dsid"
 
     def test_params_include_dsid_only_when_present(self):
         assert pcs._params(self.api)["dsid"] == "synthetic-dsid"
         self.api.data = {"webservices": {}, "dsInfo": {}}
         assert "dsid" not in pcs._params(self.api)
 
-    def test_params_tolerate_non_dict_data(self):
+    def test_params_carry_client_identity_without_account_data(self):
         self.api.data = []
-        assert pcs._params(self.api) == {"clientId": "synthetic-client"}
+        params = pcs._params(self.api)
+        assert params == {
+            "clientBuildNumber": pcs.CLIENT_BUILD_NUMBER,
+            "clientMasteringNumber": pcs.CLIENT_MASTERING_NUMBER,
+            "clientId": "synthetic-client",
+        }
 
 
 class PCSTimeoutMathTest(TestCase):
@@ -655,3 +679,151 @@ class PCSDeadlineTest(PCSTestBase):
 
         # max_attempts would allow 50 s of polling, but the deadline stops it at 10.
         assert clock["t"] == 10.0
+
+
+class PCSWireShapeTest(TestCase):
+    """The request envelope Apple validates, and the redacted diagnostic.
+
+    Values are the personal part of a PCS request, so the failure message may
+    name the parameters, body keys and cookies but must never carry their
+    values. These cases assert both halves of that.
+    """
+
+    def setUp(self):
+        self.directory = tempfile.mkdtemp()
+        self.api = FakeService(
+            self.directory,
+            webservices={
+                "ckdatabasews": {"url": "https://photos.invalid", "pcsRequired": True},
+            },
+            dsid="synthetic-dsid",
+            cookies=(WEB_AUTH,),
+        )
+        self.requests_seen = []
+        self.queue = []
+        captured = self
+
+        class RecordingResponse:
+            def __init__(self, status, payload):
+                self.status_code = status
+                self._payload = payload
+
+            def json(self):
+                return self._payload
+
+        class RecordingSession:
+            def __init__(self):
+                self.headers = {}
+
+            def post(self, url, **kwargs):
+                captured.requests_seen.append(("POST", url, kwargs))
+                status, payload, cookies = captured.queue.pop(0)
+                for name in cookies:
+                    add_cookie(captured.api, name)
+                return RecordingResponse(status, payload)
+
+            def get(self, url, **kwargs):
+                captured.requests_seen.append(("GET", url, kwargs))
+                status, payload, _ = captured.queue.pop(0) if captured.queue else (200, {}, ())
+                return RecordingResponse(status, payload)
+
+        patcher = patch.object(pcs.requests, "Session", RecordingSession)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        sleeper = patch.object(pcs, "_sleep", lambda _seconds: None)
+        sleeper.start()
+        self.addCleanup(sleeper.stop)
+
+    def names(self):
+        return [url.rsplit("/", 1)[-1] for _, url, _ in self.requests_seen]
+
+    def workflows(self):
+        return {
+            json.loads(kwargs["data"])["workflowUuid"] for method, _, kwargs in self.requests_seen if method == "POST"
+        }
+
+    def test_web_access_state_carries_client_identity_and_workflow(self):
+        self.queue.append((200, web_state(), ()))
+
+        state = pcs.web_access_state(self.api, "photos")
+
+        assert state.is_device_consented is True
+        method, url, kwargs = self.requests_seen[0]
+        assert method == "POST"
+        assert url == "https://setup.example.invalid/setup/ws/1/requestWebAccessState"
+        assert kwargs["params"]["clientBuildNumber"] == pcs.CLIENT_BUILD_NUMBER
+        assert kwargs["params"]["clientMasteringNumber"] == pcs.CLIENT_MASTERING_NUMBER
+        assert kwargs["headers"]["Content-Type"] == "text/plain;charset=UTF-8"
+        assert list(json.loads(kwargs["data"])) == ["workflowUuid"]
+
+    def test_one_workflow_id_spans_the_whole_acquisition(self):
+        self.queue.extend(
+            [
+                (200, web_state(consented=False), ()),
+                (200, {"isDeviceConsentNotificationSent": True}, ()),
+                (200, web_state(consented=True), ()),
+                (200, {}, ()),
+                (200, {"status": "success"}, PHOTOS_COOKIES),
+            ]
+        )
+
+        result = pcs.ensure_pcs(self.api, "photos")
+
+        assert result.status == pcs.ACQUIRED
+        assert self.names() == [
+            "requestWebAccessState",
+            "enableDeviceConsentForPCS",
+            "requestWebAccessState",
+            "generateSessionIdToken",
+            "requestPCS",
+        ]
+        assert [method for method, _, _ in self.requests_seen][3] == "GET"
+        assert len(self.workflows()) == 1
+
+    def test_session_id_token_failure_is_not_fatal(self):
+        self.queue.extend(
+            [
+                (200, web_state(), ()),
+                (418, {}, ()),
+                (200, {"status": "success"}, PHOTOS_COOKIES),
+            ]
+        )
+
+        result = pcs.ensure_pcs(self.api, "photos")
+
+        assert result.status == pcs.ACQUIRED
+
+    def test_rejection_message_carries_the_shape_but_no_values(self):
+        self.queue.append((422, {}, ()))
+
+        with pytest.raises(ICloudPyPCSRequiredException) as caught:
+            pcs.ensure_pcs(self.api, "photos")
+
+        message = str(caught.value)
+        assert "422" in message
+        assert "requestWebAccessState" in message
+        # What we need in a bug report: the schema.
+        assert "clientBuildNumber" in message
+        assert "clientMasteringNumber" in message
+        assert "workflowUuid" in message
+        assert WEB_AUTH in message
+        assert "text/plain" in message
+        # What must never be there: the account's identifiers and cookie values.
+        assert "synthetic" not in message
+        assert "synthetic-dsid" not in message
+        assert "synthetic-client" not in message
+
+    def test_shape_helper_reports_names_only(self):
+        shape = pcs._shape(
+            self.api,
+            "POST",
+            pcs.REQUEST_PCS,
+            {"appName": "photos", "derivedFromUserAction": True, "workflowUuid": "abc"},
+        )
+
+        assert "params=[clientBuildNumber, clientId, clientMasteringNumber, dsid]" in shape
+        assert "body=[appName, derivedFromUserAction, workflowUuid]" in shape
+        assert f"cookies=[{WEB_AUTH}]" in shape
+        assert "synthetic-dsid" not in shape
+        assert "synthetic-client" not in shape
+        assert "abc" not in shape

@@ -19,7 +19,13 @@ release, including older ones, are on the
   can tell its user to approve the prompt; `interrupt` keeps a daemon
   responsive. Failures raise `ICloudPyPCSRequiredException` subclasses that
   name the cause (web access off, session cannot request access, timeout,
-  wrong `appName`). This is **not** unattended support: approval recurs
+  wrong `appName`). Every PCS request is shaped the way Apple's web client
+  shapes it — the client build numbers in the query string and a per-attempt
+  `workflowUuid` in a `text/plain` JSON body — because a request without them
+  is answered `422` with an empty body. A rejected request reports its own
+  shape (parameter, body-key and cookie *names*, never values), so a failure
+  can be pasted into a report without exposing account data. This is **not**
+  unattended support: approval recurs
   whenever the cookies expire
   ([#20](https://github.com/mandarons/icloudpy/issues/20)).
 - `api.terms_update_needed` and `api.repair_needed` surface Apple's

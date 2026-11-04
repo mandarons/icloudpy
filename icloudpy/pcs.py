@@ -17,6 +17,13 @@ Three undocumented endpoints drive it, all ``POST`` to the setup endpoint:
     Issues the cookies once consent exists. ``status: failure`` with a
     "waiting" message means "not approved yet", not "failed".
 
+Every call carries the client build numbers in the query string and, for a
+``POST``, a JSON body tagged with the attempt's ``workflowUuid``: that is the
+shape the icloud.com client uses, and the setup service answers a PCS request
+without it ``422`` with an empty body -- a rejection that names nothing and
+reads like a refusal. ``generateSessionIdToken`` is minted between consent and
+the cookie request, best effort.
+
 This module talks to those endpoints over its own :class:`requests.Session`
 bound to the service's cookie jar, rather than through
 :class:`icloudpy.base.ICloudPySession`. The session layer retries every 421/450/500
@@ -32,8 +39,10 @@ response and never proves ADP is on, and a service that does not advertise
 from __future__ import annotations
 
 import enum
+import json
 import logging
 import time
+import uuid
 
 # Runtime import on purpose: Python 3.14 evaluates annotations lazily at
 # access time (PEP 649), so a TYPE_CHECKING-only import makes
@@ -63,6 +72,19 @@ WEB_AUTH_COOKIE = "X-APPLE-WEBAUTH-TOKEN"
 REQUEST_WEB_ACCESS_STATE = "/requestWebAccessState"
 ENABLE_DEVICE_CONSENT = "/enableDeviceConsentForPCS"
 REQUEST_PCS = "/requestPCS"
+GENERATE_SESSION_ID_TOKEN = "/generateSessionIdToken"
+
+#: Client fingerprints the PCS endpoints validate. The legacy setup endpoints
+#: (``/validate``, ``/accountLogin``) accept a ``clientId``-only request, which
+#: is why icloudpy never sent these -- but a PCS request without them is
+#: answered 422 with an empty body, before any consent prompt can fire. The
+#: values are the current icloud.com client's; bump them when Apple does.
+CLIENT_BUILD_NUMBER = "2522Project44"
+CLIENT_MASTERING_NUMBER = "2522B2"
+
+#: ``icloud.com`` posts its PCS bodies as JSON under this content type, and
+#: tags every call in one acquisition attempt with a shared ``workflowUuid``.
+PCS_CONTENT_TYPE = "text/plain;charset=UTF-8"
 
 #: ``requestPCS`` answers with one of these while the trusted device has not
 #: finished uploading the keys. They mean "not ready", not "failed".
@@ -213,8 +235,16 @@ def _new_session(api) -> requests.Session:
 
 
 def _params(api) -> dict[str, Any]:
-    """Query parameters, including ``dsid`` when the account exposes one."""
-    params = dict(getattr(api, "params", None) or {})
+    """Query parameters for every PCS call.
+
+    ``clientBuildNumber``/``clientMasteringNumber`` are the client fingerprints
+    the PCS endpoints validate; ``dsid`` is added when the account exposes one.
+    """
+    params: dict[str, Any] = {
+        "clientBuildNumber": CLIENT_BUILD_NUMBER,
+        "clientMasteringNumber": CLIENT_MASTERING_NUMBER,
+    }
+    params.update(getattr(api, "params", None) or {})
     data = getattr(api, "data", None)
     dsid = (data.get("dsInfo") or {}).get("dsid") if isinstance(data, dict) else None
     if dsid and "dsid" not in params:
@@ -231,31 +261,73 @@ def _json_payload(response) -> dict[str, Any]:
     return payload if isinstance(payload, dict) else {}
 
 
-def _post(api, path: str, body: dict[str, Any] | None = None) -> tuple[int, dict[str, Any]]:
+def _new_workflow() -> str:
+    """A per-attempt workflow id, the way the icloud.com client tags its calls."""
+    return str(uuid.uuid4()).upper()
+
+
+def _shape(api, method: str, path: str, body: dict[str, Any] | None) -> str:
+    """Describe a request without recording anything personal.
+
+    The *values* are the private part -- ``dsid``, ``clientId``, cookie values,
+    the account's Apple ID -- so only the schema is described: which query
+    parameters, which body keys, which cookie names, and the content type. That
+    is what shows whether Apple rejected the request shape or the account
+    state, and it is safe to paste into an issue.
+    """
+    params = ", ".join(sorted(_params(api)))
+    keys = ", ".join(sorted(body)) if body else ""
+    cookies = ", ".join(sorted({cookie.name for cookie in api.session.cookies}))
+    content_type = PCS_CONTENT_TYPE if method != "GET" else ""
+    return f"{method} {path} params=[{params}] body=[{keys}] content-type={content_type or '-'} cookies=[{cookies}]"
+
+
+def _post(
+    api,
+    path: str,
+    body: dict[str, Any] | None = None,
+    *,
+    method: str = "POST",
+    workflow: str | None = None,
+) -> tuple[int, dict[str, Any]]:
     """One HTTP request to a PCS endpoint, with no retry and no rewriting.
+
+    Every call carries the client build numbers in the query string and, for a
+    POST, a JSON body tagged with the attempt's ``workflowUuid`` -- the shape
+    Apple's own web client sends. A POST without them is answered 422 with an
+    empty body, which reads as a refusal rather than as a malformed request.
 
     The cookie jar is saved afterwards because Apple sets the PCS cookies on
     the ``requestPCS`` response itself.
     """
     session = _new_session(api)
-    response = session.post(
-        f"{api.setup_endpoint}{path}",
-        params=_params(api),
-        json=body,
-        timeout=HTTP_TIMEOUT_SEC,
-    )
+    url = f"{api.setup_endpoint}{path}"
+    sent: dict[str, Any] | None = None
+    if method == "GET":
+        response = session.get(url, params=_params(api), timeout=HTTP_TIMEOUT_SEC)
+    else:
+        sent = {"workflowUuid": workflow or _new_workflow(), **(body or {})}
+        response = session.post(
+            url,
+            params=_params(api),
+            data=json.dumps(sent),
+            headers={"Content-Type": PCS_CONTENT_TYPE},
+            timeout=HTTP_TIMEOUT_SEC,
+        )
+    LOGGER.debug("PCS request %s -> HTTP %s", _shape(api, method, path, sent), response.status_code)
     payload = _json_payload(response)
     session_store.save_cookies(api)
     return response.status_code, payload
 
 
-def web_access_state(api, service: str) -> WebAccessState:
+def web_access_state(api, service: str, *, workflow: str | None = None) -> WebAccessState:
     """Ask Apple for the account's web-access state. Read-only."""
     target = _target(service)
-    status, payload = _post(api, REQUEST_WEB_ACCESS_STATE)
+    status, payload = _post(api, REQUEST_WEB_ACCESS_STATE, workflow=workflow)
     if not payload and status >= 400:
         raise ICloudPyPCSRequiredException(
-            f"Apple refused the web-access check with HTTP {status}.",
+            f"Apple refused the web-access check with HTTP {status}. "
+            f"Request shape: {_shape(api, 'POST', REQUEST_WEB_ACCESS_STATE, {'workflowUuid': None})}",
             status,
             service=target.key,
             app_name=target.app_name,
@@ -268,10 +340,10 @@ def web_access_state(api, service: str) -> WebAccessState:
     )
 
 
-def request_device_consent(api, service: str) -> bool:
+def request_device_consent(api, service: str, *, workflow: str | None = None) -> bool:
     """Ask Apple to push the approval prompt. Returns whether it was sent."""
     target = _target(service)
-    _, payload = _post(api, ENABLE_DEVICE_CONSENT)
+    _, payload = _post(api, ENABLE_DEVICE_CONSENT, workflow=workflow)
     sent = bool(payload.get("isDeviceConsentNotificationSent"))
     LOGGER.info("PCS: approval prompt for %s requested (sent=%s)", target.key, sent)
     return sent
@@ -387,9 +459,17 @@ def _acquired(api, target: PCSTarget, adp: ADP = ADP.UNDETERMINED) -> PCSResult:
     return PCSResult(service=target.key, status=ACQUIRED, cookies_present=present, adp=adp)
 
 
-def _raise_for(outcome: str, status: int, payload: dict[str, Any], target: PCSTarget) -> None:
+def _raise_for(
+    outcome: str,
+    status: int,
+    payload: dict[str, Any],
+    target: PCSTarget,
+    *,
+    shape: str = "",
+) -> None:
     """Raise the specific exception a failed outcome maps to."""
     message = str(payload.get("message") or "") or f"HTTP {status}"
+    detail = f" Request shape: {shape}" if shape else ""
     if outcome == _WEB_ACCESS_OFF:
         raise ICloudPyWebAccessDisabledException(
             "Advanced Data Protection is on but 'Access iCloud Data on the Web' is off. "
@@ -404,23 +484,49 @@ def _raise_for(outcome: str, status: int, payload: dict[str, Any], target: PCSTa
             app_name=target.app_name,
         )
     raise ICloudPyPCSRequiredException(
-        f"Apple refused the data-access request for '{target.app_name}': {message}.",
+        f"Apple refused the data-access request for '{target.app_name}': {message}.{detail}",
         service=target.key,
         app_name=target.app_name,
     )
 
 
-def _request_pcs(api, target: PCSTarget, *, derived: bool) -> tuple[int, dict[str, Any]]:
+def _pcs_body(target: PCSTarget, derived: bool) -> dict[str, Any]:
+    """The ``requestPCS`` body the web client sends.
+
+    ``derivedFromUserAction`` is true only on the first attempt: it is what
+    makes Apple notify the phone, and repeating it re-notifies on every poll.
+    ``isFinalAttempt`` stays false, matching the icloud.com client, which keeps
+    polling rather than announcing a last try.
+    """
+    return {
+        "appName": target.app_name,
+        "derivedFromUserAction": derived,
+        "isFinalAttempt": False,
+    }
+
+
+def _request_pcs(api, target: PCSTarget, *, derived: bool, workflow: str | None = None) -> tuple[int, dict[str, Any]]:
     """One ``requestPCS`` call.
 
     ``derivedFromUserAction`` is true only on the first attempt: it is what
     makes Apple notify the phone, and repeating it re-notifies on every poll.
     """
-    return _post(
-        api,
-        REQUEST_PCS,
-        {"appName": target.app_name, "derivedFromUserAction": derived},
-    )
+    return _post(api, REQUEST_PCS, _pcs_body(target, derived), workflow=workflow)
+
+
+def _generate_session_id_token(api, workflow: str | None = None) -> bool:
+    """Mint the session-id token the web client has before ``requestPCS``.
+
+    icloud.com calls this between the consent poll and the cookie request. It
+    is best effort: a failure here must not turn a working acquisition into an
+    error, because the cookie request itself is what decides the outcome.
+    """
+    try:
+        status, _ = _post(api, GENERATE_SESSION_ID_TOKEN, method="GET", workflow=workflow)
+    except Exception as error:  # noqa: BLE001 - best effort, never fatal
+        LOGGER.debug("PCS session-id token request failed: %s", type(error).__name__)
+        return False
+    return 200 <= status < 300
 
 
 def ensure_pcs(
@@ -465,7 +571,8 @@ def ensure_pcs(
             app_name=target.app_name,
         )
 
-    state = web_access_state(api, target.key)
+    workflow = _new_workflow()
+    state = web_access_state(api, target.key, workflow=workflow)
     if state.is_web_access_allowed is False:
         raise ICloudPyWebAccessDisabledException(
             "Advanced Data Protection is on but 'Access iCloud Data on the Web' is off. "
@@ -494,7 +601,7 @@ def ensure_pcs(
     if consented is None:
         # Unknown consent. A request with derivedFromUserAction=False cannot
         # push a prompt, so it is safe to ask Apple what it thinks first.
-        status, payload = _request_pcs(api, target, derived=False)
+        status, payload = _request_pcs(api, target, derived=False, workflow=workflow)
         outcome = _classify(status, payload)
         if outcome == _ACQUIRED:
             return _acquired(api, target, state.adp)
@@ -507,12 +614,18 @@ def ensure_pcs(
                 adp=state.adp,
             )
         if outcome in (_INCOMPLETE, _WEB_ACCESS_OFF, _REJECTED):
-            _raise_for(outcome, status, payload, target)
+            _raise_for(
+                outcome,
+                status,
+                payload,
+                target,
+                shape=_shape(api, "POST", REQUEST_PCS, _pcs_body(target, False)),
+            )
         consented = False
 
     if not consented:
         waiting()
-        if not request_device_consent(api, target.key):
+        if not request_device_consent(api, target.key, workflow=workflow):
             raise ICloudPyPCSRequiredException(
                 "Apple did not send the approval prompt to a trusted device.",
                 service=target.key,
@@ -532,7 +645,7 @@ def ensure_pcs(
             if _past_deadline(deadline):
                 break
             _sleep(interval)
-            state = web_access_state(api, target.key)
+            state = web_access_state(api, target.key, workflow=workflow)
             if state.is_device_consented:
                 approved = True
                 break
@@ -556,7 +669,12 @@ def ensure_pcs(
             )
         if _past_deadline(deadline):
             break
-        status, payload = _request_pcs(api, target, derived=attempt == 0)
+        if attempt == 0:
+            # The web client mints this between consent and the cookie
+            # request. Best effort: it never decides the outcome.
+            _generate_session_id_token(api, workflow)
+        derived = attempt == 0
+        status, payload = _request_pcs(api, target, derived=derived, workflow=workflow)
         outcome = _classify(status, payload)
         if outcome == _ACQUIRED:
             return _acquired(api, target, state.adp)
@@ -569,7 +687,13 @@ def ensure_pcs(
                 adp=state.adp,
             )
         if outcome in (_INCOMPLETE, _WEB_ACCESS_OFF, _REJECTED):
-            _raise_for(outcome, status, payload, target)
+            _raise_for(
+                outcome,
+                status,
+                payload,
+                target,
+                shape=_shape(api, "POST", REQUEST_PCS, _pcs_body(target, derived)),
+            )
         waiting()
         if attempt + 1 < budget:
             _sleep(interval)
