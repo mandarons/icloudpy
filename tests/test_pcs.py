@@ -793,6 +793,13 @@ class PCSWireShapeTest(TestCase):
 
         assert result.status == pcs.ACQUIRED
 
+    def test_session_id_token_request_that_breaks_is_swallowed(self):
+        def boom(*args, **kwargs):
+            raise RuntimeError("network down")
+
+        with patch.object(pcs, "_post", boom):
+            assert pcs._generate_session_id_token(self.api) is False
+
     def test_rejection_message_carries_the_shape_but_no_values(self):
         self.queue.append((422, {}, ()))
 
