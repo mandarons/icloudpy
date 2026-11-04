@@ -58,6 +58,14 @@ class ICloudPyPasswordFilter(logging.Filter):
         return True
 
 
+# requests waits forever by default. A connection that dies silently (a NAT
+# or ISP reconnect, a dropped Wi-Fi link) then blocks its caller for good,
+# and a long-running sync freezes with no error. (connect, read) seconds; the
+# read timeout is the longest silence between bytes, so large streamed
+# downloads are unaffected. A caller's own ``timeout=`` still wins.
+DEFAULT_TIMEOUT = (30, 300)
+
+
 class ICloudPySession(Session):
     """iCloud session."""
 
@@ -77,6 +85,7 @@ class ICloudPySession(Session):
 
         has_retried = kwargs.get("retried")
         kwargs.pop("retried", None)
+        kwargs.setdefault("timeout", DEFAULT_TIMEOUT)
         response = super().request(method, url, **kwargs)
 
         content_type = response.headers.get("Content-Type", "").split(";")[0]
