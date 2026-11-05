@@ -15,6 +15,7 @@ from uuid import uuid1
 import srp
 from requests import Session
 
+from icloudpy import pcs, session_store
 from icloudpy.exceptions import (
     ICloudPy2SARequiredException,
     ICloudPyAPIResponseException,
@@ -89,14 +90,10 @@ class ICloudPySession(Session):
                     {session_arg: response.headers.get(header)},
                 )
 
-        # Save session_data to file
-        with open(self.service.session_path, "w", encoding="utf-8") as outfile:
-            json.dump(self.service.session_data, outfile)
-            LOGGER.debug("Saved session data to file")
-
-        # Save cookies to file
-        self.cookies.save(ignore_discard=True, ignore_expires=True)
-        LOGGER.debug("Cookies saved to %s", self.service.cookiejar_path)
+        # Persist session data and cookies atomically, merging cookies another
+        # instance may have written in the meantime (see session_store). Both
+        # files carry credentials, so both are written 0600.
+        session_store.save_session_files(self.service)
 
         if not response.ok and (content_type not in json_mimetypes or response.status_code in [421, 450, 500]):
             try:
@@ -885,6 +882,60 @@ class ICloudPyService:
                 params=self.params,
             )
         return self._drive
+
+    def pcs_required_for(self, service):
+        """Whether ``service`` needs a per-service encryption cookie.
+
+        Reads ``webservices.<key>.pcsRequired`` from account data already in
+        hand, so it costs no request. True means "this service wants a PCS
+        cookie"; it does **not** by itself prove Advanced Data Protection is
+        enabled -- a partial web session sets it too.
+
+        Args:
+            service: ``"photos"`` or ``"drive"``.
+
+        Returns:
+            bool: Whether Apple advertises a PCS cookie for the service.
+        """
+        return pcs.pcs_required(self, service)
+
+    def ensure_pcs(self, service, **kwargs):
+        """Acquire the per-service encryption cookies an ADP account needs.
+
+        Blocks while the user approves on a trusted device unless the cookies
+        are already held, so it is never called from a property getter: the
+        caller decides when to wait and what to tell the user meanwhile.
+
+        Args:
+            service: ``"photos"`` or ``"drive"``.
+            **kwargs: Forwarded to :func:`icloudpy.pcs.ensure_pcs`
+                (``on_waiting``, ``interrupt``, ``timeout``,
+                ``max_attempts``, ``interval``).
+
+        Returns:
+            icloudpy.pcs.PCSResult: Status of the attempt.
+
+        Raises:
+            icloudpy.exceptions.ICloudPyPCSRequiredException: A subclass
+                naming the specific cause.
+        """
+        return pcs.ensure_pcs(self, service, **kwargs)
+
+    @property
+    def terms_update_needed(self) -> bool:
+        """Whether Apple requires updated iCloud terms before the account works.
+
+        Pending terms are invisible in a ``423`` and surface later as a
+        ``requestPCS`` failure, so this is worth reporting at sign-in.
+        """
+        data = self.data if isinstance(self.data, dict) else {}
+        return bool(data.get("termsUpdateNeeded"))
+
+    @property
+    def repair_needed(self) -> bool:
+        """Whether Apple wants the account repaired at icloud.com first."""
+        data = self.data if isinstance(self.data, dict) else {}
+        return bool(data.get("isRepairNeeded"))
 
     def __unicode__(self):
         return f"iCloud API: {self.user.get('accountName')}"
