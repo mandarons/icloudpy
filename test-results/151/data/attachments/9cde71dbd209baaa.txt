@@ -1,0 +1,1 @@
+ERROR    icloudpy.base:base.py:164 Authentication failed. Please log into https://icloud.com/ to manually finish setting up your iCloud service (AUTHENTICATION_FAILED)
